@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@certusone/wormhole-sdk": "^0.5.0",
+    "@solana/web3.js": "^1.48.0",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",
@@ -11,6 +12,8 @@
     "@types/node": "^16.11.43",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
+    "ethers": "^5.6.9",
+    "node-fetch": "^3.2.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
