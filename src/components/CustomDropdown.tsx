@@ -1,20 +1,20 @@
-import React, { FC, useEffect, useRef, useState } from 'react';
+import React, { FC, useRef, useState } from 'react';
 
 export const CustomDropDown: FC<{
     dropdownList: string[]
-    selected: string,
-    setSelected: React.Dispatch<React.SetStateAction<string>>
-}> = ({ dropdownList, selected, setSelected }) => {
+    value: string,
+    onChange: Function
+}> = ({ dropdownList, value, onChange }) => {
     const [isFocused, setIsFocused] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
-    const onSelected = (val: string) => {
-        setSelected(val);
+    const onSelected = (selected: string) => {
+        onChange(selected);
         ref.current?.blur();
     };
     return (
         <div ref={ref} className='w-full relative' tabIndex={0} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}>
             <div className='border p-1 h-9'>
-                <span className='text-md capitalize'>{selected}</span>
+                <span className='text-md capitalize'>{value}</span>
             </div>
             {
                 isFocused &&
@@ -26,7 +26,7 @@ export const CustomDropDown: FC<{
                                 return (
                                     <li className='w-full capitalize p-1 cursor-pointer hover:bg-gray-200'
                                         key={option}
-                                        onClick={() => onSelected(option)}>
+                                        onClick={(e) => onSelected(option)}>
                                         {option}
                                     </li>
                                 )
