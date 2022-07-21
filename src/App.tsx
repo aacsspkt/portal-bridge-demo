@@ -1,19 +1,35 @@
-import { TokenBridge, Wormhole, } from '@certusone/wormhole-sdk';
-import React, { useState } from 'react';
-import './App.css';
+import React, { useEffect, useState } from 'react';
 import { CustomDropDown } from './components/CustomDropdown';
+import './App.css';
+import { deriveSolanaToken } from "./functions";
+import { CHAINS, CHAIN_ID_ETH, CHAIN_ID_TO_NAME } from '@certusone/wormhole-sdk';
 
 function App() {
-  let chainList = ['solana', 'ethereums']
-  let tokenList = ['4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R']
+  let chainList = Object.keys(CHAINS);
   const [sourceChain, setSourceChain] = useState(chainList[0]);
-  const [sourceToken, setSourceToken] = useState(tokenList[0]);
+  const [sourceToken, setSourceToken] = useState('');
   const [targetChain, setTargetChain] = useState(chainList[0]);
-  const [amount, setAmount] = useState('');
   const [targetToken, setTargetToken] = useState('');
+  const [amount, setAmount] = useState('');
+
+  // const onSourceTokenValueChange = async () => {
+  //   // try {
+
+  //   setTargetToken(targetToken.toString());
+  //   // } catch (error) {
+
+  //   // }
+  //   // 
+  // }
 
 
-  // const tokenbridge = new TokenBridge();
+  // useEffect(() => {
+  //   const targetToken = async () => {
+  //     
+  //     setTargetToken(targetToken.toString())
+  //   }
+  //   targetToken();
+  // }, [sourceToken]);
 
   return (
     <div className="w-full p-2">
@@ -23,9 +39,19 @@ function App() {
             <label className='text-md mb-2'>Source Chain</label>
             <CustomDropDown selected={sourceChain} setSelected={setSourceChain} dropdownList={chainList} />
           </div>
-          <div className='w-1/3 mb-3'>
+          <div className='w-1/3 mb-3 flex flex-col'>
             <label className='text-md mb-2'>Source Token</label>
-            <CustomDropDown selected={sourceToken} setSelected={setSourceToken} dropdownList={tokenList} />
+            <input
+              value={sourceToken}
+              className='h-9 w-full border p-2 text-md focus:outline-none'
+              title='Source Token'
+              name='source_token'
+              onChange={async (e) => {
+                setSourceToken(e.target.value);
+                const targetToken = await deriveSolanaToken(sourceToken, CHAIN_ID_ETH);
+                setTargetToken(targetChain);
+              }}
+              type='text' />
           </div>
           <div className='w-1/3 mb-3'>
             <label className='text-md mb-2'>Target Chain</label>
@@ -35,7 +61,6 @@ function App() {
             <label className='text-md mb-2'>Target Token</label>
             <input
               value={targetToken}
-              onChange={(e) => setTargetToken(e.target.value)}
               className='h-9 w-full border p-2 text-md focus:outline-none'
               title='Target Token'
               disabled
@@ -59,3 +84,7 @@ function App() {
 }
 
 export default App;
+
+function deriveSolanaTokenFromEth(sourceToken: string) {
+  throw new Error('Function not implemented.');
+}
