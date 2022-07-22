@@ -1,35 +1,39 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { CustomDropDown } from './components/CustomDropdown';
 import './App.css';
-import { deriveSolanaToken } from "./functions";
-import { CHAINS, CHAIN_ID_ETH, CHAIN_ID_TO_NAME } from '@certusone/wormhole-sdk';
+import { deriveCorrespondingToken } from "./functions";
+import { CHAINS, ChainName, toChainId } from '@certusone/wormhole-sdk';
 
 function App() {
-  let chainList = Object.keys(CHAINS);
+  const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item != "unset");
+
   const [sourceChain, setSourceChain] = useState(chainList[0]);
   const [sourceToken, setSourceToken] = useState('');
   const [targetChain, setTargetChain] = useState(chainList[0]);
   const [targetToken, setTargetToken] = useState('');
-  const [amount, setAmount] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
 
-  // const onSourceTokenValueChange = async () => {
-  //   // try {
+  const handleSourceChainChange = async (value: string) => {
+    setSourceChain(value as ChainName);
+    const targetToken = await deriveCorrespondingToken(sourceToken, toChainId(sourceChain), toChainId(targetChain));
+    setTargetToken(targetToken.toString());
+  }
 
-  //   setTargetToken(targetToken.toString());
-  //   // } catch (error) {
+  const handleSrcTokenChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSourceToken(e.target.value);
+    const targetToken = await deriveCorrespondingToken(sourceToken, toChainId(sourceChain), toChainId(targetChain));
+    setTargetToken(targetToken.toString());
+  };
 
-  //   // }
-  //   // 
-  // }
+  const handleTargetChainChange = async (value: string) => {
+    setTargetChain(value as ChainName);
+    const targetToken = await deriveCorrespondingToken(sourceToken, toChainId(sourceChain), toChainId(targetChain));
+    setTargetToken(targetToken.toString());
+  }
 
-
-  // useEffect(() => {
-  //   const targetToken = async () => {
-  //     
-  //     setTargetToken(targetToken.toString())
-  //   }
-  //   targetToken();
-  // }, [sourceToken]);
+  const handleTransferAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTransferAmount(e.target.value);
+  }
 
   return (
     <div className="w-full p-2">
@@ -37,7 +41,7 @@ function App() {
         <form>
           <div className='w-1/3 mb-3'>
             <label className='text-md mb-2'>Source Chain</label>
-            <CustomDropDown selected={sourceChain} setSelected={setSourceChain} dropdownList={chainList} />
+            <CustomDropDown value={sourceChain} onChange={handleSourceChainChange} dropdownList={chainList} />
           </div>
           <div className='w-1/3 mb-3 flex flex-col'>
             <label className='text-md mb-2'>Source Token</label>
@@ -46,16 +50,12 @@ function App() {
               className='h-9 w-full border p-2 text-md focus:outline-none'
               title='Source Token'
               name='source_token'
-              onChange={async (e) => {
-                setSourceToken(e.target.value);
-                const targetToken = await deriveSolanaToken(sourceToken, CHAIN_ID_ETH);
-                setTargetToken(targetChain);
-              }}
+              onChange={handleSrcTokenChange}
               type='text' />
           </div>
           <div className='w-1/3 mb-3'>
             <label className='text-md mb-2'>Target Chain</label>
-            <CustomDropDown selected={targetChain} setSelected={setTargetChain} dropdownList={chainList} />
+            <CustomDropDown value={targetChain} onChange={handleTargetChainChange} dropdownList={chainList} />
           </div>
           <div className='w-1/3 mb-3 flex flex-col'>
             <label className='text-md mb-2'>Target Token</label>
@@ -71,8 +71,8 @@ function App() {
             <label className='text-md mb-2'>Amount</label>
             <input
               className='h-9 w-full border p-2 text-md focus:outline-none'
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              value={transferAmount}
+              onChange={handleTransferAmountChange}
               title='Amount'
               name='amount'
               type='text' />
@@ -84,7 +84,3 @@ function App() {
 }
 
 export default App;
-
-function deriveSolanaTokenFromEth(sourceToken: string) {
-  throw new Error('Function not implemented.');
-}
