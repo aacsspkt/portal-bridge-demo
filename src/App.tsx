@@ -5,7 +5,7 @@ import { deriveCorrespondingToken } from "./functions";
 import { CHAINS, ChainName, toChainId } from '@certusone/wormhole-sdk';
 
 function App() {
-  const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item != "unset");
+  const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item !== "unset");
 
   const [data, setData] = useState({
     sourceChain: chainList[0],
@@ -39,15 +39,15 @@ function App() {
     });
   }
 
-  const getAndSetTargetToken = async () => {
-    const targetToken = await deriveCorrespondingToken(data.sourceToken, toChainId(data.sourceChain), toChainId(data.targetChain));
-    setData({
-      ...data,
-      targetToken: targetToken.toString()
-    });
-  }
-
   useEffect(() => {
+    const getAndSetTargetToken = async () => {
+      const targetToken = await deriveCorrespondingToken(data.sourceToken, toChainId(data.sourceChain), toChainId(data.targetChain));
+      setData({
+        ...data,
+        targetToken: targetToken.toString()
+      });
+    }
+
     if (data.sourceChain && data.sourceToken && data.targetChain) {
       getAndSetTargetToken()
     }
@@ -58,13 +58,7 @@ function App() {
   const [phantomButtonText, setPhantomButtonText] = useState('Connect Phantom');
   const [isPhantomConnected, setIsPhantomConnected] = useState(false);
 
-  // useEffect(() => {
-  //   first
 
-  //   return () => {
-  //     second
-  //   }
-  // }, [third])
 
   return (
     <div className="w-full p-4">
