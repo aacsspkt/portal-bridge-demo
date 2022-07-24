@@ -5,7 +5,6 @@ import { deriveCorrespondingToken } from "./functions";
 import { CHAINS, ChainName, toChainId } from '@certusone/wormhole-sdk';
 import { PublicKey } from '@solana/web3.js';
 import { attestToken } from './functions/attestTokens';
-import { ethers, Signer, Wallet } from 'ethers';
 import { useWallet } from './hooks/useWallet';
 import { WalletContextData } from './hooks/WalletContext';
 
@@ -88,8 +87,6 @@ function App() {
       }
     });
   }
-
-  console.log(((window as any).eth));
 
   useEffect(() => {
     const getAndSetTargetToken = async () => {
