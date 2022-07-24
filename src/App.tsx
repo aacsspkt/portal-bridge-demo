@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CustomDropDown } from './components/CustomDropdown';
 import './App.css';
 import { deriveCorrespondingToken } from "./functions";
@@ -7,74 +7,110 @@ import { CHAINS, ChainName, toChainId } from '@certusone/wormhole-sdk';
 function App() {
   const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item != "unset");
 
-  const [sourceChain, setSourceChain] = useState(chainList[0]);
-  const [sourceToken, setSourceToken] = useState('');
-  const [targetChain, setTargetChain] = useState(chainList[0]);
-  const [targetToken, setTargetToken] = useState('');
-  const [transferAmount, setTransferAmount] = useState('');
+  const [data, setData] = useState({
+    sourceChain: chainList[0],
+    sourceToken: "",
+    targetChain: chainList[0],
+    targetToken: "",
+    transferAmount: "",
+    sourceAccountAddress: "",
+    targetAccountAddress: "",
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setData({
+      ...data,
+      [name]: value
+    });
+  }
 
   const handleSourceChainChange = async (value: string) => {
-    setSourceChain(value as ChainName);
-    const targetToken = await deriveCorrespondingToken(sourceToken, toChainId(sourceChain), toChainId(targetChain));
-    setTargetToken(targetToken.toString());
+    setData({
+      ...data,
+      sourceChain: value as ChainName
+    });
   }
-
-  const handleSrcTokenChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSourceToken(e.target.value);
-    const targetToken = await deriveCorrespondingToken(sourceToken, toChainId(sourceChain), toChainId(targetChain));
-    setTargetToken(targetToken.toString());
-  };
 
   const handleTargetChainChange = async (value: string) => {
-    setTargetChain(value as ChainName);
-    const targetToken = await deriveCorrespondingToken(sourceToken, toChainId(sourceChain), toChainId(targetChain));
-    setTargetToken(targetToken.toString());
+    setData({
+      ...data,
+      targetChain: value as ChainName
+    });
   }
 
-  const handleTransferAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTransferAmount(e.target.value);
+  const getAndSetTargetToken = async () => {
+    const targetToken = await deriveCorrespondingToken(data.sourceToken, toChainId(data.sourceChain), toChainId(data.targetChain));
+    setData({
+      ...data,
+      targetToken: targetToken.toString()
+    });
   }
+
+  useEffect(() => {
+    if (data.sourceChain && data.sourceToken && data.targetChain) {
+      getAndSetTargetToken()
+    }
+  }, [data.sourceChain, data.sourceToken, data.targetChain])
+
+  const [metamaskButtonText, setMetamaskButtonText] = useState('Connect Metamask');
+  const [isMetamaskConnected, setIsMetamaskConnected] = useState(false);
+  const [phantomButtonText, setPhantomButtonText] = useState('Connect Phantom');
+  const [isPhantomConnected, setIsPhantomConnected] = useState(false);
+
+  // useEffect(() => {
+  //   first
+
+  //   return () => {
+  //     second
+  //   }
+  // }, [third])
 
   return (
-    <div className="w-full p-2">
+    <div className="w-full p-4">
+      <section className='w-full flex flex-row mb-4 gap-4'>
+        <button className='p-2 w-40 shadow bg-amber-500 rounded text-center' type='button' >{metamaskButtonText}</button>
+        <button className='p-2 w-40 shadow bg-indigo-500 rounded text-center' type='button' >{phantomButtonText}</button>
+      </section>
+
       <section className='from-to'>
         <form>
           <div className='w-1/3 mb-3'>
             <label className='text-md mb-2'>Source Chain</label>
-            <CustomDropDown value={sourceChain} onChange={handleSourceChainChange} dropdownList={chainList} />
+            <CustomDropDown value={data.sourceChain} onChange={handleSourceChainChange} dropdownList={chainList} />
           </div>
           <div className='w-1/3 mb-3 flex flex-col'>
             <label className='text-md mb-2'>Source Token</label>
             <input
-              value={sourceToken}
+              value={data.sourceToken}
               className='h-9 w-full border p-2 text-md focus:outline-none'
               title='Source Token'
-              name='source_token'
-              onChange={handleSrcTokenChange}
+              name='sourceToken'
+              onChange={handleChange}
               type='text' />
           </div>
           <div className='w-1/3 mb-3'>
             <label className='text-md mb-2'>Target Chain</label>
-            <CustomDropDown value={targetChain} onChange={handleTargetChainChange} dropdownList={chainList} />
+            <CustomDropDown value={data.targetChain} onChange={handleTargetChainChange} dropdownList={chainList} />
           </div>
           <div className='w-1/3 mb-3 flex flex-col'>
             <label className='text-md mb-2'>Target Token</label>
             <input
-              value={targetToken}
+              value={data.targetToken}
               className='h-9 w-full border p-2 text-md focus:outline-none'
               title='Target Token'
               disabled
-              name='target_token'
+              name='targetToken'
               type='text' />
           </div>
           <div className='w-1/3 mb-3 flex flex-col'>
             <label className='text-md mb-2'>Amount</label>
             <input
               className='h-9 w-full border p-2 text-md focus:outline-none'
-              value={transferAmount}
-              onChange={handleTransferAmountChange}
+              value={data.transferAmount}
+              onChange={handleChange}
               title='Amount'
-              name='amount'
+              name='transferAmount'
               type='text' />
           </div>
         </form>
