@@ -3,10 +3,14 @@ import './index.css';
 import ReactDOM from 'react-dom';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { WalletContextDataProvider } from './hooks/WalletContext';
+import { MetaMaskProvider } from 'metamask-react';
 
 ReactDOM.render(
   <React.StrictMode>
+    <MetaMaskProvider>
     <App />
+    </MetaMaskProvider>
   </React.StrictMode>
 ,document.getElementById('root') as HTMLElement);
 
