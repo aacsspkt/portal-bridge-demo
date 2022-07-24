@@ -3,10 +3,11 @@ import { CustomDropDown } from './components/CustomDropdown';
 import './App.css';
 import { deriveCorrespondingToken } from "./functions";
 import { CHAINS, ChainName, toChainId } from '@certusone/wormhole-sdk';
-<<<<<<< HEAD
 import { PublicKey } from '@solana/web3.js';
 import { attestToken } from './functions/attestTokens';
 import { ethers, Signer, Wallet } from 'ethers';
+import { useWallet } from './hooks/useWallet';
+import { WalletContextData } from './hooks/WalletContext';
 
 interface TokenTransferForm {
   sourceChain: {
@@ -30,10 +31,6 @@ interface TokenTransferForm {
     error: string | null
   }
 }
-=======
-import { useWallet } from './hooks/useWallet';
-import { WalletContextData } from './hooks/WalletContext';
->>>>>>> 043c76f98bde05100498906829d834ac50d57602
 
 function App() {
   const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item !== "unset");
@@ -92,7 +89,7 @@ function App() {
     });
   }
 
-  console.log(((window as any).ethereum));
+  console.log(((window as any).eth));
 
   useEffect(() => {
     const getAndSetTargetToken = async () => {
@@ -120,21 +117,21 @@ function App() {
   const [isMetamaskConnected, setIsMetamaskConnected] = useState(false);
   const [phantomButtonText, setPhantomButtonText] = useState('Connect Phantom');
   const [isPhantomConnected, setIsPhantomConnected] = useState(false);
-  const {  accounts,
+  const { accounts,
     walletConnected,
     network,
     connectWallet,
     disconnectWallet,
-    trimWalletAddress} = useWallet();
+    trimWalletAddress } = useWallet();
 
   return (
     <div className="w-full p-4">
       <section className='w-full flex flex-row mb-4 gap-4'>
-        <button className='p-2 w-40 shadow bg-amber-500 rounded text-center' 
-        type='button'
-        onClick={()=>walletConnected? disconnectWallet(): connectWallet()} >
-          {walletConnected?trimWalletAddress(accounts):metamaskButtonText }
-          </button>
+        <button className='p-2 w-40 shadow bg-amber-500 rounded text-center'
+          type='button'
+          onClick={() => walletConnected ? disconnectWallet() : connectWallet()} >
+          {walletConnected ? trimWalletAddress(accounts) : metamaskButtonText}
+        </button>
         <button className='p-2 w-40 shadow bg-indigo-500 rounded text-center' type='button' >{phantomButtonText}</button>
       </section>
 
