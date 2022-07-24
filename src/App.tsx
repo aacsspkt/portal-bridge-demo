@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { CustomDropDown } from './components/CustomDropdown';
 import './App.css';
 import { deriveCorrespondingToken } from "./functions";
 import { CHAINS, ChainName, toChainId } from '@certusone/wormhole-sdk';
 import { useWallet } from './hooks/useWallet';
+import { WalletContextData } from './hooks/WalletContext';
 
 function App() {
   const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item != "unset");
@@ -78,8 +79,8 @@ function App() {
       <section className='w-full flex flex-row mb-4 gap-4'>
         <button className='p-2 w-40 shadow bg-amber-500 rounded text-center' 
         type='button'
-        onClick={()=>walletConnected? disconnectWallet(): connectWallet()} >
-          {walletConnected?trimWalletAddress(accounts):metamaskButtonText }
+        onClick={()=>walletConnected? disconnectWallet(): connectWallet(window)} >
+          {walletConnected?trimWalletAddress(account):metamaskButtonText }
           </button>
         <button className='p-2 w-40 shadow bg-indigo-500 rounded text-center' type='button' >{phantomButtonText}</button>
       </section>

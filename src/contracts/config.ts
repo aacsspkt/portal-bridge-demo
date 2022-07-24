@@ -3,8 +3,7 @@ export const EthereumTestnetConfig= {
 
     mainnet :{
 
-    
-    chainId: [1],
+        chainId: [1],
     chainName: "Ethereum Mainnet",
     rpcUrls: "https://mainnet.infura.io/v3/",
     nativeCurrency: {
