@@ -1,10 +1,4 @@
-import {
-	attestFromEth,
-	ChainId,
-	getEmitterAddressEth,
-	parseSequenceFromLogEth,
-	toChainName,
-} from "@certusone/wormhole-sdk";
+import { attestFromEth, ChainName, getEmitterAddressEth, parseSequenceFromLogEth } from "@certusone/wormhole-sdk";
 import { ethers } from "ethers";
 import { BRIDGE_ADDRESSES, TOKEN_BRIDGE_ADDRESS, WORMHOLE_REST_ADDRESS } from "../constants";
 import { createVaaURL } from "./createVaaUrl";
@@ -16,9 +10,9 @@ import { createVaaURL } from "./createVaaUrl";
  * @param tokenAddress Token address
  * @returns Vaa URL of contract receipt of the attestation
  */
-export async function attestToken(sourceChain: ChainId, signer: ethers.Signer, tokenAddress: string) {
+export async function attestToken(sourceChain: ChainName, signer: ethers.Signer, tokenAddress: string) {
 	let tokenAttestation: ethers.ContractReceipt;
-	switch (toChainName(sourceChain)) {
+	switch (sourceChain) {
 		case "ethereum":
 			const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS["ethereum"].address;
 			tokenAttestation = await attestFromEth(tokenBridgeAddress, signer, tokenAddress);
