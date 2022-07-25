@@ -1,5 +1,4 @@
 import './App.css';
-import detectEthereumProvider from "@metamask/detect-provider";
 
 import React, {
   useEffect,
@@ -7,31 +6,35 @@ import React, {
 } from 'react';
 
 import base58 from 'bs58';
-import { ethers} from 'ethers';
+import { ethers } from 'ethers';
 
 import {
   ChainName,
   CHAINS,
   createPostVaaInstructionSolana,
+  redeemOnSolana,
   toChainId,
 } from '@certusone/wormhole-sdk';
-import * as splToken from '@solana/spl-token';
+import detectEthereumProvider from '@metamask/detect-provider';
 import {
   Keypair,
   PublicKey,
   Transaction,
 } from '@solana/web3.js';
 
-import { CustomDropDown } from './components/CustomDropdown';
+import { CustomDropDown } from './components';
 import {
   BRIDGE_ADDRESSES,
   CONNECTION,
   RECIPIENT_WALLET_ADDRESS,
+  TOKEN_BRIDGE_ADDRESS,
 } from './constants';
-import { deriveCorrespondingToken } from './functions';
-import { transferTokens } from './functions/transferTokens';
-import {  useEthereumProvider } from './hooks/EthereumContextProvider';
-
+import {
+  deriveCorrespondingToken,
+  sendAndConfirmTransactions,
+  transferTokens,
+} from './functions';
+import { useEthereumProvider } from './hooks/EthereumContextProvider';
 
 interface TokenTransferForm {
   sourceChain: {
@@ -120,7 +123,7 @@ function App() {
     //   new PublicKey(data.targetToken.value),
     //   RECIPIENT_WALLET_ADDRESS
     // );
-    
+
 
     const detectedProvider = await detectEthereumProvider
     const provider = new ethers.providers.Web3Provider(
@@ -136,7 +139,8 @@ function App() {
     const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
 
     try {
-      const txn = new Transaction()
+      //post vaa
+      const postVaaTxn = new Transaction()
         .add(
           await createPostVaaInstructionSolana(
             BRIDGE_ADDRESSES["solana"].address,
@@ -145,32 +149,19 @@ function App() {
             keypair
           )
         );
-      const lbh = await CONNECTION.getLatestBlockhash();
-      txn.feePayer = RECIPIENT_WALLET_ADDRESS;
-      txn.recentBlockhash = lbh.blockhash;
-      txn.lastValidBlockHeight = lbh.lastValidBlockHeight;
-      const signedTxn = await CONNECTION.sendTransaction(txn, [keypair], {
-        preflightCommitment: 'processed',
-        skipPreflight: false,
-      });
-      // need to show a toast that txn is sent
-      const { value: { err } } = await CONNECTION.confirmTransaction(
-        {
-          signature: signedTxn,
-          blockhash: lbh.blockhash,
-          lastValidBlockHeight: lbh.lastValidBlockHeight
-        },
-        "confirmed"
+
+      // redeem token
+      const redeemTxn = await redeemOnSolana(
+        CONNECTION,
+        BRIDGE_ADDRESSES["solana"].address,
+        TOKEN_BRIDGE_ADDRESS["solana"].address,
+        RECIPIENT_WALLET_ADDRESS.toString(),
+        signedVAA.vaaBytes
       );
-      if (!err) {
-        // show success toast
-      } else {
-        console.log(err);
-        // show a toast to show error;
-      }
+
+      await sendAndConfirmTransactions(CONNECTION, [postVaaTxn, redeemTxn], keypair);
     } catch (error) {
       console.log(error);
-      // need to show a toast to show error occured.
     }
   }
 
@@ -203,7 +194,7 @@ function App() {
   }, [data.sourceChain, data.sourceToken, data.targetChain])
 
   const [metamaskButtonText] = useState('Connect Metamask');
-  const { 
+  const {
     connect,
     disconnect,
     provider,
@@ -212,7 +203,7 @@ function App() {
     signerAddress,
     providerError,
     walletConnected,
-    trimWalletAddress} = useEthereumProvider()
+    trimWalletAddress } = useEthereumProvider()
 
   return (
     <div className="w-full h-screen flex flex-col">
@@ -278,7 +269,7 @@ function App() {
                 type='text' />
             </div>
             <button type='submit' className='p-2 w-40 shadow text-white bg-blue-500 my-4 rounded text-center'
-           >Transfer</button>
+            >Transfer</button>
           </form>
         </div>
       </section>
