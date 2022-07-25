@@ -9,10 +9,10 @@ import { MetaMaskProvider } from 'metamask-react';
 ReactDOM.render(
   <React.StrictMode>
     <MetaMaskProvider>
-    <App />
+      <App />
     </MetaMaskProvider>
   </React.StrictMode>
-,document.getElementById('root') as HTMLElement);
+  , document.getElementById('root') as HTMLElement);
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
