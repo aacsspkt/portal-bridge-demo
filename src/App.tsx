@@ -1,19 +1,18 @@
 import './App.css';
+import detectEthereumProvider from "@metamask/detect-provider";
 
 import React, {
-  useContext,
   useEffect,
   useState,
 } from 'react';
 
 import base58 from 'bs58';
-import { ethers, Signer, Wallet } from 'ethers';
+import { ethers} from 'ethers';
 
 import {
   ChainName,
   CHAINS,
   createPostVaaInstructionSolana,
-  hexToUint8Array,
   toChainId,
 } from '@certusone/wormhole-sdk';
 import * as splToken from '@solana/spl-token';
@@ -31,9 +30,8 @@ import {
 } from './constants';
 import { deriveCorrespondingToken } from './functions';
 import { transferTokens } from './functions/transferTokens';
-import { useWallet } from './hooks/useWallet';
-import { EthereumProviderProvider, useEthereumProvider } from './hooks/EthereumContextProvider';
-import { disconnect } from 'process';
+import {  useEthereumProvider } from './hooks/EthereumContextProvider';
+
 
 interface TokenTransferForm {
   sourceChain: {
@@ -118,11 +116,13 @@ function App() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const recipientTokenAccount = splToken.getAssociatedTokenAddress(
-      new PublicKey(data.targetToken.value),
-      RECIPIENT_WALLET_ADDRESS
-    );
+    // const recipientTokenAccount = splToken.getAssociatedTokenAddress(
+    //   new PublicKey(data.targetToken.value),
+    //   RECIPIENT_WALLET_ADDRESS
+    // );
+    
 
+    const detectedProvider = await detectEthereumProvider
     const provider = new ethers.providers.Web3Provider(
       // @ts-ignore
       detectedProvider,
@@ -132,6 +132,7 @@ function App() {
     const decimals = 10; // need to figure out how to get decimal value of a token in another chain
     const amount = BigInt(parseFloat(data.transferAmount.value) * decimals);
     const signedVAA = await transferTokens(data.sourceChain.value, signer, data.targetToken.value, amount, RECIPIENT_WALLET_ADDRESS.toBytes());
+    console.log("signedVaa", signedVAA)
     const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
 
     try {
