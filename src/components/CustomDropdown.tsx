@@ -1,10 +1,11 @@
 import React, { FC, useRef, useState } from 'react';
 
 export const CustomDropDown: FC<{
+    className?: string,
     dropdownList: string[]
     value: string,
     onChange: Function
-}> = ({ dropdownList, value, onChange }) => {
+}> = ({ className, dropdownList, value, onChange }) => {
     const [isFocused, setIsFocused] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
     const onSelected = (selected: string) => {
@@ -12,7 +13,7 @@ export const CustomDropDown: FC<{
         ref.current?.blur();
     };
     return (
-        <div ref={ref} className='w-full relative' tabIndex={0} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}>
+        <div ref={ref} className={`w-full relative ${className}`} tabIndex={0} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}>
             <div className='border p-1 h-9'>
                 <span className='text-md capitalize'>{value}</span>
             </div>
