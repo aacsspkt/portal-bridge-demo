@@ -222,16 +222,16 @@ function App() {
       </nav>
       <section className='w-full p-3 h-full'>
         <div className='container flex flex-row mx-auto overflow-y-auto'>
-          <form className='w-full' onSubmit={handleSubmit}>
+          <form className='w-full space-y-3' onSubmit={handleSubmit}>
             <legend className='w-full text-3xl mt-5 mb-6'>Token Transfer</legend>
 
-            <div className='w-2/5 mb-3'>
-              <label className='text-md mb-3'>Source Chain</label>
+            <div className='w-2/5 space-y-2'>
+              <label className='text-md '>Source Chain</label>
               <CustomDropDown className="" value={data.sourceChain.value} onChange={handleSourceChainChange} dropdownList={chainList} />
               {data.sourceChain.error ?? <span className='text-red-500 text-sm'>{data.sourceChain.error}</span>}
             </div>
-            <div className='w-2/5 mb-3 flex flex-col'>
-              <label className='text-md mb-2'>Source Token</label>
+            <div className='w-2/5 space-y-2'>
+              <label className='text-md '>Source Token</label>
               <input
                 value={data.sourceToken.value}
                 className='h-9 w-full border p-2 text-md focus:outline-none'
@@ -240,12 +240,12 @@ function App() {
                 onChange={handleChange}
                 type='text' />
             </div>
-            <div className='w-2/5 mb-3'>
-              <label className='text-md mb-2'>Target Chain</label>
+            <div className='w-2/5 space-y-2'>
+              <label className='text-md '>Target Chain</label>
               <CustomDropDown value={data.targetChain.value} onChange={handleTargetChainChange} dropdownList={chainList} />
             </div>
-            <div className='w-2/5 mb-3 flex flex-col'>
-              <label className='text-md mb-2'>Target Token</label>
+            <div className='w-2/5 space-y-2'>
+              <label className='text-md '>Target Token</label>
               <input
                 value={data.targetToken.value}
                 className='h-9 w-full border p-2 text-md focus:outline-none'
@@ -254,8 +254,8 @@ function App() {
                 name='targetToken'
                 type='text' />
             </div>
-            <div className='w-2/5 mb-3 flex flex-col'>
-              <label className='text-md mb-2'>Amount</label>
+            <div className='w-2/5 space-y-2'>
+              <label className='text-md '>Amount</label>
               <input
                 className='h-9 w-full border p-2 text-md focus:outline-none'
                 value={data.transferAmount.value}
