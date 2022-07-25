@@ -1,5 +1,7 @@
-import { clusterApiUrl, Connection } from "@solana/web3.js";
+import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
 import { BridgeConfig, CHAIN_NAMES } from "./types";
+
+export const RECIPIENT_WALLET_ADDRESS = new PublicKey("CSbNAhedp9JBjchyoPdBH4QWgmrncuhx6SwQxv4gdqhP");
 
 export const SOLANA_TOKEN_BRIDGE_ADDRESS = "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb";
 export const CONNECTION = new Connection(clusterApiUrl("mainnet-beta"));

@@ -7,6 +7,8 @@ import { PublicKey } from '@solana/web3.js';
 import { attestToken } from './functions/attestTokens';
 import { useWallet } from './hooks/useWallet';
 import { WalletContextData } from './hooks/WalletContext';
+import { ethers } from 'ethers';
+import { transferTokens } from './functions/transferTokens';
 
 interface TokenTransferForm {
   sourceChain: {
@@ -86,6 +88,19 @@ function App() {
         error: null,
       }
     });
+  }
+
+  const handletransferToken = async ()=>{
+    
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    transferTokens(data.sourceChain,
+      signer,
+      data.sourceToken,
+      data.transferAmount,
+      data.targetChain,
+      data.targetToken)
+
   }
 
   useEffect(() => {
