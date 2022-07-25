@@ -42,6 +42,6 @@ export async function transferTokens(
 			return signedVAA;
 
 		default:
-			break;
+			throw new Error("Not Implemented");
 	}
 }

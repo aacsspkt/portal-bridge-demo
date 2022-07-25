@@ -1,12 +1,35 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { CustomDropDown } from './components/CustomDropdown';
 import './App.css';
-import { deriveCorrespondingToken } from "./functions";
-import { CHAINS, ChainName, toChainId } from '@certusone/wormhole-sdk';
-import { PublicKey } from '@solana/web3.js';
-import { attestToken } from './functions/attestTokens';
+
+import React, {
+  useEffect,
+  useState,
+} from 'react';
+
+import base58 from 'bs58';
+import { Wallet } from 'ethers';
+
+import {
+  ChainName,
+  CHAINS,
+  createPostVaaInstructionSolana,
+  toChainId,
+} from '@certusone/wormhole-sdk';
+import * as splToken from '@solana/spl-token';
+import {
+  Keypair,
+  PublicKey,
+  Transaction,
+} from '@solana/web3.js';
+
+import { CustomDropDown } from './components/CustomDropdown';
+import {
+  BRIDGE_ADDRESSES,
+  CONNECTION,
+  RECIPIENT_WALLET_ADDRESS,
+} from './constants';
+import { deriveCorrespondingToken } from './functions';
+import { transferTokens } from './functions/transferTokens';
 import { useWallet } from './hooks/useWallet';
-import { WalletContextData } from './hooks/WalletContext';
 
 interface TokenTransferForm {
   sourceChain: {
@@ -88,6 +111,60 @@ function App() {
     });
   }
 
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const recipientTokenAccount = splToken.getAssociatedTokenAddress(
+      new PublicKey(data.targetToken.value),
+      RECIPIENT_WALLET_ADDRESS
+    );
+
+    const privateKey = "jowiwyr0q82hfh8W3YRDBSFQUY32312312DSDFCSFSFW"; // fake
+    const signer = new Wallet(privateKey);
+    const decimals = 10; // need to figure out how to get decimal value of a token in another chain
+    const amount = BigInt(parseFloat(data.transferAmount.value) * decimals);
+    const signedVAA = await transferTokens(data.sourceChain.value, signer, data.targetToken.value, amount, RECIPIENT_WALLET_ADDRESS.toBytes());
+    const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
+
+    try {
+      const txn = new Transaction()
+        .add(
+          await createPostVaaInstructionSolana(
+            BRIDGE_ADDRESSES["solana"].address,
+            RECIPIENT_WALLET_ADDRESS.toString(),
+            Buffer.from(signedVAA.vaaBytes),
+            keypair
+          )
+        );
+      const lbh = await CONNECTION.getLatestBlockhash();
+      txn.feePayer = RECIPIENT_WALLET_ADDRESS;
+      txn.recentBlockhash = lbh.blockhash;
+      txn.lastValidBlockHeight = lbh.lastValidBlockHeight;
+      const signedTxn = await CONNECTION.sendTransaction(txn, [keypair], {
+        preflightCommitment: 'processed',
+        skipPreflight: false,
+      });
+      // need to show a toast that txn is sent
+      const { value: { err } } = await CONNECTION.confirmTransaction(
+        {
+          signature: signedTxn,
+          blockhash: lbh.blockhash,
+          lastValidBlockHeight: lbh.lastValidBlockHeight
+        },
+        "confirmed"
+      );
+      if (!err) {
+        // show success toast
+      } else {
+        console.log(err);
+        // show a toast to show error;
+      }
+    } catch (error) {
+      console.log(error);
+      // need to show a toast to show error occured.
+    }
+  }
+
   useEffect(() => {
     const getAndSetTargetToken = async () => {
       let targetToken: PublicKey | null;
@@ -101,7 +178,13 @@ function App() {
           }
         });
       } else {
-        // const vaaUrl = await attestToken(data.sourceChain, signer, data.sourceToken);
+        setData({
+          ...data,
+          targetToken: {
+            value: "",
+            error: "This token is not registered."
+          }
+        })
       }
     }
 
@@ -110,10 +193,7 @@ function App() {
     }
   }, [data.sourceChain, data.sourceToken, data.targetChain])
 
-  const [metamaskButtonText, setMetamaskButtonText] = useState('Connect Metamask');
-  const [isMetamaskConnected, setIsMetamaskConnected] = useState(false);
-  const [phantomButtonText, setPhantomButtonText] = useState('Connect Phantom');
-  const [isPhantomConnected, setIsPhantomConnected] = useState(false);
+  const [metamaskButtonText] = useState('Connect Metamask');
   const { accounts,
     walletConnected,
     network,
@@ -122,58 +202,71 @@ function App() {
     trimWalletAddress } = useWallet();
 
   return (
-    <div className="w-full p-4">
-      <section className='w-full flex flex-row mb-4 gap-4'>
-        <button className='p-2 w-40 shadow bg-amber-500 rounded text-center'
-          type='button'
-          onClick={() => walletConnected ? disconnectWallet() : connectWallet()} >
-          {walletConnected ? trimWalletAddress(accounts) : metamaskButtonText}
-        </button>
-        <button className='p-2 w-40 shadow bg-indigo-500 rounded text-center' type='button' >{phantomButtonText}</button>
-      </section>
+    <div className="w-full h-screen flex flex-col">
+      <nav className='w-full shadow flex items-center p-3'>
+        <div className='container flex flex-row justify-between mx-auto'>
+          <ul className='flex flex-row'>
+            <li className="p-2 w-24 text-center hover:cursor-pointer">
+              <a className="text-indigo-700 capitalize hover:text-indigo-500" href="/">transfer</a>
+            </li>
+            <li className="p-2 w-24 text-center hover:drop-shadow-2xl hover:cursor-pointer">
+              <a className="capitalize hover:text-indigo-500" href="#">register</a>
+            </li>
+          </ul>
+          <button className='ml-auto p-2 w-40 shadow bg-amber-500 rounded text-center'
+            type='button'
+            onClick={() => walletConnected ? disconnectWallet() : connectWallet()} >
+            {walletConnected ? trimWalletAddress(accounts) : metamaskButtonText}
+          </button>
+        </div>
+      </nav>
+      <section className='w-full p-3 h-full'>
+        <div className='container flex flex-row mx-auto overflow-y-auto'>
+          <form className='w-full' onSubmit={handleSubmit}>
+            <legend className='w-full text-3xl mt-5 mb-6'>Token Transfer</legend>
 
-      <section className='from-to'>
-        <form>
-          <div className='w-1/3 mb-3'>
-            <label className='text-md mb-2'>Source Chain</label>
-            <CustomDropDown value={data.sourceChain.value} onChange={handleSourceChainChange} dropdownList={chainList} />
-            {data.sourceChain.error ?? <span className='text-red-500 text-sm'>{data.sourceChain.error}</span>}
-          </div>
-          <div className='w-1/3 mb-3 flex flex-col'>
-            <label className='text-md mb-2'>Source Token</label>
-            <input
-              value={data.sourceToken.value}
-              className='h-9 w-full border p-2 text-md focus:outline-none'
-              title='Source Token'
-              name='sourceToken'
-              onChange={handleChange}
-              type='text' />
-          </div>
-          <div className='w-1/3 mb-3'>
-            <label className='text-md mb-2'>Target Chain</label>
-            <CustomDropDown value={data.targetChain.value} onChange={handleTargetChainChange} dropdownList={chainList} />
-          </div>
-          <div className='w-1/3 mb-3 flex flex-col'>
-            <label className='text-md mb-2'>Target Token</label>
-            <input
-              value={data.targetToken.value}
-              className='h-9 w-full border p-2 text-md focus:outline-none'
-              title='Target Token'
-              disabled
-              name='targetToken'
-              type='text' />
-          </div>
-          <div className='w-1/3 mb-3 flex flex-col'>
-            <label className='text-md mb-2'>Amount</label>
-            <input
-              className='h-9 w-full border p-2 text-md focus:outline-none'
-              value={data.transferAmount.value}
-              onChange={handleChange}
-              title='Amount'
-              name='transferAmount'
-              type='text' />
-          </div>
-        </form>
+            <div className='w-2/5 mb-3'>
+              <label className='text-md mb-3'>Source Chain</label>
+              <CustomDropDown className="" value={data.sourceChain.value} onChange={handleSourceChainChange} dropdownList={chainList} />
+              {data.sourceChain.error ?? <span className='text-red-500 text-sm'>{data.sourceChain.error}</span>}
+            </div>
+            <div className='w-2/5 mb-3 flex flex-col'>
+              <label className='text-md mb-2'>Source Token</label>
+              <input
+                value={data.sourceToken.value}
+                className='h-9 w-full border p-2 text-md focus:outline-none'
+                title='Source Token'
+                name='sourceToken'
+                onChange={handleChange}
+                type='text' />
+            </div>
+            <div className='w-2/5 mb-3'>
+              <label className='text-md mb-2'>Target Chain</label>
+              <CustomDropDown value={data.targetChain.value} onChange={handleTargetChainChange} dropdownList={chainList} />
+            </div>
+            <div className='w-2/5 mb-3 flex flex-col'>
+              <label className='text-md mb-2'>Target Token</label>
+              <input
+                value={data.targetToken.value}
+                className='h-9 w-full border p-2 text-md focus:outline-none'
+                title='Target Token'
+                disabled
+                name='targetToken'
+                type='text' />
+            </div>
+            <div className='w-2/5 mb-3 flex flex-col'>
+              <label className='text-md mb-2'>Amount</label>
+              <input
+                className='h-9 w-full border p-2 text-md focus:outline-none'
+                value={data.transferAmount.value}
+                onChange={handleChange}
+                title='Amount'
+                name='transferAmount'
+                type='text' />
+            </div>
+            <button type='submit' className='p-2 w-40 shadow text-white bg-blue-500 my-4 rounded text-center'>Tranfer</button>
+          </form>
+        </div>
       </section>
     </div>
   );
