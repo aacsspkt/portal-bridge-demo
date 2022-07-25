@@ -1,17 +1,19 @@
 import './App.css';
 
 import React, {
+  useContext,
   useEffect,
   useState,
 } from 'react';
 
 import base58 from 'bs58';
-import { Wallet } from 'ethers';
+import { ethers, Signer, Wallet } from 'ethers';
 
 import {
   ChainName,
   CHAINS,
   createPostVaaInstructionSolana,
+  hexToUint8Array,
   toChainId,
 } from '@certusone/wormhole-sdk';
 import * as splToken from '@solana/spl-token';
@@ -30,6 +32,8 @@ import {
 import { deriveCorrespondingToken } from './functions';
 import { transferTokens } from './functions/transferTokens';
 import { useWallet } from './hooks/useWallet';
+import { EthereumProviderProvider, useEthereumProvider } from './hooks/EthereumContextProvider';
+import { disconnect } from 'process';
 
 interface TokenTransferForm {
   sourceChain: {
@@ -119,8 +123,12 @@ function App() {
       RECIPIENT_WALLET_ADDRESS
     );
 
-    const privateKey = "jowiwyr0q82hfh8W3YRDBSFQUY32312312DSDFCSFSFW"; // fake
-    const signer = new Wallet(privateKey);
+    const provider = new ethers.providers.Web3Provider(
+      // @ts-ignore
+      detectedProvider,
+      "any"
+    );
+    const signer = provider.getSigner();
     const decimals = 10; // need to figure out how to get decimal value of a token in another chain
     const amount = BigInt(parseFloat(data.transferAmount.value) * decimals);
     const signedVAA = await transferTokens(data.sourceChain.value, signer, data.targetToken.value, amount, RECIPIENT_WALLET_ADDRESS.toBytes());
@@ -194,12 +202,16 @@ function App() {
   }, [data.sourceChain, data.sourceToken, data.targetChain])
 
   const [metamaskButtonText] = useState('Connect Metamask');
-  const { accounts,
+  const { 
+    connect,
+    disconnect,
+    provider,
+    chainId,
+    signer,
+    signerAddress,
+    providerError,
     walletConnected,
-    network,
-    connectWallet,
-    disconnectWallet,
-    trimWalletAddress } = useWallet();
+    trimWalletAddress} = useEthereumProvider()
 
   return (
     <div className="w-full h-screen flex flex-col">
@@ -215,8 +227,8 @@ function App() {
           </ul>
           <button className='ml-auto p-2 w-40 shadow bg-amber-500 rounded text-center'
             type='button'
-            onClick={() => walletConnected ? disconnectWallet() : connectWallet()} >
-            {walletConnected ? trimWalletAddress(accounts) : metamaskButtonText}
+            onClick={() => walletConnected ? disconnect() : connect()} >
+            {walletConnected ? trimWalletAddress(signerAddress) : metamaskButtonText}
           </button>
         </div>
       </nav>
@@ -264,7 +276,8 @@ function App() {
                 name='transferAmount'
                 type='text' />
             </div>
-            <button type='submit' className='p-2 w-40 shadow text-white bg-blue-500 my-4 rounded text-center'>Tranfer</button>
+            <button type='submit' className='p-2 w-40 shadow text-white bg-blue-500 my-4 rounded text-center'
+           >Transfer</button>
           </form>
         </div>
       </section>
