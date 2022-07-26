@@ -18,7 +18,7 @@ export default function Navbar (props: INavbarProps) {
         walletConnected,
         trimWalletAddress } = useEthereumProvider()
   return (
-    <div className="w-full h-screen flex flex-col">
+    <div className="w-full flex flex-col">
       <nav className='w-full shadow flex items-center p-3'>
         <div className='container flex flex-row justify-between mx-auto'>
           <ul className='flex flex-row'>
