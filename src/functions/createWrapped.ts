@@ -2,7 +2,6 @@ import { createWrappedOnEth, ChainName, getEmitterAddressEth,
 	parseSequenceFromLogEth, getSignedVAA, getForeignAssetSolana,
 	tryNativeToHexString, hexToUint8Array} from "@certusone/wormhole-sdk";
 import { ethers } from "ethers";
-import { wrap } from "module";
 import { BRIDGE_ADDRESSES, TOKEN_BRIDGE_ADDRESS, WORMHOLE_REST_ADDRESS, 
 		CONNECTION as connection, SOLANA_TOKEN_BRIDGE_ADDRESS,
  } from "../constants";
