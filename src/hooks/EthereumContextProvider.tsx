@@ -1,11 +1,16 @@
-import detectEthereumProvider from "@metamask/detect-provider";
-import { BigNumber, ethers } from "ethers";
 import React, {
   useCallback,
   useContext,
   useMemo,
   useState,
-} from "react";
+} from 'react';
+
+import {
+  BigNumber,
+  ethers,
+} from 'ethers';
+
+import detectEthereumProvider from '@metamask/detect-provider';
 
 export type Provider = ethers.providers.Web3Provider | undefined;
 export type Signer = ethers.Signer | undefined;
@@ -19,24 +24,24 @@ interface IEthereumProviderContext {
   signerAddress: string | undefined;
   providerError: string | null;
   walletConnected: boolean;
-  trimWalletAddress: (walletAddress: string  | undefined) => string |undefined,
+  trimWalletAddress: (walletAddress: string | undefined) => string | undefined,
 
 }
 
 const EthereumProviderContext = React.createContext<IEthereumProviderContext>({
-  connect: () => {},
-  disconnect: () => {},
+  connect: () => { },
+  disconnect: () => { },
   provider: undefined,
   chainId: undefined,
   signer: undefined,
   signerAddress: undefined,
   providerError: null,
   walletConnected: false,
-  trimWalletAddress: (undefined)=>undefined
+  trimWalletAddress: (walletAddress: string | undefined) => walletAddress
 });
 export const EthereumProviderProvider = ({
-  children 
-} :any) => {
+  children
+}: any) => {
   const [providerError, setProviderError] = useState<string | null>(null);
   const [provider, setProvider] = useState<Provider>(undefined);
   const [chainId, setChainId] = useState<number | undefined>(undefined);
@@ -44,7 +49,7 @@ export const EthereumProviderProvider = ({
   const [signerAddress, setSignerAddress] = useState<string | undefined>(
     undefined
   );
-  const [walletConnected, setWalletConnected]= useState<boolean>(false)
+  const [walletConnected, setWalletConnected] = useState<boolean>(false)
   const connect = useCallback(() => {
     setProviderError(null);
     detectEthereumProvider()
@@ -90,7 +95,7 @@ export const EthereumProviderProvider = ({
                 detectedProvider.on("chainChanged", (chainId) => {
                   try {
                     setChainId(BigNumber.from(chainId).toNumber());
-                  } catch (e) {}
+                  } catch (e) { }
                 });
                 // @ts-ignore
                 detectedProvider.on("accountsChanged", (_accounts) => {
@@ -107,7 +112,7 @@ export const EthereumProviderProvider = ({
                           "An error occurred while getting the signer address"
                         );
                       });
-                  } catch (e) {}
+                  } catch (e) { }
                 });
               }
             })
@@ -124,12 +129,12 @@ export const EthereumProviderProvider = ({
         setProviderError("Please install MetaMask");
       });
   }, []);
-  const trimWalletAddress = (walletAddress: string | undefined) => {
+  const trimWalletAddress = useCallback((walletAddress: string | undefined) => {
     return `${walletAddress?.slice(0, 6)}.....${walletAddress?.slice(
       walletAddress?.length - 6,
       walletAddress?.length - 1
     )}`
-  }
+  }, []);
   const disconnect = useCallback(() => {
     setWalletConnected(false)
     setProviderError(null);

@@ -13,6 +13,7 @@ import {
 } from '@certusone/wormhole-sdk';
 
 import {
+  BRIDGE_ADDRESS,
   CONNECTION as connection,
   SOLANA_TOKEN_BRIDGE_ADDRESS,
   TOKEN_BRIDGE_ADDRESS,
