@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 
 import {
+  ChainId,
   ChainName,
   createWrappedOnEth,
   getEmitterAddressEth,
@@ -12,7 +13,6 @@ import {
 } from '@certusone/wormhole-sdk';
 
 import {
-  BRIDGE_ADDRESS,
   CONNECTION as connection,
   SOLANA_TOKEN_BRIDGE_ADDRESS,
   TOKEN_BRIDGE_ADDRESS,
@@ -20,14 +20,16 @@ import {
 } from '../constants';
 
 /**
- *
- * @param sourceChain Source Chain Id
+ * @param sourceChain Source Chain Name
+ * @param sourceChainId Source Chain Id
  * @param signer Signer
  * @param tokenAddress Token address
- * @returns Vaa URL of contract receipt of the attestation
+ * @param tokenAttestation token attestation (from attestTokens.ts)
+ * @returns wrapped token address in target chain
  */
 export async function createWrapped(
 	sourceChain: ChainName,
+	sourceChainId: ChainId,
 	signer: ethers.Signer,
 	tokenAddress: string,
 	tokenAttestation: ethers.ContractReceipt,
@@ -45,7 +47,6 @@ export async function createWrapped(
 			);
 			await createWrappedOnEth(tokenBridgeAddress, signer, signedVAA.vaaBytes);
 
-			let sourceChainId: any = BRIDGE_ADDRESS[sourceChain].address;
 			const wrappedTokenAddress = await getForeignAssetSolana(
 				connection,
 				SOLANA_TOKEN_BRIDGE_ADDRESS,
