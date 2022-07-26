@@ -4,6 +4,7 @@ import {
   ChainId,
   ChainName,
   createWrappedOnEth,
+  createWrappedOnSolana,
   getEmitterAddressEth,
   getForeignAssetSolana,
   getSignedVAA,
@@ -31,13 +32,14 @@ import {
 export async function createWrapped(
 	sourceChain: ChainName,
 	sourceChainId: ChainId,
-	signer: ethers.Signer,
+	payerAddress: string,
 	tokenAddress: string,
 	tokenAttestation: ethers.ContractReceipt,
 ) {
 	switch (sourceChain) {
-		case "ethereum":
-			const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS["ethereum"].address;
+		case "ethereum":{
+			const bridgeAddress = TOKEN_BRIDGE_ADDRESS["solana"].address;
+			const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS["solana"].address;
 			const emitterAddr = getEmitterAddressEth(tokenBridgeAddress);
 			const seq = parseSequenceFromLogEth(tokenAttestation, BRIDGE_ADDRESS["ethereum"].address);
 			const signedVAA = await getSignedVAA(
@@ -46,7 +48,7 @@ export async function createWrapped(
 				emitterAddr,
 				seq,
 			);
-			await createWrappedOnEth(tokenBridgeAddress, signer, signedVAA.vaaBytes);
+			await createWrappedOnSolana(connection, bridgeAddress, tokenBridgeAddress, payerAddress, signedVAA.vaaBytes);
 
 			const wrappedTokenAddress = await getForeignAssetSolana(
 				connection,
@@ -57,6 +59,7 @@ export async function createWrapped(
 
 			console.log("Wrapped token created at: ", wrappedTokenAddress);
 			return wrappedTokenAddress;
+		}
 
 		default:
 			break;
