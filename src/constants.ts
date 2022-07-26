@@ -11,7 +11,6 @@ import {
 
 export const RECIPIENT_WALLET_ADDRESS = new PublicKey("CSbNAhedp9JBjchyoPdBH4QWgmrncuhx6SwQxv4gdqhP");
 
-export const SOLANA_TOKEN_BRIDGE_ADDRESS = "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb";
 export const CONNECTION = new Connection(clusterApiUrl("mainnet-beta"));
 
 export const WORMHOLE_REST_ADDRESS = "https://wormhole-v2-mainnet-api.certus.one";

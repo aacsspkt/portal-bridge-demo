@@ -1,21 +1,24 @@
-import { PublicKey } from "@solana/web3.js";
 import {
-	ChainId,
-	getForeignAssetSolana,
-	hexToUint8Array,
-	toChainName,
-	tryNativeToHexString,
-} from "@certusone/wormhole-sdk";
-import { CONNECTION as connection, SOLANA_TOKEN_BRIDGE_ADDRESS } from "../constants";
+  ChainName,
+  getForeignAssetSolana,
+  hexToUint8Array,
+  tryNativeToHexString,
+} from '@certusone/wormhole-sdk';
+import { PublicKey } from '@solana/web3.js';
 
-export async function deriveCorrespondingToken(tokenAddress: string, sourceChainId: ChainId, targetChainId: ChainId) {
-	switch (toChainName(targetChainId)) {
+import {
+  CONNECTION as connection,
+  TOKEN_BRIDGE_ADDRESS,
+} from '../constants';
+
+export async function deriveCorrespondingToken(tokenAddress: string, sourceChain: ChainName, targetChain: ChainName) {
+	switch (targetChain) {
 		case "solana":
 			const str = await getForeignAssetSolana(
 				connection,
-				SOLANA_TOKEN_BRIDGE_ADDRESS,
-				sourceChainId,
-				hexToUint8Array(tryNativeToHexString(tokenAddress, sourceChainId)),
+				TOKEN_BRIDGE_ADDRESS["solana"].address,
+				sourceChain,
+				hexToUint8Array(tryNativeToHexString(tokenAddress, sourceChain)),
 			);
 			return str !== null ? new PublicKey(str) : str;
 
