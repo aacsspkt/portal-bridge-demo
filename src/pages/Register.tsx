@@ -11,7 +11,6 @@ import {
   CHAINS,
   createPostVaaInstructionSolana,
   redeemOnSolana,
-  toChainId,
 } from '@certusone/wormhole-sdk';
 import detectEthereumProvider from '@metamask/detect-provider';
 import {
@@ -33,9 +32,6 @@ import {
   sendAndConfirmTransactions,
   transferTokens,
 } from '../functions';
-
-interface ITransferProps {
-}
 
 interface TokenTransferForm {
   sourceChain: {
@@ -63,9 +59,9 @@ interface TokenTransferForm {
 interface IRegisterProps {
 }
 
-export default function Register (props: IRegisterProps) {
+export default function Register(props: IRegisterProps) {
   const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item !== "unset");
-  const [tokenExists,setTokenExists] = useState<boolean>(false);
+  const [tokenExists, setTokenExists] = useState<boolean>(false);
 
 
   const [data, setData] = useState<TokenTransferForm>({
@@ -125,7 +121,7 @@ export default function Register (props: IRegisterProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const detectedProvider = await detectEthereumProvider
+    const detectedProvider = detectEthereumProvider();
     const provider = new ethers.providers.Web3Provider(
       // @ts-ignore
       detectedProvider,
@@ -169,9 +165,7 @@ export default function Register (props: IRegisterProps) {
   useEffect(() => {
     const getAndSetTargetToken = async () => {
       let targetToken: PublicKey | null;
-     
-
-      targetToken = await deriveCorrespondingToken(data.sourceToken.value, toChainId(data.sourceChain.value), toChainId(data.targetChain.value));
+      targetToken = await deriveCorrespondingToken(data.sourceToken.value, data.sourceChain.value, data.targetChain.value);
       if (targetToken != null) {
         setTokenExists(true)
         setData({
@@ -191,51 +185,50 @@ export default function Register (props: IRegisterProps) {
         })
       }
     }
-
     if (data.sourceChain.value && data.sourceToken.value !== "" && data.targetChain.value) {
       getAndSetTargetToken()
     }
   }, [data])
   return (
-  <>
-<div className="w-full h-screen flex flex-col">
-      <Navbar />
+    <>
+      <div className="w-full h-screen flex flex-col">
+        <Navbar />
 
-      <section className='w-full p-3 h-full'>
-        <div className='container flex flex-row mx-auto overflow-y-auto'>
-          <form className='w-full space-y-3' onSubmit={()=>{}}>
-            <legend className='w-full text-3xl mt-5 mb-6'>Token Transfer</legend>
+        <section className='w-full p-3 h-full'>
+          <div className='container flex flex-row mx-auto overflow-y-auto'>
+            <form className='w-full space-y-3' onSubmit={handleSubmit}>
+              <legend className='w-full text-3xl mt-5 mb-6'>Token Transfer</legend>
 
-            <div className='w-2/5 space-y-2'>
-              <label className='text-md '>Source Chain</label>
-              <CustomDropDown className="" value={data.sourceChain.value} onChange={handleSourceChainChange} dropdownList={chainList} />
-              {data.sourceChain.error ?? <span className='text-red-500 text-sm'>{data.sourceChain.error}</span>}
-            </div>
-            <div className='w-2/5 space-y-2'>
-              <label className='text-md '>Source Token</label>
-              <input
-                value={data.sourceToken.value}
-                className='h-9 w-full border p-2 text-md focus:outline-none'
-                title='Source Token'
-                name='sourceToken'
-                onChange={handleChange}
-                type='text' />
-            </div>
-             <div className='w-2/5 space-y-2'>
+              <div className='w-2/5 space-y-2'>
+                <label className='text-md '>Source Chain</label>
+                <CustomDropDown className="" value={data.sourceChain.value} onChange={handleSourceChainChange} dropdownList={chainList} />
+                {data.sourceChain.error ?? <span className='text-red-500 text-sm'>{data.sourceChain.error}</span>}
+              </div>
+              <div className='w-2/5 space-y-2'>
+                <label className='text-md '>Source Token</label>
+                <input
+                  value={data.sourceToken.value}
+                  className='h-9 w-full border p-2 text-md focus:outline-none'
+                  title='Source Token'
+                  name='sourceToken'
+                  onChange={handleChange}
+                  type='text' />
+              </div>
+              <div className='w-2/5 space-y-2'>
                 <label className='text-md '>Target Chain</label>
                 <CustomDropDown value={data.targetChain.value} onChange={handleTargetChainChange} dropdownList={chainList} />
               </div>
-              
+
               {tokenExists && (<><div className='w-2/5 space-y-2'>
-                  <label className='text-md '>Target Token</label>
-                  <input
-                    value={data.targetToken.value}
-                    className='h-9 w-full border p-2 text-md focus:outline-none'
-                    title='Target Token'
-                    disabled
-                    name='targetToken'
-                    type='text' />
-                </div>
+                <label className='text-md '>Target Token</label>
+                <input
+                  value={data.targetToken.value}
+                  className='h-9 w-full border p-2 text-md focus:outline-none'
+                  title='Target Token'
+                  disabled
+                  name='targetToken'
+                  type='text' />
+              </div>
                 <div className='w-2/5 space-y-2'>
                   <label className='text-md '>Amount</label>
                   <input
@@ -248,16 +241,16 @@ export default function Register (props: IRegisterProps) {
                 </div></>)}
 
 
-                
-                {!tokenExists && (<button type='submit' className='p-2 w-40 shadow text-white bg-blue-500 my-4 rounded text-center'>
-                  Register
-                  </button>)}
-          </form>
-        </div>
-      </section>
-    </div>
 
-    
-  
-  </>)
+              {!tokenExists && (<button type='submit' className='p-2 w-40 shadow text-white bg-blue-500 my-4 rounded text-center'>
+                Register
+              </button>)}
+            </form>
+          </div>
+        </section>
+      </div>
+
+
+
+    </>)
 };

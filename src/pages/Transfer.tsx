@@ -11,7 +11,6 @@ import {
   CHAINS,
   createPostVaaInstructionSolana,
   redeemOnSolana,
-  toChainId,
 } from '@certusone/wormhole-sdk';
 import detectEthereumProvider from '@metamask/detect-provider';
 import {
@@ -121,7 +120,8 @@ export default function Transfer(props: ITransferProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const detectedProvider = await detectEthereumProvider
+    const detectedProvider = detectEthereumProvider();
+
     const provider = new ethers.providers.Web3Provider(
       // @ts-ignore
       detectedProvider,
@@ -165,9 +165,9 @@ export default function Transfer(props: ITransferProps) {
   useEffect(() => {
     const getAndSetTargetToken = async () => {
       let targetToken: PublicKey | null;
-     
 
-      targetToken = await deriveCorrespondingToken(data.sourceToken.value, toChainId(data.sourceChain.value), toChainId(data.targetChain.value));
+      targetToken = await deriveCorrespondingToken(data.sourceToken.value, data.sourceChain.value, data.targetChain.value);
+
       if (targetToken != null) {
         setData({
           ...data,
