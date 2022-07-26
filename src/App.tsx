@@ -1,30 +1,24 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 import './App.css';
-import Navbar from './components/Navbar';
-import Transfer from './pages/Transfer';
+
+import {
+  BrowserRouter,
+  Route,
+  Routes,
+} from 'react-router-dom';
+
 import Register from './pages/Register';
-
-
+import Transfer from './pages/Transfer';
 
 function App() {
-  
-
-  
-
 
   return (
     <>
-     
       <BrowserRouter>
-     
-      <Routes>
-        <Route  path="/" element={<Transfer/>}/>
-        <Route path="/register" element={<Register/>} />
-       
-      </Routes>
-    </BrowserRouter>
-     
-      
+        <Routes>
+          <Route path="/" element={<Transfer />} />
+          <Route path="/register" element={<Register />} />
+        </Routes>
+      </BrowserRouter>
     </>
   );
 }

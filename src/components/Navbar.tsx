@@ -1,22 +1,24 @@
 import * as React from 'react';
+
 import { Link } from 'react-router-dom';
+
 import { useEthereumProvider } from '../hooks/EthereumContextProvider';
 
 export interface INavbarProps {
 }
 
-export default function Navbar (props: INavbarProps) {
-    const [metamaskButtonText] = React.useState('Connect Metamask');
-    const {
-        connect,
-        disconnect,
-        provider,
-        chainId,
-        signer,
-        signerAddress,
-        providerError,
-        walletConnected,
-        trimWalletAddress } = useEthereumProvider()
+const Navbar = (props: INavbarProps) => {
+  const [metamaskButtonText] = React.useState('Connect Metamask');
+  const {
+    connect,
+    disconnect,
+    provider,
+    chainId,
+    signer,
+    signerAddress,
+    providerError,
+    walletConnected,
+    trimWalletAddress } = useEthereumProvider()
   return (
     <div className="w-full flex flex-col">
       <nav className='w-full shadow flex items-center p-3'>
@@ -36,8 +38,10 @@ export default function Navbar (props: INavbarProps) {
           </button>
         </div>
       </nav>
-     
-      
+
+
     </div>
   );
 }
+
+export default Navbar
