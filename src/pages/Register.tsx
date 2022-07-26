@@ -29,6 +29,7 @@ import {
   TOKEN_BRIDGE_ADDRESS,
 } from '../constants';
 import {
+  attestToken,
   deriveCorrespondingToken,
   sendAndConfirmTransactions,
   transferTokens,
@@ -134,8 +135,7 @@ export default function Register (props: IRegisterProps) {
 
     const signer = provider.getSigner();
     const decimals = 10; // need to figure out how to get decimal value of a token in another chain
-    const amount = BigInt(parseFloat(data.transferAmount.value) * decimals);
-    const signedVAA = await transferTokens(data.sourceChain.value, signer, data.targetToken.value, amount, RECIPIENT_WALLET_ADDRESS.toBytes());
+    const signedVAA = await attestToken(data.sourceChain.value, toChainId(data.sourceChain.value), signer, data.sourceToken.value);
     console.log("signedVaa", signedVAA)
     const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
 
@@ -203,7 +203,7 @@ export default function Register (props: IRegisterProps) {
 
       <section className='w-full p-3 h-full'>
         <div className='container flex flex-row mx-auto overflow-y-auto'>
-          <form className='w-full space-y-3' onSubmit={()=>{}}>
+          <form className='w-full space-y-3' onSubmit={handleSubmit}>
             <legend className='w-full text-3xl mt-5 mb-6'>Token Transfer</legend>
 
             <div className='w-2/5 space-y-2'>
