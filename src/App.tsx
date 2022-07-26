@@ -13,17 +13,12 @@ function App() {
 
   return (
     <>
-
       <BrowserRouter>
-
         <Routes>
           <Route path="/" element={<Transfer />} />
           <Route path="/register" element={<Register />} />
-
         </Routes>
       </BrowserRouter>
-
-
     </>
   );
 }

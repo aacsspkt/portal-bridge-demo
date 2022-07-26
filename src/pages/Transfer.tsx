@@ -1,68 +1,68 @@
 import React, {
-    useEffect,
-    useState,
-  } from 'react';
-  
-  import base58 from 'bs58';
-  import { ethers } from 'ethers';
-  
-  import {
-    ChainName,
-    CHAINS,
-    createPostVaaInstructionSolana,
-    redeemOnSolana,
-    toChainId,
-  } from '@certusone/wormhole-sdk';
-  import detectEthereumProvider from '@metamask/detect-provider';
-  import {
-    Keypair,
-    PublicKey,
-    Transaction,
-  } from '@solana/web3.js';
-  
-  import { CustomDropDown } from '../components';
-  import {
-    BRIDGE_ADDRESSES,
-    CONNECTION,
-    RECIPIENT_WALLET_ADDRESS,
-    TOKEN_BRIDGE_ADDRESS,
-  } from '../constants';
-  import {
-    deriveCorrespondingToken,
-    sendAndConfirmTransactions,
-    transferTokens,
-  } from '../functions';
-import Navbar from '../components/Navbar';
+  useEffect,
+  useState,
+} from 'react';
 
+import base58 from 'bs58';
+import { ethers } from 'ethers';
+
+import {
+  ChainName,
+  CHAINS,
+  createPostVaaInstructionSolana,
+  redeemOnSolana,
+  toChainId,
+} from '@certusone/wormhole-sdk';
+import detectEthereumProvider from '@metamask/detect-provider';
+import {
+  Keypair,
+  PublicKey,
+  Transaction,
+} from '@solana/web3.js';
+
+import { CustomDropDown } from '../components/CustomDropdown';
+import Navbar from '../components/Navbar';
+import {
+  BRIDGE_ADDRESS,
+  CONNECTION,
+  RECIPIENT_WALLET_ADDRESS,
+  TOKEN_BRIDGE_ADDRESS,
+} from '../constants';
+import {
+  deriveCorrespondingToken,
+  sendAndConfirmTransactions,
+  transferTokens,
+} from '../functions';
 
 interface ITransferProps {
 }
+
 interface TokenTransferForm {
-    sourceChain: {
-      value: ChainName,
-      error: string | null,
-    },
-    sourceToken: {
-      value: string,
-      error: string | null
-    },
-    targetChain: {
-      value: ChainName,
-      error: string | null,
-    },
-    targetToken: {
-      value: string,
-      error: string | null
-    },
-    transferAmount: {
-      value: string,
-      error: string | null
-    }
+  sourceChain: {
+    value: ChainName,
+    error: string | null,
+  },
+  sourceToken: {
+    value: string,
+    error: string | null
+  },
+  targetChain: {
+    value: ChainName,
+    error: string | null,
+  },
+  targetToken: {
+    value: string,
+    error: string | null
+  },
+  transferAmount: {
+    value: string,
+    error: string | null
   }
+}
 
 
-export default function Transfer (props: ITransferProps) {
-    const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item !== "unset");
+export default function Transfer(props: ITransferProps) {
+  const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item !== "unset");
 
   const [data, setData] = useState<TokenTransferForm>({
     sourceChain: {
@@ -121,18 +121,13 @@ export default function Transfer (props: ITransferProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    // const recipientTokenAccount = splToken.getAssociatedTokenAddress(
-    //   new PublicKey(data.targetToken.value),
-    //   RECIPIENT_WALLET_ADDRESS
-    // );
-
-
     const detectedProvider = await detectEthereumProvider
     const provider = new ethers.providers.Web3Provider(
       // @ts-ignore
       detectedProvider,
       "any"
     );
+
     const signer = provider.getSigner();
     const decimals = 10; // need to figure out how to get decimal value of a token in another chain
     const amount = BigInt(parseFloat(data.transferAmount.value) * decimals);
@@ -145,7 +140,7 @@ export default function Transfer (props: ITransferProps) {
       const postVaaTxn = new Transaction()
         .add(
           await createPostVaaInstructionSolana(
-            BRIDGE_ADDRESSES["solana"].address,
+            BRIDGE_ADDRESS["solana"].address,
             RECIPIENT_WALLET_ADDRESS.toString(),
             Buffer.from(signedVAA.vaaBytes),
             keypair
@@ -155,7 +150,7 @@ export default function Transfer (props: ITransferProps) {
       // redeem token
       const redeemTxn = await redeemOnSolana(
         CONNECTION,
-        BRIDGE_ADDRESSES["solana"].address,
+        BRIDGE_ADDRESS["solana"].address,
         TOKEN_BRIDGE_ADDRESS["solana"].address,
         RECIPIENT_WALLET_ADDRESS.toString(),
         signedVAA.vaaBytes
@@ -193,13 +188,13 @@ export default function Transfer (props: ITransferProps) {
     if (data.sourceChain.value && data.sourceToken.value !== "" && data.targetChain.value) {
       getAndSetTargetToken()
     }
-  }, [data.sourceChain, data.sourceToken, data.targetChain])
+  }, [data])
 
 
-  return(
+  return (
     <div className="w-full h-screen flex flex-col">
-        <Navbar/>
-    
+      <Navbar />
+
       <section className='w-full p-3 h-full'>
         <div className='container flex flex-row mx-auto overflow-y-auto'>
           <form className='w-full space-y-3' onSubmit={handleSubmit}>
