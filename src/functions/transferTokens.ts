@@ -12,7 +12,7 @@ import {
 } from '@certusone/wormhole-sdk';
 
 import {
-  BRIDGE_ADDRESSES,
+  BRIDGE_ADDRESS,
   TOKEN_BRIDGE_ADDRESS,
   WORMHOLE_REST_ADDRESS,
 } from '../constants';
@@ -36,7 +36,7 @@ export async function transferTokens(
 				recipientAddress,
 				relayerFee,
 			);
-			const seq = parseSequenceFromLogEth(receipt, BRIDGE_ADDRESSES["ethereum"].address);
+			const seq = parseSequenceFromLogEth(receipt, BRIDGE_ADDRESS["ethereum"].address);
 			const emitterAddress = getEmitterAddressEth(TOKEN_BRIDGE_ADDRESS["ethereum"].address);
 			const signedVAA = await getSignedVAA(WORMHOLE_REST_ADDRESS, "ethereum", emitterAddress, seq);
 			return signedVAA;
