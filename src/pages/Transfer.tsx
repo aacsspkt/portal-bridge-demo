@@ -165,6 +165,8 @@ export default function Transfer(props: ITransferProps) {
   useEffect(() => {
     const getAndSetTargetToken = async () => {
       let targetToken: PublicKey | null;
+     
+
       targetToken = await deriveCorrespondingToken(data.sourceToken.value, toChainId(data.sourceChain.value), toChainId(data.targetChain.value));
       if (targetToken != null) {
         setData({
