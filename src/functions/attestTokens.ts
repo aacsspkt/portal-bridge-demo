@@ -19,7 +19,7 @@ import {
   TOKEN_BRIDGE_ADDRESS,
   WORMHOLE_REST_ADDRESS,
 } from '../constants';
-import { createWrapped } from './createWrapped';
+import { createWrappedTokens } from './createWrapped';
 
 export * from "./createWrapped";
 
@@ -46,7 +46,7 @@ export async function attestToken(
 			const seq = parseSequenceFromLogEth(tokenAttestation, BRIDGE_ADDRESS["ethereum"].address);
 			const signedVAA = await getSignedVAA(WORMHOLE_REST_ADDRESS, "ethereum", emitterAddr, seq);
 			const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
-			return createWrapped(sourceChain, chainId, payerAddress, keypair, tokenAddress, tokenAttestation);
+			return createWrappedTokens(sourceChain, payerAddress, keypair, signedVAA);
 
 		default:
 			break;

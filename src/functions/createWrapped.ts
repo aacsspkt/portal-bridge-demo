@@ -1,89 +1,59 @@
-import { ethers } from 'ethers';
-
 import {
-  ChainId,
   ChainName,
+  createPostVaaInstructionSolana,
   createWrappedOnSolana,
-  getEmitterAddressEth,
-  getForeignAssetSolana,
-  getSignedVAA,
-  hexToUint8Array,
-  postVaaSolana,
-  parseSequenceFromLogEth,
-  tryNativeToHexString,
-  createPostVaaInstructionSolana
-  
 } from '@certusone/wormhole-sdk';
+import { publicrpc } from '@certusone/wormhole-sdk-proto-web';
 import {
-	Keypair,
+  Keypair,
   PublicKey,
   Signer,
-  Transaction
+  Transaction,
 } from '@solana/web3.js';
 
 import {
   BRIDGE_ADDRESS,
   CONNECTION as connection,
-  SOLANA_TOKEN_BRIDGE_ADDRESS,
   TOKEN_BRIDGE_ADDRESS,
-  WORMHOLE_REST_ADDRESS,
 } from '../constants';
-
-import { publicrpc } from "@certusone/wormhole-sdk-proto-web";
+import { sendAndConfirmTransactions } from './sendTransactionSolana';
 
 /**
  * @param sourceChain Source Chain Name
- * @param sourceChainId Source Chain Id
- * @param signer Signer
- * @param tokenAddress Token address
- * @param tokenAttestation token attestation (from attestTokens.ts)
- * @returns wrapped token address in target chain
+ * @param payerAddress Public Key of the fee payer
+ * @param signer Signer who signs and pay
+ * @param signedVAA Vaa obtained after attestation
+ * @returns Array of transaction signature
  */
-export async function createWrapped(
+export async function createWrappedTokens(
 	sourceChain: ChainName,
-	sourceChainId: ChainId,
 	payerAddress: PublicKey,
 	signer: Signer,
-	tokenAddress: string,
-	tokenAttestation: ethers.ContractReceipt,
-	signedVAA:publicrpc.GetSignedVAAResponse
+	signedVAA: publicrpc.GetSignedVAAResponse,
 ) {
 	switch (sourceChain) {
 		case "ethereum": {
 			//post vaa
-			const postVaaTxn = new Transaction()
-			.add(
-			  await createPostVaaInstructionSolana(
-				BRIDGE_ADDRESS["solana"].address,
-				payerAddress.toString(),
-				Buffer.from(signedVAA.vaaBytes),
-				signer as Keypair
-			  )
+			const postVaaTxn = new Transaction().add(
+				await createPostVaaInstructionSolana(
+					BRIDGE_ADDRESS["solana"].address,
+					payerAddress.toString(),
+					Buffer.from(signedVAA.vaaBytes),
+					signer as Keypair,
+				),
 			);
-
-			const bridgeAddress = TOKEN_BRIDGE_ADDRESS["solana"].address;
-			const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS["solana"].address;
-
-			const txn = await createWrappedOnSolana(
+			const createWrappedTxn = await createWrappedOnSolana(
 				connection,
-				bridgeAddress,
-				tokenBridgeAddress,
+				BRIDGE_ADDRESS["solana"].address,
+				TOKEN_BRIDGE_ADDRESS["solana"].address,
 				payerAddress.toString(),
 				signedVAA.vaaBytes,
 			);
-
-			const wrappedTokenAddress = await getForeignAssetSolana(
-				connection,
-				SOLANA_TOKEN_BRIDGE_ADDRESS,
-				sourceChainId,
-				hexToUint8Array(tryNativeToHexString(tokenAddress, sourceChain)),
-			);
-
-			console.log("Wrapped token created at: ", wrappedTokenAddress);
-			return wrappedTokenAddress;
+			const txnIds = await sendAndConfirmTransactions(connection, [postVaaTxn, createWrappedTxn], signer);
+			return txnIds;
 		}
 
 		default:
-			break;
+			throw new Error("Not implemented");
 	}
 }
