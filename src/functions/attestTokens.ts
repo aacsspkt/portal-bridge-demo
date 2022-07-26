@@ -25,7 +25,7 @@ export * from "./createWrapped";
  * @param tokenAddress Token address
  * @returns Vaa URL of contract receipt of the attestation
  */
-export async function attestToken(sourceChain: ChainName, chainId:ChainId, signer: ethers.Signer, tokenAddress: string) {
+export async function attestToken(sourceChain: ChainName, chainId:ChainId, signer: ethers.Signer, tokenAddress: string, payerAddress:string) {
 	let tokenAttestation: ethers.ContractReceipt;
 	switch (sourceChain) {
 		case "ethereum":
@@ -34,7 +34,7 @@ export async function attestToken(sourceChain: ChainName, chainId:ChainId, signe
 			const emitterAddr = getEmitterAddressEth(tokenBridgeAddress);
 			const seq = parseSequenceFromLogEth(tokenAttestation, BRIDGE_ADDRESS["ethereum"].address);
 			const signedVAA = await getSignedVAA(WORMHOLE_REST_ADDRESS, "ethereum", emitterAddr, seq);
-			return createWrapped(sourceChain, chainId, signer, tokenAddress, tokenAttestation);
+			return createWrapped(sourceChain, chainId, payerAddress, tokenAddress, tokenAttestation);
 
 		default:
 			break;
