@@ -3,7 +3,6 @@ import { ethers } from 'ethers';
 import {
   ChainId,
   ChainName,
-  createWrappedOnEth,
   createWrappedOnSolana,
   getEmitterAddressEth,
   getForeignAssetSolana,
@@ -12,6 +11,10 @@ import {
   parseSequenceFromLogEth,
   tryNativeToHexString,
 } from '@certusone/wormhole-sdk';
+import {
+  PublicKey,
+  Signer,
+} from '@solana/web3.js';
 
 import {
   BRIDGE_ADDRESS,
@@ -32,15 +35,14 @@ import {
 export async function createWrapped(
 	sourceChain: ChainName,
 	sourceChainId: ChainId,
-	payerAddress: string,
+	payerAddress: PublicKey,
+	signer: Signer,
 	tokenAddress: string,
 	tokenAttestation: ethers.ContractReceipt,
 ) {
 	switch (sourceChain) {
-		case "ethereum":{
-			const bridgeAddress = TOKEN_BRIDGE_ADDRESS["solana"].address;
-			const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS["solana"].address;
-			const emitterAddr = getEmitterAddressEth(tokenBridgeAddress);
+		case "ethereum": {
+			const emitterAddr = getEmitterAddressEth(TOKEN_BRIDGE_ADDRESS["ethereum"].address);
 			const seq = parseSequenceFromLogEth(tokenAttestation, BRIDGE_ADDRESS["ethereum"].address);
 			const signedVAA = await getSignedVAA(
 				WORMHOLE_REST_ADDRESS,
@@ -48,7 +50,36 @@ export async function createWrapped(
 				emitterAddr,
 				seq,
 			);
-			await createWrappedOnSolana(connection, bridgeAddress, tokenBridgeAddress, payerAddress, signedVAA.vaaBytes);
+
+			const bridgeAddress = TOKEN_BRIDGE_ADDRESS["solana"].address;
+			const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS["solana"].address;
+
+			const txn = await createWrappedOnSolana(
+				connection,
+				bridgeAddress,
+				tokenBridgeAddress,
+				payerAddress.toString(),
+				signedVAA.vaaBytes,
+			);
+
+			const lbh = await connection.getLatestBlockhash();
+			txn.feePayer = new PublicKey(payerAddress);
+			txn.recentBlockhash = lbh.blockhash;
+			txn.lastValidBlockHeight = lbh.lastValidBlockHeight;
+
+			const txnId = await connection.sendTransaction(txn, [signer], {
+				preflightCommitment: "processed",
+				skipPreflight: false,
+			});
+
+			await connection.confirmTransaction(
+				{
+					signature: txnId,
+					blockhash: lbh.blockhash,
+					lastValidBlockHeight: lbh.lastValidBlockHeight,
+				},
+				"confirmed",
+			);
 
 			const wrappedTokenAddress = await getForeignAssetSolana(
 				connection,

@@ -1,3 +1,4 @@
+import base58 from 'bs58';
 import { ethers } from 'ethers';
 
 import {
@@ -8,6 +9,10 @@ import {
   getSignedVAA,
   parseSequenceFromLogEth,
 } from '@certusone/wormhole-sdk';
+import {
+  Keypair,
+  PublicKey,
+} from '@solana/web3.js';
 
 import {
   BRIDGE_ADDRESS,
@@ -25,7 +30,13 @@ export * from "./createWrapped";
  * @param tokenAddress Token address
  * @returns Vaa URL of contract receipt of the attestation
  */
-export async function attestToken(sourceChain: ChainName, chainId:ChainId, signer: ethers.Signer, tokenAddress: string, payerAddress:string) {
+export async function attestToken(
+	sourceChain: ChainName,
+	chainId: ChainId,
+	signer: ethers.Signer,
+	tokenAddress: string,
+	payerAddress: PublicKey,
+) {
 	let tokenAttestation: ethers.ContractReceipt;
 	switch (sourceChain) {
 		case "ethereum":
@@ -34,7 +45,8 @@ export async function attestToken(sourceChain: ChainName, chainId:ChainId, signe
 			const emitterAddr = getEmitterAddressEth(tokenBridgeAddress);
 			const seq = parseSequenceFromLogEth(tokenAttestation, BRIDGE_ADDRESS["ethereum"].address);
 			const signedVAA = await getSignedVAA(WORMHOLE_REST_ADDRESS, "ethereum", emitterAddr, seq);
-			return createWrapped(sourceChain, chainId, payerAddress, tokenAddress, tokenAttestation);
+			const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
+			return createWrapped(sourceChain, chainId, payerAddress, keypair, tokenAddress, tokenAttestation);
 
 		default:
 			break;
