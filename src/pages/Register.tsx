@@ -140,7 +140,7 @@ export default function Register(props: IRegisterProps) {
         <section className='w-full p-3 h-full'>
           <div className='container flex flex-row mx-auto overflow-y-auto'>
             <form className='w-full space-y-3' onSubmit={handleSubmit}>
-              <legend className='w-full text-3xl mt-5 mb-6'>Token Transfer</legend>
+              <legend className='w-full text-3xl mt-5 mb-6'>Token Attestation</legend>
 
               <div className='w-2/5 space-y-2'>
                 <label className='text-md '>Source Chain</label>
