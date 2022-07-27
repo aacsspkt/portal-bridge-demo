@@ -15,7 +15,6 @@ import {
 import detectEthereumProvider from '@metamask/detect-provider';
 import {
   Keypair,
-  PublicKey,
   Transaction,
 } from '@solana/web3.js';
 
@@ -28,17 +27,10 @@ import {
   TOKEN_BRIDGE_ADDRESS_TESTNET,
 } from '../constants_testnet';
 import {
-  BRIDGE_ADDRESS,
-  CONNECTION,
-  RECIPIENT_WALLET_ADDRESS,
-  TOKEN_BRIDGE_ADDRESS,
-} from '../constants';
-import {
-  deriveCorrespondingToken,
+  deriveForeignToken,
   sendAndConfirmTransactions,
   transferTokens,
 } from '../functions';
-import { useEthereumProvider } from '../hooks/EthereumContextProvider';
 
 interface ITransferProps {
 }
@@ -138,7 +130,7 @@ export default function Transfer(props: ITransferProps) {
 
     const signer = provider.getSigner();
     const decimals = 6; // need to figure out how to get decimal value of a token in another chain
-    const amount_calculation =parseFloat(data.transferAmount.value) * decimals
+    const amount_calculation = parseFloat(data.transferAmount.value) * decimals
     const amount = BigInt(amount_calculation);
     const signedVAA = await transferTokens(data.sourceChain.value, signer, data.targetToken.value, amount, RECIPIENT_WALLET_ADDRESS_TESTNET.toBytes());
     console.log("signedVaa", signedVAA)
@@ -173,15 +165,13 @@ export default function Transfer(props: ITransferProps) {
 
   useEffect(() => {
     const getAndSetTargetToken = async () => {
-      let targetToken: PublicKey | null;
-
-      targetToken = await deriveCorrespondingToken(data.sourceToken.value, data.sourceChain.value, data.targetChain.value);
+      const targetToken = await deriveForeignToken(data.sourceToken.value, data.sourceChain.value, data.targetChain.value);
 
       if (targetToken != null) {
         setData({
           ...data,
           targetToken: {
-            value: targetToken.toString(),
+            value: targetToken,
             error: null
           }
         });

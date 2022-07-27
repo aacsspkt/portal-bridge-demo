@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 
+import base58 from 'bs58';
 import { ethers } from 'ethers';
 
 import {
@@ -7,13 +8,18 @@ import {
   CHAINS,
 } from '@certusone/wormhole-sdk';
 import detectEthereumProvider from '@metamask/detect-provider';
+import { Keypair } from '@solana/web3.js';
 
 import { CustomDropDown } from '../components/CustomDropdown';
 import Navbar from '../components/Navbar';
 import { RECIPIENT_WALLET_ADDRESS_TESTNET } from '../constants_testnet';
-import { attestToken } from '../functions';
+import {
+  attestToken,
+  createWrappedTokens,
+  deriveForeignToken,
+} from '../functions';
 
-interface TokenTransferForm {
+interface TokenRegisterForm {
   sourceChain: {
     value: ChainName,
     error: string | null,
@@ -30,10 +36,6 @@ interface TokenTransferForm {
     value: string,
     error: string | null
   },
-  transferAmount: {
-    value: string,
-    error: string | null
-  }
 }
 
 interface IRegisterProps {
@@ -44,7 +46,7 @@ export default function Register(props: IRegisterProps) {
   const [tokenExists, setTokenExists] = useState<boolean>(false);
 
 
-  const [data, setData] = useState<TokenTransferForm>({
+  const [data, setData] = useState<TokenRegisterForm>({
     sourceChain: {
       value: chainList[0],
       error: null,
@@ -60,10 +62,6 @@ export default function Register(props: IRegisterProps) {
     targetToken: {
       value: "",
       error: null,
-    },
-    transferAmount: {
-      value: "",
-      error: null
     }
   });
 
@@ -112,7 +110,26 @@ export default function Register(props: IRegisterProps) {
     const signer = provider.getSigner();
     console.log("targetToken ===>", data.sourceToken.value);
 
-    const signedVAA = await attestToken(data.sourceChain.value, signer, data.sourceToken.value, RECIPIENT_WALLET_ADDRESS_TESTNET);
+    const signedVAA = await attestToken(data.sourceChain.value, signer, data.sourceToken.value);
+    if (signedVAA) {
+      const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
+      let targetToken: string | null;
+
+      do {
+        await createWrappedTokens(data.targetChain.value, RECIPIENT_WALLET_ADDRESS_TESTNET.toString(), keypair, signedVAA);
+        targetToken = await deriveForeignToken(data.sourceToken.value, data.sourceChain.value, data.targetChain.value);
+      } while (targetToken == null)
+
+      setData({
+        ...data,
+        targetToken: {
+          value: targetToken,
+          error: null
+        }
+      })
+    } else {
+      console.log("Error in token attestation");
+    }
     // console.log("signedVaa", signedVAA)
   }
   return (
