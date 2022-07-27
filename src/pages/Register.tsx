@@ -26,11 +26,12 @@ import {
   CONNECTION,
   RECIPIENT_WALLET_ADDRESS,
   TOKEN_BRIDGE_ADDRESS,
-} from '../constants';
+} from '../constants_testnet';
 import {
   deriveCorrespondingToken,
   sendAndConfirmTransactions,
   transferTokens,
+  attestToken
 } from '../functions';
 
 interface TokenTransferForm {
@@ -87,7 +88,7 @@ export default function Register(props: IRegisterProps) {
     }
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = async(e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setData({
       ...data,
@@ -96,6 +97,7 @@ export default function Register(props: IRegisterProps) {
         error: null
       }
     });
+    console.log(name, "and ", value)
   }
 
   const handleSourceChainChange = async (value: string) => {
@@ -121,7 +123,7 @@ export default function Register(props: IRegisterProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const detectedProvider = detectEthereumProvider();
+    const detectedProvider = await detectEthereumProvider();
     const provider = new ethers.providers.Web3Provider(
       // @ts-ignore
       detectedProvider,
@@ -129,66 +131,11 @@ export default function Register(props: IRegisterProps) {
     );
 
     const signer = provider.getSigner();
-    const decimals = 10; // need to figure out how to get decimal value of a token in another chain
-    const amount = BigInt(parseFloat(data.transferAmount.value) * decimals);
-    const signedVAA = await transferTokens(data.sourceChain.value, signer, data.targetToken.value, amount, RECIPIENT_WALLET_ADDRESS.toBytes());
-    console.log("signedVaa", signedVAA)
-    const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
+    console.log("targetToken ===>", data.sourceToken.value);
 
-    try {
-      //post vaa
-      const postVaaTxn = new Transaction()
-        .add(
-          await createPostVaaInstructionSolana(
-            BRIDGE_ADDRESS["solana"].address,
-            RECIPIENT_WALLET_ADDRESS.toString(),
-            Buffer.from(signedVAA.vaaBytes),
-            keypair
-          )
-        );
-
-      // redeem token
-      const redeemTxn = await redeemOnSolana(
-        CONNECTION,
-        BRIDGE_ADDRESS["solana"].address,
-        TOKEN_BRIDGE_ADDRESS["solana"].address,
-        RECIPIENT_WALLET_ADDRESS.toString(),
-        signedVAA.vaaBytes
-      );
-
-      await sendAndConfirmTransactions(CONNECTION, [postVaaTxn, redeemTxn], keypair);
-    } catch (error) {
-      console.log(error);
-    }
+    const signedVAA = await attestToken(data.sourceChain.value, signer, data.sourceToken.value, RECIPIENT_WALLET_ADDRESS);
+    // console.log("signedVaa", signedVAA)
   }
-
-  useEffect(() => {
-    const getAndSetTargetToken = async () => {
-      let targetToken: PublicKey | null;
-      targetToken = await deriveCorrespondingToken(data.sourceToken.value, data.sourceChain.value, data.targetChain.value);
-      if (targetToken != null) {
-        setTokenExists(true)
-        setData({
-          ...data,
-          targetToken: {
-            value: targetToken.toString(),
-            error: null
-          }
-        });
-      } else {
-        setData({
-          ...data,
-          targetToken: {
-            value: "",
-            error: "This token is not registered."
-          }
-        })
-      }
-    }
-    if (data.sourceChain.value && data.sourceToken.value !== "" && data.targetChain.value) {
-      getAndSetTargetToken()
-    }
-  }, [data])
   return (
     <>
       <div className="w-full h-screen flex flex-col">
@@ -219,29 +166,6 @@ export default function Register(props: IRegisterProps) {
                 <CustomDropDown value={data.targetChain.value} onChange={handleTargetChainChange} dropdownList={chainList} />
               </div>
 
-              {tokenExists && (<><div className='w-2/5 space-y-2'>
-                <label className='text-md '>Target Token</label>
-                <input
-                  value={data.targetToken.value}
-                  className='h-9 w-full border p-2 text-md focus:outline-none'
-                  title='Target Token'
-                  disabled
-                  name='targetToken'
-                  type='text' />
-              </div>
-                <div className='w-2/5 space-y-2'>
-                  <label className='text-md '>Amount</label>
-                  <input
-                    className='h-9 w-full border p-2 text-md focus:outline-none'
-                    value={data.transferAmount.value}
-                    onChange={handleChange}
-                    title='Amount'
-                    name='transferAmount'
-                    type='text' />
-                </div></>)}
-
-
-
               {!tokenExists && (<button type='submit' className='p-2 w-40 shadow text-white bg-blue-500 my-4 rounded text-center'>
                 Register
               </button>)}
@@ -249,8 +173,5 @@ export default function Register(props: IRegisterProps) {
           </div>
         </section>
       </div>
-
-
-
     </>)
 };
