@@ -1,10 +1,8 @@
 import {
   ChainName,
   createPostVaaInstructionSolana,
-  postVaaSolanaWithRetry,
   createWrappedOnSolana,
 } from '@certusone/wormhole-sdk';
-import { publicrpc } from '@certusone/wormhole-sdk-proto-web';
 import {
   Keypair,
   PublicKey,
@@ -14,9 +12,9 @@ import {
 } from '@solana/web3.js';
 
 import {
-  BRIDGE_ADDRESS,
-  CONNECTION as connection,
-  TOKEN_BRIDGE_ADDRESS,
+  BRIDGE_ADDRESS_TESTNET,
+  CONNECTION_TESTNET as connection,
+  TOKEN_BRIDGE_ADDRESS_TESTNET,
 } from '../constants_testnet';
 import { sendAndConfirmTransactions } from './sendTransactionSolana';
 
@@ -38,7 +36,7 @@ export async function createWrappedTokens(
 			//post vaa
 			const postVaaTxn = new Transaction().add(
 				await createPostVaaInstructionSolana(
-					BRIDGE_ADDRESS["solana"].address,
+					BRIDGE_ADDRESS_TESTNET["solana"].address,
 					payerAddress.toString(),
 					Buffer.from(signedVAA, "base64"),
 					signer as Keypair,
@@ -46,20 +44,19 @@ export async function createWrappedTokens(
 			);
 			const createWrappedTxn = await createWrappedOnSolana(
 				connection,
-				BRIDGE_ADDRESS["solana"].address,
-				TOKEN_BRIDGE_ADDRESS["solana"].address,
+				BRIDGE_ADDRESS_TESTNET["solana"].address,
+				TOKEN_BRIDGE_ADDRESS_TESTNET["solana"].address,
 				payerAddress.toString(),
-				Buffer.from(signedVAA, "base64")
+				Buffer.from(signedVAA, "base64"),
 			);
-			try{
+			try {
 				const txnIds = await sendAndConfirmTransactions(connection, [postVaaTxn, createWrappedTxn], signer);
 				return txnIds;
-			}
-			catch(error){
-				if (error instanceof SendTransactionError){
+			} catch (error) {
+				if (error instanceof SendTransactionError) {
 					console.log(error.logs);
 				}
-				throw error
+				throw error;
 			}
 		}
 

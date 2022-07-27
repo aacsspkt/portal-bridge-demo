@@ -10,7 +10,7 @@ import detectEthereumProvider from '@metamask/detect-provider';
 
 import { CustomDropDown } from '../components/CustomDropdown';
 import Navbar from '../components/Navbar';
-import { RECIPIENT_WALLET_ADDRESS } from '../constants_testnet';
+import { RECIPIENT_WALLET_ADDRESS_TESTNET } from '../constants_testnet';
 import { attestToken } from '../functions';
 
 interface TokenTransferForm {
@@ -112,7 +112,7 @@ export default function Register(props: IRegisterProps) {
     const signer = provider.getSigner();
     console.log("targetToken ===>", data.sourceToken.value);
 
-    const signedVAA = await attestToken(data.sourceChain.value, signer, data.sourceToken.value, RECIPIENT_WALLET_ADDRESS);
+    const signedVAA = await attestToken(data.sourceChain.value, signer, data.sourceToken.value, RECIPIENT_WALLET_ADDRESS_TESTNET);
     // console.log("signedVaa", signedVAA)
   }
   return (
