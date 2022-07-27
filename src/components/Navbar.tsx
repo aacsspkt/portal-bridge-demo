@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 import { useEthereumProvider } from '../hooks/EthereumContextProvider';
 
@@ -25,10 +25,10 @@ const Navbar = (props: INavbarProps) => {
         <div className='container flex flex-row justify-between mx-auto'>
           <ul className='flex flex-row'>
             <li className="p-2 w-24 text-center hover:cursor-pointer">
-              <Link className="text-indigo-700 capitalize hover:text-indigo-500" to="/">transfer</Link>
+              <NavLink className={({ isActive }) => `${isActive ? 'text-indigo-800' : ''} capitalize hover:text-indigo-500`} to="/">transfer</NavLink>
             </li>
             <li className="p-2 w-24 text-center hover:drop-shadow-2xl hover:cursor-pointer">
-              <Link className="capitalize hover:text-indigo-500" to="/register">register</Link>
+              <NavLink className={({ isActive }) => `${isActive ? 'text-indigo-800' : ''} capitalize hover:text-indigo-500`} to="/register">register</NavLink>
             </li>
           </ul>
           <button className='ml-auto p-2 w-40 shadow bg-amber-500 rounded text-center'
