@@ -11,7 +11,6 @@ import {
 
 export const RECIPIENT_WALLET_ADDRESS_TESTNET = new PublicKey("CSbNAhedp9JBjchyoPdBH4QWgmrncuhx6SwQxv4gdqhP");
 
-export const SOLANA_TOKEN_BRIDGE_ADDRESS_TESTNET = "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb";
 export const CONNECTION_TESTNET = new Connection(clusterApiUrl("devnet"));
 
 export const WORMHOLE_REST_ADDRESS_TESTNET = "https://wormhole-v2-testnet-api.certus.one";
