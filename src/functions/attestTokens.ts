@@ -1,18 +1,18 @@
-import { ethers } from 'ethers';
+import { ethers } from "ethers";
 
 import {
-  attestFromEth,
-  ChainName,
-  getEmitterAddressEth,
-  getSignedVAAWithRetry,
-  parseSequenceFromLogEth,
-} from '@certusone/wormhole-sdk';
+	attestFromEth,
+	ChainName,
+	getEmitterAddressEth,
+	getSignedVAAWithRetry,
+	parseSequenceFromLogEth,
+} from "@certusone/wormhole-sdk";
 
 import {
-  BRIDGE_ADDRESS_TESTNET,
-  TOKEN_BRIDGE_ADDRESS_TESTNET,
-  WORMHOLE_REST_ADDRESS_TESTNET,
-} from '../constants_testnet';
+	BRIDGE_ADDRESS_TESTNET,
+	TOKEN_BRIDGE_ADDRESS_TESTNET,
+	WORMHOLE_REST_ADDRESS_TESTNET,
+} from "../constants_testnet";
 
 export * from "./createWrapped";
 
@@ -26,17 +26,23 @@ export * from "./createWrapped";
 export async function attestToken(sourceChain: ChainName, signer: ethers.Signer, tokenAddress: string) {
 	switch (sourceChain) {
 		case "ethereum":
-			// let gasLim: ethers.BigNumberish = 1000000;
-			const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS_TESTNET["ethereum"].address;
+			// const gasLimit: ethers.BigNumberish = 1000000;
+			const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address;
+			console.log("Attesting token");
 			const tokenAttestation = await attestFromEth(tokenBridgeAddress, signer, tokenAddress);
+			console.log("token attest txn hash:", tokenAttestation.transactionHash);
 			const emitterAddress = getEmitterAddressEth(tokenBridgeAddress);
-			const sequence = parseSequenceFromLogEth(tokenAttestation, BRIDGE_ADDRESS_TESTNET["ethereum"].address);
+			console.log("fetching vaa");
+			console.log("emitterAddress:", emitterAddress);
+			const sequence = parseSequenceFromLogEth(tokenAttestation, BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address);
+			console.log("sequence:", sequence);
 			const { vaaBytes } = await getSignedVAAWithRetry(
 				[WORMHOLE_REST_ADDRESS_TESTNET],
 				sourceChain,
 				emitterAddress,
 				sequence,
 			);
+			console.log("vaa:", vaaBytes.toString());
 			return vaaBytes;
 
 		default:

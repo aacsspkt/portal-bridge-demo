@@ -1,22 +1,14 @@
-import { ethers } from 'ethers';
+import { ethers } from "ethers";
+
+import { ChainName, createPostVaaInstructionSolana, createWrappedOnSolana } from "@certusone/wormhole-sdk";
+import { Keypair, SendTransactionError, Transaction } from "@solana/web3.js";
 
 import {
-  ChainName,
-  createPostVaaInstructionSolana,
-  createWrappedOnSolana,
-} from '@certusone/wormhole-sdk';
-import {
-  Keypair,
-  SendTransactionError,
-  Transaction,
-} from '@solana/web3.js';
-
-import {
-  BRIDGE_ADDRESS_TESTNET,
-  CONNECTION_TESTNET as connection,
-  TOKEN_BRIDGE_ADDRESS_TESTNET,
-} from '../constants_testnet';
-import { sendAndConfirmTransactions } from './sendTransactionSolana';
+	BRIDGE_ADDRESS_TESTNET,
+	CONNECTION_TESTNET as connection,
+	TOKEN_BRIDGE_ADDRESS_TESTNET,
+} from "../constants_testnet";
+import { sendAndConfirmTransactions } from "./sendTransactionSolana";
 
 /**
  * @param sourceChain Source Chain Name
@@ -38,9 +30,11 @@ export async function createWrappedTokens(
 				const bridgeAddress = BRIDGE_ADDRESS_TESTNET["solana"].address;
 				const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS_TESTNET["solana"].address;
 				//post vaa
+				console.log("creating txn for posting vaa");
 				const postVaaTxn = new Transaction().add(
 					await createPostVaaInstructionSolana(bridgeAddress, payerAddress, Buffer.from(signedVAA), signer),
 				);
+				console.log("creating txn to create wrapped token");
 				// create wrapped tokens
 				const createWrappedTxn = await createWrappedOnSolana(
 					connection,
@@ -49,6 +43,7 @@ export async function createWrappedTokens(
 					payerAddress,
 					signedVAA,
 				);
+				console.log("init txn send.");
 				const txnIds = await sendAndConfirmTransactions(connection, [postVaaTxn, createWrappedTxn], signer);
 				return txnIds;
 			} catch (error) {

@@ -1,4 +1,4 @@
 export * from "./attestTokens";
-export * from "./deriveSolanaTokenFromEth";
+export * from "./deriveCorrespondingToken";
 export * from "./sendTransactionSolana";
 export * from "./transferTokens";
