@@ -9,15 +9,14 @@ import {
   CHAIN_NAMES,
 } from './types';
 
-export const RECIPIENT_WALLET_ADDRESS = new PublicKey("CSbNAhedp9JBjchyoPdBH4QWgmrncuhx6SwQxv4gdqhP");
+export const RECIPIENT_WALLET_ADDRESS_TESTNET = new PublicKey("CSbNAhedp9JBjchyoPdBH4QWgmrncuhx6SwQxv4gdqhP");
 
-export const SOLANA_TOKEN_BRIDGE_ADDRESS = "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb";
-export const CONNECTION = new Connection(clusterApiUrl("mainnet-beta"));
+export const SOLANA_TOKEN_BRIDGE_ADDRESS_TESTNET = "wormDTUJ6AWPNvk59vGQbDvGJmqbDTdgWgAqcLBCgUb";
+export const CONNECTION_TESTNET = new Connection(clusterApiUrl("devnet"));
 
-export const WORMHOLE_REST_ADDRESS = "https://wormhole-v2-mainnet-api.certus.one";
 export const WORMHOLE_REST_ADDRESS_TESTNET = "https://wormhole-v2-testnet-api.certus.one";
 
-export const BRIDGE_ADDRESS: {
+export const BRIDGE_ADDRESS_TESTNET: {
 	[chainName in CHAIN_NAMES]: BridgeConfig;
 } = {
 	solana: {
@@ -87,7 +86,7 @@ export const BRIDGE_ADDRESS: {
 	},
 };
 
-export const TOKEN_BRIDGE_ADDRESS: {
+export const TOKEN_BRIDGE_ADDRESS_TESTNET: {
 	[chainName in CHAIN_NAMES]: BridgeConfig;
 } = {
 	solana: {

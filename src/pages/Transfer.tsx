@@ -11,7 +11,6 @@ import {
   CHAINS,
   createPostVaaInstructionSolana,
   redeemOnSolana,
-  toChainId,
 } from '@certusone/wormhole-sdk';
 import detectEthereumProvider from '@metamask/detect-provider';
 import {
@@ -23,6 +22,12 @@ import {
 import { CustomDropDown } from '../components/CustomDropdown';
 import Navbar from '../components/Navbar';
 import {
+  BRIDGE_ADDRESS_TESTNET,
+  CONNECTION_TESTNET,
+  RECIPIENT_WALLET_ADDRESS_TESTNET,
+  TOKEN_BRIDGE_ADDRESS_TESTNET,
+} from '../constants_testnet';
+import {
   BRIDGE_ADDRESS,
   CONNECTION,
   RECIPIENT_WALLET_ADDRESS,
@@ -33,6 +38,7 @@ import {
   sendAndConfirmTransactions,
   transferTokens,
 } from '../functions';
+import { useEthereumProvider } from '../hooks/EthereumContextProvider';
 
 interface ITransferProps {
 }
@@ -63,6 +69,7 @@ interface TokenTransferForm {
 
 export default function Transfer(props: ITransferProps) {
   const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item !== "unset");
+
 
   const [data, setData] = useState<TokenTransferForm>({
     sourceChain: {
@@ -121,7 +128,8 @@ export default function Transfer(props: ITransferProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const detectedProvider = await detectEthereumProvider
+    const detectedProvider = await detectEthereumProvider();
+
     const provider = new ethers.providers.Web3Provider(
       // @ts-ignore
       detectedProvider,
@@ -129,9 +137,10 @@ export default function Transfer(props: ITransferProps) {
     );
 
     const signer = provider.getSigner();
-    const decimals = 10; // need to figure out how to get decimal value of a token in another chain
-    const amount = BigInt(parseFloat(data.transferAmount.value) * decimals);
-    const signedVAA = await transferTokens(data.sourceChain.value, signer, data.targetToken.value, amount, RECIPIENT_WALLET_ADDRESS.toBytes());
+    const decimals = 6; // need to figure out how to get decimal value of a token in another chain
+    const amount_calculation =parseFloat(data.transferAmount.value) * decimals
+    const amount = BigInt(amount_calculation);
+    const signedVAA = await transferTokens(data.sourceChain.value, signer, data.targetToken.value, amount, RECIPIENT_WALLET_ADDRESS_TESTNET.toBytes());
     console.log("signedVaa", signedVAA)
     const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
 
@@ -140,8 +149,8 @@ export default function Transfer(props: ITransferProps) {
       const postVaaTxn = new Transaction()
         .add(
           await createPostVaaInstructionSolana(
-            BRIDGE_ADDRESS["solana"].address,
-            RECIPIENT_WALLET_ADDRESS.toString(),
+            BRIDGE_ADDRESS_TESTNET["solana"].address,
+            RECIPIENT_WALLET_ADDRESS_TESTNET.toString(),
             Buffer.from(signedVAA.vaaBytes),
             keypair
           )
@@ -149,14 +158,14 @@ export default function Transfer(props: ITransferProps) {
 
       // redeem token
       const redeemTxn = await redeemOnSolana(
-        CONNECTION,
-        BRIDGE_ADDRESS["solana"].address,
-        TOKEN_BRIDGE_ADDRESS["solana"].address,
-        RECIPIENT_WALLET_ADDRESS.toString(),
+        CONNECTION_TESTNET,
+        BRIDGE_ADDRESS_TESTNET["solana"].address,
+        TOKEN_BRIDGE_ADDRESS_TESTNET["solana"].address,
+        RECIPIENT_WALLET_ADDRESS_TESTNET.toString(),
         signedVAA.vaaBytes
       );
 
-      await sendAndConfirmTransactions(CONNECTION, [postVaaTxn, redeemTxn], keypair);
+      await sendAndConfirmTransactions(CONNECTION_TESTNET, [postVaaTxn, redeemTxn], keypair);
     } catch (error) {
       console.log(error);
     }
@@ -165,9 +174,9 @@ export default function Transfer(props: ITransferProps) {
   useEffect(() => {
     const getAndSetTargetToken = async () => {
       let targetToken: PublicKey | null;
-     
 
-      targetToken = await deriveCorrespondingToken(data.sourceToken.value, toChainId(data.sourceChain.value), toChainId(data.targetChain.value));
+      targetToken = await deriveCorrespondingToken(data.sourceToken.value, data.sourceChain.value, data.targetChain.value);
+
       if (targetToken != null) {
         setData({
           ...data,
