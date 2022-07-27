@@ -13,7 +13,14 @@ export const RECIPIENT_WALLET_ADDRESS = new PublicKey("CSbNAhedp9JBjchyoPdBH4QWg
 
 export const CONNECTION = new Connection(clusterApiUrl("mainnet-beta"));
 
-export const WORMHOLE_REST_ADDRESS = "https://wormhole-v2-mainnet-api.certus.one";
+export const WORMHOLE_REST_ADDRESSES = [
+	"https://wormhole-v2-mainnet-api.certus.one",
+	"https://wormhole.inotel.ro",
+	"https://wormhole-v2-mainnet-api.mcf.rocks",
+	"https://wormhole-v2-mainnet-api.chainlayer.network",
+	"https://wormhole-v2-mainnet-api.staking.fund",
+	"https://wormhole-v2-mainnet.01node.com",
+];
 
 export const BRIDGE_ADDRESS: {
 	[chainName in CHAIN_NAMES]: BridgeConfig;

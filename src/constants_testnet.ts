@@ -15,6 +15,8 @@ export const CONNECTION_TESTNET = new Connection(clusterApiUrl("devnet"));
 
 export const WORMHOLE_REST_ADDRESS_TESTNET = "https://wormhole-v2-testnet-api.certus.one";
 
+export const WORMHOLE_GUARDIAN_PUBKEY = "0x13947Bd48b18E53fdAeEe77F3473391aC727C638";
+
 export const BRIDGE_ADDRESS_TESTNET: {
 	[chainName in CHAIN_NAMES]: BridgeConfig;
 } = {
