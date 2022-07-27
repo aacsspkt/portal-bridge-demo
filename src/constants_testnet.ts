@@ -1,13 +1,6 @@
-import {
-  clusterApiUrl,
-  Connection,
-  PublicKey,
-} from '@solana/web3.js';
+import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
 
-import {
-  BridgeConfig,
-  CHAIN_NAMES,
-} from './types';
+import { BridgeConfig, CHAIN_NAMES_TESTNET } from "./types";
 
 export const RECIPIENT_WALLET_ADDRESS_TESTNET = new PublicKey("CSbNAhedp9JBjchyoPdBH4QWgmrncuhx6SwQxv4gdqhP");
 
@@ -18,17 +11,22 @@ export const WORMHOLE_REST_ADDRESS_TESTNET = "https://wormhole-v2-testnet-api.ce
 export const WORMHOLE_GUARDIAN_PUBKEY = "0x13947Bd48b18E53fdAeEe77F3473391aC727C638";
 
 export const BRIDGE_ADDRESS_TESTNET: {
-	[chainName in CHAIN_NAMES]: BridgeConfig;
+	[chainName in CHAIN_NAMES_TESTNET]: BridgeConfig;
 } = {
 	solana: {
 		wormholeChainId: 1,
 		networkId: "devnet",
 		address: "3u8hJUVTA4jH1wYAyUur7FFZVQ8H635K3tSHHF4ssjQ5",
 	},
-	ethereum: {
+	ethereum_goerli: {
 		wormholeChainId: 2,
 		networkId: 5,
 		address: "0x706abc4E45D419950511e474C7B9Ed348A4a716c",
+	},
+	ethereum_ropsten: {
+		wormholeChainId: 10001,
+		networkId: 5,
+		address: "0x210c5F5e2AF958B4defFe715Dc621b7a3BA888c5",
 	},
 	terra: {
 		wormholeChainId: 3,
@@ -54,6 +52,11 @@ export const BRIDGE_ADDRESS_TESTNET: {
 		wormholeChainId: 7,
 		networkId: 42261,
 		address: "0xc1C338397ffA53a2Eb12A7038b4eeb34791F8aCb",
+	},
+	algorand: {
+		wormholeChainId: 8,
+		networkId: undefined,
+		address: "86525623",
 	},
 	aurora: {
 		wormholeChainId: 9,
@@ -88,17 +91,22 @@ export const BRIDGE_ADDRESS_TESTNET: {
 };
 
 export const TOKEN_BRIDGE_ADDRESS_TESTNET: {
-	[chainName in CHAIN_NAMES]: BridgeConfig;
+	[chainName in CHAIN_NAMES_TESTNET]: BridgeConfig;
 } = {
 	solana: {
 		wormholeChainId: 1,
 		networkId: "devnet",
 		address: "DZnkkTmCiFWfYTfT41X3Rd1kDgozqzxWaHqsw6W4x2oe",
 	},
-	ethereum: {
+	ethereum_goerli: {
 		wormholeChainId: 2,
 		networkId: 5,
 		address: "0xF890982f9310df57d00f659cf4fd87e65adEd8d7",
+	},
+	ethereum_ropsten: {
+		wormholeChainId: 10001,
+		networkId: 3,
+		address: "0xF174F9A837536C449321df1Ca093Bb96948D5386",
 	},
 	terra: {
 		wormholeChainId: 3,
@@ -124,6 +132,11 @@ export const TOKEN_BRIDGE_ADDRESS_TESTNET: {
 		wormholeChainId: 7,
 		networkId: 42261,
 		address: "0x88d8004A9BdbfD9D28090A02010C19897a29605c",
+	},
+	algorand: {
+		wormholeChainId: 8,
+		networkId: undefined,
+		address: "86525641",
 	},
 	aurora: {
 		wormholeChainId: 9,

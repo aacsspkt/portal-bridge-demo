@@ -15,8 +15,25 @@ export type CHAIN_NAMES =
 	| "klaytn"
 	| "celo";
 
+export type CHAIN_NAMES_TESTNET =
+	| "solana"
+	| "ethereum_goerli"
+	| "ethereum_ropsten"
+	| "terra"
+	| "bsc"
+	| "polygon"
+	| "avalanche"
+	| "oasis"
+	| "algorand"
+	| "aurora"
+	| "fantom"
+	| "karura"
+	| "acala"
+	| "klaytn"
+	| "celo";
+
 export type BridgeConfig = {
 	wormholeChainId: ChainId;
-	networkId: string | number;
+	networkId: string | number | undefined;
 	address: string;
 };
