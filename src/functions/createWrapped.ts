@@ -1,3 +1,5 @@
+import { ethers } from 'ethers';
+
 import {
   ChainName,
   createPostVaaInstructionSolana,
@@ -5,9 +7,7 @@ import {
 } from '@certusone/wormhole-sdk';
 import {
   Keypair,
-  PublicKey,
   SendTransactionError,
-  Signer,
   Transaction,
 } from '@solana/web3.js';
 
@@ -26,30 +26,29 @@ import { sendAndConfirmTransactions } from './sendTransactionSolana';
  * @returns Array of transaction signature
  */
 export async function createWrappedTokens(
-	sourceChain: ChainName,
-	payerAddress: PublicKey,
-	signer: Signer,
-	signedVAA: String,
+	targetChain: ChainName,
+	payerAddress: string,
+	signer: Keypair | ethers.Signer,
+	signedVAA: Uint8Array,
 ) {
-	switch (sourceChain) {
-		case "ethereum": {
-			//post vaa
-			const postVaaTxn = new Transaction().add(
-				await createPostVaaInstructionSolana(
-					BRIDGE_ADDRESS_TESTNET["solana"].address,
-					payerAddress.toString(),
-					Buffer.from(signedVAA, "base64"),
-					signer as Keypair,
-				),
-			);
-			const createWrappedTxn = await createWrappedOnSolana(
-				connection,
-				BRIDGE_ADDRESS_TESTNET["solana"].address,
-				TOKEN_BRIDGE_ADDRESS_TESTNET["solana"].address,
-				payerAddress.toString(),
-				Buffer.from(signedVAA, "base64"),
-			);
+	switch (targetChain) {
+		case "solana": {
 			try {
+				if (!(signer instanceof Keypair)) throw new Error(`Signer should be instanceof Keypair. value: ${signer}`);
+				const bridgeAddress = BRIDGE_ADDRESS_TESTNET["solana"].address;
+				const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS_TESTNET["solana"].address;
+				//post vaa
+				const postVaaTxn = new Transaction().add(
+					await createPostVaaInstructionSolana(bridgeAddress, payerAddress, Buffer.from(signedVAA), signer),
+				);
+				// create wrapped tokens
+				const createWrappedTxn = await createWrappedOnSolana(
+					connection,
+					bridgeAddress,
+					tokenBridgeAddress,
+					payerAddress,
+					signedVAA,
+				);
 				const txnIds = await sendAndConfirmTransactions(connection, [postVaaTxn, createWrappedTxn], signer);
 				return txnIds;
 			} catch (error) {
@@ -61,6 +60,6 @@ export async function createWrappedTokens(
 		}
 
 		default:
-			throw new Error("Not implemented");
+			return null;
 	}
 }
