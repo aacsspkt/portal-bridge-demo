@@ -1,61 +1,63 @@
-import { Connection, Signer, Transaction } from "@solana/web3.js";
+import {
+  Connection,
+  PublicKey,
+  Signer,
+  Transaction,
+} from '@solana/web3.js';
 
-export async function sendAndConfirmTransactions(connection: Connection, transactions: Transaction[], signer: Signer) {
-	try {
-		let txnIds = await Promise.all(
-			transactions.map(async (txn, i) => {
-				const lbh = await connection.getLatestBlockhash();
+import { KEYPAIR } from '../constants';
 
-				txn.feePayer = signer.publicKey;
-				txn.recentBlockhash = lbh.blockhash;
-				txn.lastValidBlockHeight = lbh.lastValidBlockHeight;
-				txn.sign(signer);
-				console.log("txn-" + i + " info:");
-				console.log("txn fee payer:", txn.feePayer.toString());
-				console.log(
-					"txn signature:",
-					txn.signatures.map((pair) => {
-						return {
-							publicKey: pair.publicKey.toString(),
-							signature: pair.signature?.toString(),
-						};
-					}),
-				);
-				console.log(
-					"txn intruction:",
-					txn.instructions.map((ixn) => {
-						return {
-							data: ixn.data.toString(),
-							programId: ixn.programId.toString(),
-							keys: ixn.keys.map((account) => {
-								return {
-									pubkey: account.pubkey.toString(),
-									isSigner: account.isSigner,
-									isWritable: account.isWritable,
-								};
-							}),
-						};
-					}),
-				);
-				console.log("sending txn");
-				const txnId = await connection.sendRawTransaction(txn.serialize(), {
-					skipPreflight: false,
-					preflightCommitment: "processed",
+export const signTransaction = async (transaction: Transaction) => {
+	const existingPair = transaction.signatures.filter((pair) => pair.signature !== null);
+	transaction.sign(KEYPAIR);
+	existingPair.forEach((pair) => {
+		if (pair.signature) transaction.addSignature(pair.publicKey, pair.signature);
+	});
+	return transaction;
+};
+
+export async function sendAndConfirmTransactions(
+	connection: Connection,
+	unsignedTransactions: Transaction[],
+	payer: PublicKey,
+	signers: Signer[],
+	maxRetries: number = 0,
+) {
+	if (!(unsignedTransactions && unsignedTransactions.length)) {
+		return Promise.reject("No transactions provided to send.");
+	}
+	let currentRetries = 0;
+	let currentIndex = 0;
+	const transactionReceipts = [];
+	while (!(currentIndex >= unsignedTransactions.length) && !(currentRetries > maxRetries)) {
+		let transaction = unsignedTransactions[currentIndex];
+		try {
+			const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+			transaction.recentBlockhash = blockhash;
+			transaction.lastValidBlockHeight = lastValidBlockHeight;
+			transaction.feePayer = payer;
+			try {
+				const txid = await connection.sendTransaction(transaction, signers);
+				const receipt = await connection.confirmTransaction({
+					signature: txid,
+					blockhash,
+					lastValidBlockHeight,
 				});
+				transactionReceipts.push(receipt);
+				currentIndex++;
+			} catch (e) {
+				throw e;
+			}
+		} catch (e) {
+			console.error(e);
+			currentRetries++;
+			continue;
+		}
+	}
 
-				await connection.confirmTransaction(
-					{
-						signature: txnId,
-						blockhash: lbh.blockhash,
-						lastValidBlockHeight: lbh.lastValidBlockHeight,
-					},
-					"confirmed",
-				);
-				return txnId;
-			}),
-		);
-		return txnIds;
-	} catch (error) {
-		throw error;
+	if (currentRetries > maxRetries) {
+		return Promise.reject("Reached the maximum number of retries.");
+	} else {
+		return Promise.resolve(transactionReceipts);
 	}
 }

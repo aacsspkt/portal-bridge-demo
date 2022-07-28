@@ -157,7 +157,7 @@ export default function Transfer(props: ITransferProps) {
         signedVAA.vaaBytes
       );
 
-      await sendAndConfirmTransactions(CONNECTION_TESTNET, [postVaaTxn, redeemTxn], keypair);
+      await sendAndConfirmTransactions(CONNECTION_TESTNET, [postVaaTxn, redeemTxn], RECIPIENT_WALLET_ADDRESS_TESTNET, [keypair]);
     } catch (error) {
       console.log(error);
     }
