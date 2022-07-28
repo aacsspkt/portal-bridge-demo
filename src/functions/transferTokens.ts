@@ -1,6 +1,7 @@
 import { BigNumberish, Signer } from "ethers";
 
 import {
+	approveEth,
 	ChainName,
 	getEmitterAddressEth,
 	getSignedVAA,
@@ -25,7 +26,9 @@ export async function transferTokens(
 	switch (sourceChain) {
 		case "ethereum":
 			console.log(tokenAddress);
-			const receipt = await transferFromEth(
+			const approve_receipt= await approveEth( BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address, tokenAddress, signer, amount);
+			console.log("approve ETh", approve_receipt)
+			const transfer_receipt = await transferFromEth(
 				TOKEN_BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address,
 				signer,
 				tokenAddress,
@@ -37,9 +40,9 @@ export async function transferTokens(
 					gasLimit:100000,
 				}
 			);
-			console.log("receipt", receipt);
+			console.log("receipt", transfer_receipt);
 			console.log("Are you here?");
-			const seq = parseSequenceFromLogEth(receipt, BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address);
+			const seq = parseSequenceFromLogEth(transfer_receipt, BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address);
 			const emitterAddress = getEmitterAddressEth(TOKEN_BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address);
 			const signedVAA = await getSignedVAA(WORMHOLE_REST_ADDRESS_TESTNET, "ethereum", emitterAddress, seq);
 			return signedVAA;

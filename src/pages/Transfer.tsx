@@ -128,10 +128,11 @@ export default function Transfer(props: ITransferProps) {
       "any"
     );
 
+
+
     const signer = provider.getSigner();
     const decimals = 18; // need to figure out how to get decimal value of a token in another chain
-    const amount_calculation = parseFloat(data.transferAmount.value) * Math.pow(10,decimals)
-    const amount = BigInt(amount_calculation);
+    const amount = ethers.utils.parseUnits(data.transferAmount.value, decimals)
     console.log(amount)
     const signedVAA = await transferTokens(data.sourceChain.value, signer, data.sourceToken.value, amount, RECIPIENT_WALLET_ADDRESS_TESTNET.toBytes());
     console.log("signedVaa", signedVAA)
@@ -158,7 +159,7 @@ export default function Transfer(props: ITransferProps) {
         signedVAA.vaaBytes
       );
 
-      await sendAndConfirmTransactions(CONNECTION_TESTNET, [postVaaTxn, redeemTxn], keypair);
+      await sendAndConfirmTransactions(CONNECTION_TESTNET, [postVaaTxn, redeemTxn], RECIPIENT_WALLET_ADDRESS_TESTNET, [keypair]);
     } catch (error) {
       console.log(error);
     }
