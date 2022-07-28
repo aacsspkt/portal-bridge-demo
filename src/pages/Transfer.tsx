@@ -129,9 +129,10 @@ export default function Transfer(props: ITransferProps) {
     );
 
     const signer = provider.getSigner();
-    const decimals = 6; // need to figure out how to get decimal value of a token in another chain
-    const amount_calculation = parseFloat(data.transferAmount.value) * decimals
+    const decimals = 18; // need to figure out how to get decimal value of a token in another chain
+    const amount_calculation = parseFloat(data.transferAmount.value) * Math.pow(10,decimals)
     const amount = BigInt(amount_calculation);
+    console.log(amount)
     const signedVAA = await transferTokens(data.sourceChain.value, signer, data.sourceToken.value, amount, RECIPIENT_WALLET_ADDRESS_TESTNET.toBytes());
     console.log("signedVaa", signedVAA)
     const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
