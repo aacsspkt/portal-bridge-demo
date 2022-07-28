@@ -1,6 +1,9 @@
+import base58 from 'bs58';
+
 import {
   clusterApiUrl,
   Connection,
+  Keypair,
   PublicKey,
 } from '@solana/web3.js';
 
@@ -10,6 +13,7 @@ import {
 } from './types';
 
 export const RECIPIENT_WALLET_ADDRESS = new PublicKey("CSbNAhedp9JBjchyoPdBH4QWgmrncuhx6SwQxv4gdqhP");
+export const KEYPAIR = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
 
 export const CONNECTION = new Connection(clusterApiUrl("mainnet-beta"));
 
