@@ -74,7 +74,6 @@ export default function Register(props: IRegisterProps) {
         error: null
       }
     });
-    console.log(name, "and ", value)
   }
 
   const handleSourceChainChange = async (value: string) => {
@@ -127,6 +126,7 @@ export default function Register(props: IRegisterProps) {
           error: null
         }
       })
+      console.log("wrapped token created:", targetToken);
     } else {
       console.log("Error in token attestation");
     }

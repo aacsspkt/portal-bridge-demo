@@ -3,25 +3,24 @@ import React, {
   useState,
 } from 'react';
 
-import base58 from 'bs58';
 import { ethers } from 'ethers';
 
 import {
   ChainName,
   CHAINS,
-  createPostVaaInstructionSolana,
   postVaaSolanaWithRetry,
   redeemOnSolana,
 } from '@certusone/wormhole-sdk';
 import detectEthereumProvider from '@metamask/detect-provider';
+import { getOrCreateAssociatedTokenAccount } from '@solana/spl-token';
 import {
-  Keypair,
   PublicKey,
   Transaction,
 } from '@solana/web3.js';
 
 import { CustomDropDown } from '../components/CustomDropdown';
 import Navbar from '../components/Navbar';
+import { KEYPAIR } from '../constants';
 import {
   BRIDGE_ADDRESS_TESTNET,
   CONNECTION_TESTNET,
@@ -30,12 +29,10 @@ import {
 } from '../constants_testnet';
 import {
   deriveForeignToken,
+  isValidToken,
   sendAndConfirmTransactions,
   transferTokens,
 } from '../functions';
-import * as minAbi from "../contracts/abi/minAbi.json"
-import { CONNECTION, KEYPAIR } from '../constants';
-import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getOrCreateAssociatedTokenAccount, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 interface ITransferProps {
 }
@@ -104,14 +101,24 @@ export default function Transfer(props: ITransferProps) {
   }
 
   const handleSourceTokenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // TODO: validate sourceToken if it is valid
-    setData({
-      ...data,
-      sourceToken: {
-        value: e.target.value,
-        error: null
-      }
-    });
+    const { value } = e.target;
+    if (isValidToken(value, data.sourceChain.value)) {
+      setData({
+        ...data,
+        sourceToken: {
+          value,
+          error: null
+        }
+      });
+    } else {
+      setData({
+        ...data,
+        sourceToken: {
+          value,
+          error: "Token is invalid"
+        }
+      })
+    }
   }
 
   const handleTargetChainChange = async (value: string) => {
@@ -134,7 +141,7 @@ export default function Transfer(props: ITransferProps) {
     });
   }
 
-  
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -148,11 +155,11 @@ export default function Transfer(props: ITransferProps) {
     );
     const minABI = [
       {
-          constant: true,
-          inputs: [{ name: "_owner", type: "address" }],
-          name: "balanceOf",
-          outputs: [{ name: "balance", type: "uint256" }],
-          type: "function",
+        constant: true,
+        inputs: [{ name: "_owner", type: "address" }],
+        name: "balanceOf",
+        outputs: [{ name: "balance", type: "uint256" }],
+        type: "function",
       },
       {
         constant: true,
@@ -160,45 +167,45 @@ export default function Transfer(props: ITransferProps) {
         name: "decimals",
         outputs: [{ name: "decimals", type: "uint8" }],
         type: "function",
-    },
-   ];
+      },
+    ];
 
 
 
     const signer = provider.getSigner();
-    const contract = new ethers.Contract(data.sourceToken.value,minABI,provider)
+    const contract = new ethers.Contract(data.sourceToken.value, minABI, provider)
     const decimals = await contract.decimals();
-    console.log(decimals) // need to figure out how to get decimal value of a token in another chain
+    console.log(decimals)
     const amount = ethers.utils.parseUnits(data.transferAmount.value, decimals)
     console.log(amount)
-    
-
-    const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
-    const recipientAddress = await getOrCreateAssociatedTokenAccount(
-
+    const recipientTokenAccount = await getOrCreateAssociatedTokenAccount(
       CONNECTION_TESTNET,
-      keypair, 
+      KEYPAIR,
       new PublicKey(data.targetToken.value),
       RECIPIENT_WALLET_ADDRESS_TESTNET
-
     );
-    const signedVAA = await transferTokens(data.sourceChain.value, signer, data.sourceToken.value, amount,  recipientAddress.address.toBytes());
-    console.log("signedVaa", signedVAA)
+
+    const signedVAA = await transferTokens(
+      data.sourceChain.value,
+      signer,
+      data.sourceToken.value,
+      amount,
+      recipientTokenAccount.address.toBytes()
+    );
+    console.log("signedVaa", signedVAA.toString());
+
+    const signTransaction = async (transaction: Transaction) => {
+      const existingPair = transaction.signatures.filter((pair) => pair.signature !== null);
+      transaction.sign(KEYPAIR);
+      existingPair.forEach((pair) => {
+        if (pair.signature) transaction.addSignature(pair.publicKey, pair.signature);
+      });
+      return transaction;
+    };
 
     try {
-      const signTransaction = async (transaction: Transaction) => {
-        console.log("transaction", transaction)
-        console.log("transaction signature", transaction.signatures)
-        const existingPair = transaction.signatures.filter((pair) => pair.signature !== null);
-        console.log("existing pair",existingPair)
-        transaction.sign(keypair);
-        existingPair.forEach((pair) => {
-          if (pair.signature) transaction.addSignature(pair.publicKey, pair.signature);
-        });
-        return transaction;
-      };
-      console.log("signTransaction", signTransaction);
       //post vaa
+      console.log("posting vaa");
       await postVaaSolanaWithRetry(
         CONNECTION_TESTNET,
         signTransaction,
@@ -207,10 +214,10 @@ export default function Transfer(props: ITransferProps) {
         Buffer.from(signedVAA),
         10,
       );
-      console.log("I am here after post")
-      
+      console.log("vaa posted")
 
       // redeem token
+      console.log("redeeming token on solana")
       const redeemTxn = await redeemOnSolana(
         CONNECTION_TESTNET,
         BRIDGE_ADDRESS_TESTNET["solana"].address,
@@ -218,9 +225,8 @@ export default function Transfer(props: ITransferProps) {
         RECIPIENT_WALLET_ADDRESS_TESTNET.toString(),
         signedVAA
       );
-      console.log("redeemTxn", redeemTxn)
-
-      await sendAndConfirmTransactions(CONNECTION_TESTNET, [redeemTxn], RECIPIENT_WALLET_ADDRESS_TESTNET, [keypair]);
+      await sendAndConfirmTransactions(CONNECTION_TESTNET, [redeemTxn], RECIPIENT_WALLET_ADDRESS_TESTNET, [KEYPAIR]);
+      console.log("token redeemed");
     } catch (error) {
       console.log(error);
     }
