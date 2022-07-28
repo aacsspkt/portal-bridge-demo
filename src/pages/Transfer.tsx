@@ -131,7 +131,7 @@ export default function Transfer(props: ITransferProps) {
 
 
     const signer = provider.getSigner();
-    const decimals = 18; // need to figure out how to get decimal value of a token in another chain
+    const decimals = "18"; // need to figure out how to get decimal value of a token in another chain
     const amount = ethers.utils.parseUnits(data.transferAmount.value, decimals)
     console.log(amount)
     const signedVAA = await transferTokens(data.sourceChain.value, signer, data.sourceToken.value, amount, RECIPIENT_WALLET_ADDRESS_TESTNET.toBytes());

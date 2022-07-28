@@ -26,8 +26,8 @@ export async function transferTokens(
 	switch (sourceChain) {
 		case "ethereum":
 			console.log(tokenAddress);
-			const approve_receipt= await approveEth( BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address, tokenAddress, signer, amount);
-			console.log("approve ETh", approve_receipt)
+			// const approve_receipt= await approveEth( BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address, tokenAddress, signer, amount);
+			// console.log("approve ETh", approve_receipt)
 			const transfer_receipt = await transferFromEth(
 				TOKEN_BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address,
 				signer,
@@ -35,10 +35,7 @@ export async function transferTokens(
 				amount,
 				"solana",
 				recipientAddress,
-				relayerFee,
-				{
-					gasLimit:100000,
-				}
+				relayerFee
 			);
 			console.log("receipt", transfer_receipt);
 			console.log("Are you here?");
