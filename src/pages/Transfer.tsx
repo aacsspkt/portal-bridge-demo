@@ -277,7 +277,7 @@ export default function Transfer(props: ITransferProps) {
     if (data.sourceChain.value && data.sourceToken.value !== "" && data.targetChain.value) {
       getAndSetTargetToken()
     }
-  }, [data.sourceChain.value, data.sourceToken.value, data.targetChain.value])
+  }, [data])
 
 
   return (
