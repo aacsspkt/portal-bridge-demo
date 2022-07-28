@@ -10,6 +10,7 @@ import {
   ChainName,
   CHAINS,
   createPostVaaInstructionSolana,
+  postVaaSolanaWithRetry,
   redeemOnSolana,
 } from '@certusone/wormhole-sdk';
 import detectEthereumProvider from '@metamask/detect-provider';
@@ -32,6 +33,7 @@ import {
   transferTokens,
 } from '../functions';
 import * as minAbi from "../contracts/abi/minAbi.json"
+import { CONNECTION, KEYPAIR } from '../constants';
 
 interface ITransferProps {
 }
@@ -171,17 +173,27 @@ export default function Transfer(props: ITransferProps) {
     console.log("signedVaa", signedVAA)
     const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
 
+
     try {
+      const signTransaction = async (transaction: Transaction) => {
+        const existingPair = transaction.signatures.filter((pair) => pair.signature !== null);
+        transaction.sign(KEYPAIR);
+        existingPair.forEach((pair) => {
+          if (pair.signature) transaction.addSignature(pair.publicKey, pair.signature);
+        });
+        return transaction;
+      };
+      console.log("signTransaction", signTransaction);
       //post vaa
-      const postVaaTxn = new Transaction()
-        .add(
-          await createPostVaaInstructionSolana(
-            BRIDGE_ADDRESS_TESTNET["solana"].address,
-            RECIPIENT_WALLET_ADDRESS_TESTNET.toString(),
-            Buffer.from(signedVAA.vaaBytes),
-            keypair
-          )
-        );
+      await postVaaSolanaWithRetry(
+        CONNECTION_TESTNET,
+        signTransaction,
+        TOKEN_BRIDGE_ADDRESS_TESTNET["solana"].address,
+        RECIPIENT_WALLET_ADDRESS_TESTNET.toString(),
+        Buffer.from(signedVAA),
+        10,
+      );
+      
 
       // redeem token
       const redeemTxn = await redeemOnSolana(
@@ -189,10 +201,11 @@ export default function Transfer(props: ITransferProps) {
         BRIDGE_ADDRESS_TESTNET["solana"].address,
         TOKEN_BRIDGE_ADDRESS_TESTNET["solana"].address,
         RECIPIENT_WALLET_ADDRESS_TESTNET.toString(),
-        signedVAA.vaaBytes
+        signedVAA
       );
+      console.log("redeemTxn", redeemTxn)
 
-      await sendAndConfirmTransactions(CONNECTION_TESTNET, [postVaaTxn, redeemTxn], RECIPIENT_WALLET_ADDRESS_TESTNET, [keypair]);
+      await sendAndConfirmTransactions(CONNECTION_TESTNET, [redeemTxn], RECIPIENT_WALLET_ADDRESS_TESTNET, [keypair]);
     } catch (error) {
       console.log(error);
     }

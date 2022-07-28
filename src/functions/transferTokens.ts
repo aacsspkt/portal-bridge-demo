@@ -48,7 +48,7 @@ export async function transferTokens(
 			console.log("emitter",emitterAddress)
 			const signedVAA = await getSignedVAAWithRetry([WORMHOLE_REST_ADDRESS_TESTNET], "ethereum", emitterAddress, seq);
 			console.log("signedVaa",signedVAA);
-			return signedVAA;
+			return signedVAA.vaaBytes;
 
 		default:
 			throw new Error("Not Implemented");
