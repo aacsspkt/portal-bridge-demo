@@ -33,6 +33,9 @@ export async function transferTokens(
 				"solana",
 				recipientAddress,
 				relayerFee,
+				{
+					gasLimit:100000,
+				}
 			);
 			console.log("receipt", receipt);
 			console.log("Are you here?");
