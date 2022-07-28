@@ -86,16 +86,7 @@ export default function Transfer(props: ITransferProps) {
     }
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setData({
-      ...data,
-      [name]: {
-        value: value,
-        error: null
-      }
-    });
-  }
+
 
   const handleSourceChainChange = async (value: string) => {
     setData({
@@ -107,12 +98,33 @@ export default function Transfer(props: ITransferProps) {
     });
   }
 
+  const handleSourceTokenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // TODO: validate sourceToken if it is valid
+    setData({
+      ...data,
+      sourceToken: {
+        value: e.target.value,
+        error: null
+      }
+    });
+  }
+
   const handleTargetChainChange = async (value: string) => {
     setData({
       ...data,
       targetChain: {
         value: value as ChainName,
         error: null,
+      }
+    });
+  }
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setData({
+      ...data,
+      transferAmount: {
+        value: e.target.value,
+        error: null
       }
     });
   }
@@ -165,31 +177,50 @@ export default function Transfer(props: ITransferProps) {
 
   useEffect(() => {
     const getAndSetTargetToken = async () => {
-      const targetToken = await deriveForeignToken(data.sourceToken.value, data.sourceChain.value, data.targetChain.value);
+      try {
+        // TODO: check source if it is already wrapped token
 
-      if (targetToken != null) {
-        setData({
-          ...data,
-          targetToken: {
-            value: targetToken,
-            error: null
-          }
-        });
-      } else {
-        setData({
-          ...data,
-          targetToken: {
-            value: "",
-            error: "This token is not registered."
-          }
-        })
+        if (data.sourceToken.error) {
+          return;
+        }
+
+        const targetToken = await deriveForeignToken(data.sourceToken.value, data.sourceChain.value, data.targetChain.value);
+
+        if (targetToken != null) {
+          setData({
+            ...data,
+            targetToken: {
+              value: targetToken,
+              error: null
+            }
+          });
+        } else {
+          setData({
+            ...data,
+            targetToken: {
+              value: "",
+              error: "This token is not registered."
+            }
+          })
+        }
+      } catch (error) {
+        console.log(error);
+        if (error instanceof Error) {
+          setData({
+            ...data,
+            targetToken: {
+              value: "",
+              error: error.message
+            }
+          })
+        }
       }
     }
 
     if (data.sourceChain.value && data.sourceToken.value !== "" && data.targetChain.value) {
       getAndSetTargetToken()
     }
-  }, [data])
+  }, [data.sourceChain.value, data.sourceToken.value, data.targetChain.value])
 
 
   return (
@@ -213,7 +244,7 @@ export default function Transfer(props: ITransferProps) {
                 className='h-9 w-full border p-2 text-md focus:outline-none'
                 title='Source Token'
                 name='sourceToken'
-                onChange={handleChange}
+                onChange={handleSourceTokenChange}
                 type='text' />
             </div>
             <div className='w-2/5 space-y-2'>
@@ -235,7 +266,7 @@ export default function Transfer(props: ITransferProps) {
               <input
                 className='h-9 w-full border p-2 text-md focus:outline-none'
                 value={data.transferAmount.value}
-                onChange={handleChange}
+                onChange={handleAmountChange}
                 title='Amount'
                 name='transferAmount'
                 type='text' />
