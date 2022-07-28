@@ -177,7 +177,7 @@ export default function Transfer(props: ITransferProps) {
     try {
       const signTransaction = async (transaction: Transaction) => {
         const existingPair = transaction.signatures.filter((pair) => pair.signature !== null);
-        transaction.sign(KEYPAIR);
+        transaction.sign(keypair);
         existingPair.forEach((pair) => {
           if (pair.signature) transaction.addSignature(pair.publicKey, pair.signature);
         });
@@ -193,6 +193,7 @@ export default function Transfer(props: ITransferProps) {
         Buffer.from(signedVAA),
         10,
       );
+      console.log("I am here after post")
       
 
       // redeem token
