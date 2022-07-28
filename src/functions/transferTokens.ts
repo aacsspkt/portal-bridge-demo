@@ -5,6 +5,7 @@ import {
 	ChainName,
 	getEmitterAddressEth,
 	getSignedVAA,
+	getSignedVAAWithRetry,
 	parseSequenceFromLogEth,
 	transferFromEth,
 } from "@certusone/wormhole-sdk";
@@ -26,8 +27,9 @@ export async function transferTokens(
 	switch (sourceChain) {
 		case "ethereum":
 			console.log(tokenAddress);
-			// const approve_receipt= await approveEth( BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address, tokenAddress, signer, amount);
-			// console.log("approve ETh", approve_receipt)
+			console.log("before approveEth");
+			const approve_receipt= await approveEth( TOKEN_BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address, tokenAddress, signer, amount);
+			console.log("approve ETh", approve_receipt)
 			const transfer_receipt = await transferFromEth(
 				TOKEN_BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address,
 				signer,
@@ -35,13 +37,17 @@ export async function transferTokens(
 				amount,
 				"solana",
 				recipientAddress,
-				relayerFee
+				relayerFee,
+				{gasLimit:10000000}
 			);
 			console.log("receipt", transfer_receipt);
 			console.log("Are you here?");
 			const seq = parseSequenceFromLogEth(transfer_receipt, BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address);
+			console.log("seq",seq)
 			const emitterAddress = getEmitterAddressEth(TOKEN_BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address);
-			const signedVAA = await getSignedVAA(WORMHOLE_REST_ADDRESS_TESTNET, "ethereum", emitterAddress, seq);
+			console.log("emitter",emitterAddress)
+			const signedVAA = await getSignedVAAWithRetry([WORMHOLE_REST_ADDRESS_TESTNET], "ethereum", emitterAddress, seq);
+			console.log("signedVaa",signedVAA);
 			return signedVAA;
 
 		default:

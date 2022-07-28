@@ -31,6 +31,7 @@ import {
   sendAndConfirmTransactions,
   transferTokens,
 } from '../functions';
+import * as minAbi from "../contracts/abi/minAbi.json"
 
 interface ITransferProps {
 }
@@ -129,6 +130,8 @@ export default function Transfer(props: ITransferProps) {
     });
   }
 
+  
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -139,11 +142,29 @@ export default function Transfer(props: ITransferProps) {
       detectedProvider,
       "any"
     );
+    const minABI = [
+      {
+          constant: true,
+          inputs: [{ name: "_owner", type: "address" }],
+          name: "balanceOf",
+          outputs: [{ name: "balance", type: "uint256" }],
+          type: "function",
+      },
+      {
+        constant: true,
+        inputs: [],
+        name: "decimals",
+        outputs: [{ name: "decimals", type: "uint8" }],
+        type: "function",
+    },
+   ];
 
 
 
     const signer = provider.getSigner();
-    const decimals = "18"; // need to figure out how to get decimal value of a token in another chain
+    const contract = new ethers.Contract(data.sourceToken.value,minABI,provider)
+    const decimals = await contract.decimals();
+    console.log(decimals) // need to figure out how to get decimal value of a token in another chain
     const amount = ethers.utils.parseUnits(data.transferAmount.value, decimals)
     console.log(amount)
     const signedVAA = await transferTokens(data.sourceChain.value, signer, data.sourceToken.value, amount, RECIPIENT_WALLET_ADDRESS_TESTNET.toBytes());
