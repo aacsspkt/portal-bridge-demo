@@ -16,6 +16,7 @@ import {
 import detectEthereumProvider from '@metamask/detect-provider';
 import {
   Keypair,
+  PublicKey,
   Transaction,
 } from '@solana/web3.js';
 
@@ -34,6 +35,7 @@ import {
 } from '../functions';
 import * as minAbi from "../contracts/abi/minAbi.json"
 import { CONNECTION, KEYPAIR } from '../constants';
+import { ASSOCIATED_TOKEN_PROGRAM_ID, getAssociatedTokenAddress, getOrCreateAssociatedTokenAccount, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 interface ITransferProps {
 }
@@ -169,14 +171,26 @@ export default function Transfer(props: ITransferProps) {
     console.log(decimals) // need to figure out how to get decimal value of a token in another chain
     const amount = ethers.utils.parseUnits(data.transferAmount.value, decimals)
     console.log(amount)
-    const signedVAA = await transferTokens(data.sourceChain.value, signer, data.sourceToken.value, amount, RECIPIENT_WALLET_ADDRESS_TESTNET.toBytes());
-    console.log("signedVaa", signedVAA)
-    const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
+    
 
+    const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
+    const recipientAddress = await getOrCreateAssociatedTokenAccount(
+
+      CONNECTION_TESTNET,
+      keypair, 
+      new PublicKey(data.targetToken.value),
+      RECIPIENT_WALLET_ADDRESS_TESTNET
+
+    );
+    const signedVAA = await transferTokens(data.sourceChain.value, signer, data.sourceToken.value, amount,  recipientAddress.address.toBytes());
+    console.log("signedVaa", signedVAA)
 
     try {
       const signTransaction = async (transaction: Transaction) => {
+        console.log("transaction", transaction)
+        console.log("transaction signature", transaction.signatures)
         const existingPair = transaction.signatures.filter((pair) => pair.signature !== null);
+        console.log("existing pair",existingPair)
         transaction.sign(keypair);
         existingPair.forEach((pair) => {
           if (pair.signature) transaction.addSignature(pair.publicKey, pair.signature);
@@ -188,7 +202,7 @@ export default function Transfer(props: ITransferProps) {
       await postVaaSolanaWithRetry(
         CONNECTION_TESTNET,
         signTransaction,
-        TOKEN_BRIDGE_ADDRESS_TESTNET["solana"].address,
+        BRIDGE_ADDRESS_TESTNET["solana"].address,
         RECIPIENT_WALLET_ADDRESS_TESTNET.toString(),
         Buffer.from(signedVAA),
         10,

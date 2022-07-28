@@ -12,6 +12,7 @@ import {
 
 import {
 	BRIDGE_ADDRESS_TESTNET,
+	RECIPIENT_WALLET_ADDRESS_TESTNET,
 	TOKEN_BRIDGE_ADDRESS_TESTNET,
 	WORMHOLE_REST_ADDRESS_TESTNET,
 } from "../constants_testnet";
@@ -30,6 +31,7 @@ export async function transferTokens(
 			console.log("before approveEth");
 			const approve_receipt= await approveEth( TOKEN_BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address, tokenAddress, signer, amount);
 			console.log("approve ETh", approve_receipt)
+			
 			const transfer_receipt = await transferFromEth(
 				TOKEN_BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address,
 				signer,
