@@ -8,7 +8,7 @@
     },
     {
         "constant": true,
-        "inputs": [{}],
+        "inputs": [],
         "name": "decimals",
         "outputs": [{ "name": "decimals", "type": "uint8" }],
         "type": "function"
