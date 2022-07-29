@@ -8,6 +8,7 @@ import {
 
 import Register from './pages/Register';
 import Transfer from './pages/Transfer';
+import { Stream } from './pages/Stream';
 
 function App() {
 
@@ -17,6 +18,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Transfer />} />
           <Route path="/register" element={<Register />} />
+          <Route path='/stream' element = {<Stream/>}/>
         </Routes>
       </BrowserRouter>
     </>
