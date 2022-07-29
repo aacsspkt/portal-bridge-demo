@@ -33,6 +33,8 @@ import {
   sendAndConfirmTransactions,
   transferTokens,
 } from '../functions';
+import minABI from "../contracts/abi/minAbi.json"
+
 
 interface ITransferProps {
 }
@@ -153,27 +155,12 @@ export default function Transfer(props: ITransferProps) {
       detectedProvider,
       "any"
     );
-    const minABI = [
-      {
-        constant: true,
-        inputs: [{ name: "_owner", type: "address" }],
-        name: "balanceOf",
-        outputs: [{ name: "balance", type: "uint256" }],
-        type: "function",
-      },
-      {
-        constant: true,
-        inputs: [],
-        name: "decimals",
-        outputs: [{ name: "decimals", type: "uint8" }],
-        type: "function",
-      },
-    ];
+ 
 
 
 
     const signer = provider.getSigner();
-    const contract = new ethers.Contract(data.sourceToken.value, minABI, provider)
+    const contract = new ethers.Contract(data.sourceToken.value, JSON.stringify(minABI), provider)
     const decimals = await contract.decimals();
     console.log(decimals)
     const amount = ethers.utils.parseUnits(data.transferAmount.value, decimals)
