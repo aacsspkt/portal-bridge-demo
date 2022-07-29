@@ -27,6 +27,7 @@ import {
   RECIPIENT_WALLET_ADDRESS_TESTNET,
   TOKEN_BRIDGE_ADDRESS_TESTNET,
 } from '../constants_testnet';
+import minABI from '../contracts/abi/minAbi.json';
 import {
   getCorrespondingToken,
   isValidToken,
@@ -141,33 +142,14 @@ export default function Transfer(props: ITransferProps) {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    const minABI = [
-      {
-        constant: true,
-        inputs: [{ name: "_owner", type: "address" }],
-        name: "balanceOf",
-        outputs: [{ name: "balance", type: "uint256" }],
-        type: "function",
-      },
-      {
-        constant: true,
-        inputs: [],
-        name: "decimals",
-        outputs: [{ name: "decimals", type: "uint8" }],
-        type: "function",
-      },
-    ];
-
     const detectedProvider = await detectEthereumProvider();
-
     const provider = new ethers.providers.Web3Provider(
       // @ts-ignore
       detectedProvider,
       "any"
     );
     const signer = provider.getSigner();
-    const contract = new ethers.Contract(data.sourceToken.value, minABI, provider);
+    const contract = new ethers.Contract(data.sourceToken.value, JSON.stringify(minABI), provider)
     const decimals = await contract.decimals();
     console.log(decimals)
     const amount = ethers.utils.parseUnits(data.transferAmount.value, decimals)
