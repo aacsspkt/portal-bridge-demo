@@ -28,7 +28,7 @@ import {
   TOKEN_BRIDGE_ADDRESS_TESTNET,
 } from '../constants_testnet';
 import {
-  deriveForeignToken,
+  getForeignAsset,
   isValidToken,
   sendAndConfirmTransactions,
   transferTokens,
@@ -241,7 +241,7 @@ export default function Transfer(props: ITransferProps) {
           return;
         }
 
-        const targetToken = await deriveForeignToken(data.sourceToken.value, data.sourceChain.value, data.targetChain.value);
+        const targetToken = await getForeignAsset(data.sourceToken.value, data.sourceChain.value, data.targetChain.value);
 
         if (targetToken != null) {
           setData({
