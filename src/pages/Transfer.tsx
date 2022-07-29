@@ -28,7 +28,7 @@ import {
   TOKEN_BRIDGE_ADDRESS_TESTNET,
 } from '../constants_testnet';
 import {
-  getForeignAsset,
+  getCorrespondingToken,
   isValidToken,
   sendAndConfirmTransactions,
   transferTokens,
@@ -64,7 +64,6 @@ interface TokenTransferForm {
 export default function Transfer(props: ITransferProps) {
   const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item !== "unset");
 
-
   const [data, setData] = useState<TokenTransferForm>({
     sourceChain: {
       value: chainList[0],
@@ -87,8 +86,6 @@ export default function Transfer(props: ITransferProps) {
       error: null
     }
   });
-
-
 
   const handleSourceChainChange = async (value: string) => {
     setData({
@@ -142,17 +139,9 @@ export default function Transfer(props: ITransferProps) {
   }
 
 
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const detectedProvider = await detectEthereumProvider();
-
-    const provider = new ethers.providers.Web3Provider(
-      // @ts-ignore
-      detectedProvider,
-      "any"
-    );
     const minABI = [
       {
         constant: true,
@@ -170,10 +159,15 @@ export default function Transfer(props: ITransferProps) {
       },
     ];
 
+    const detectedProvider = await detectEthereumProvider();
 
-
+    const provider = new ethers.providers.Web3Provider(
+      // @ts-ignore
+      detectedProvider,
+      "any"
+    );
     const signer = provider.getSigner();
-    const contract = new ethers.Contract(data.sourceToken.value, minABI, provider)
+    const contract = new ethers.Contract(data.sourceToken.value, minABI, provider);
     const decimals = await contract.decimals();
     console.log(decimals)
     const amount = ethers.utils.parseUnits(data.transferAmount.value, decimals)
@@ -235,14 +229,27 @@ export default function Transfer(props: ITransferProps) {
   useEffect(() => {
     const getAndSetTargetToken = async () => {
       try {
-        // TODO: check source if it is already wrapped token
-
+        console.log("Getting Target Token...")
         if (data.sourceToken.error) {
           return;
         }
 
-        const targetToken = await getForeignAsset(data.sourceToken.value, data.sourceChain.value, data.targetChain.value);
+        const detectedProvider = await detectEthereumProvider();
 
+        const provider = new ethers.providers.Web3Provider(
+          // @ts-ignore
+          detectedProvider,
+          "any"
+        );
+
+        const targetToken = await getCorrespondingToken({
+          sourceChain: data.sourceChain.value,
+          targetChain: data.targetChain.value,
+          tokenAddress: data.sourceToken.value,
+          connection: CONNECTION_TESTNET,
+          signer: provider.getSigner()
+        });
+        console.log("targetToken:", targetToken);
         if (targetToken != null) {
           setData({
             ...data,
@@ -274,10 +281,10 @@ export default function Transfer(props: ITransferProps) {
       }
     }
 
-    if (data.sourceChain.value && data.sourceToken.value !== "" && data.targetChain.value) {
+    if (data.sourceChain.value && data.sourceToken.value !== "" && data.targetChain.value && !data.sourceToken.error) {
       getAndSetTargetToken()
     }
-  }, [data])
+  }, [data.sourceChain, data.sourceToken, data.targetChain])
 
 
   return (

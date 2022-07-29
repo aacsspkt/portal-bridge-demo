@@ -12,11 +12,14 @@ import { Keypair } from '@solana/web3.js';
 
 import { CustomDropDown } from '../components/CustomDropdown';
 import Navbar from '../components/Navbar';
-import { RECIPIENT_WALLET_ADDRESS_TESTNET } from '../constants_testnet';
+import {
+  CONNECTION_TESTNET,
+  RECIPIENT_WALLET_ADDRESS_TESTNET,
+} from '../constants_testnet';
 import {
   attestToken,
   createWrappedTokens,
-  getForeignAsset,
+  getCorrespondingToken,
 } from '../functions';
 
 interface TokenRegisterForm {
@@ -116,10 +119,13 @@ export default function Register(props: IRegisterProps) {
 
       do {
         await createWrappedTokens(data.targetChain.value, RECIPIENT_WALLET_ADDRESS_TESTNET.toString(), keypair, signedVAA);
-        targetToken = await getForeignAsset(
-          data.sourceToken.value,
-          data.sourceChain.value,
-          data.targetChain.value
+        targetToken = await getCorrespondingToken({
+          tokenAddress: data.sourceToken.value,
+          sourceChain: data.sourceChain.value,
+          targetChain: data.targetChain.value,
+          connection: CONNECTION_TESTNET,
+          signer
+        }
         );
       } while (targetToken == null)
 
