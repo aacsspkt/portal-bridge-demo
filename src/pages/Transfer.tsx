@@ -19,7 +19,6 @@ import {
 } from '@solana/web3.js';
 
 import { CustomDropDown } from '../components/CustomDropdown';
-import Navbar from '../components/Navbar';
 import { KEYPAIR } from '../constants';
 import {
   BRIDGE_ADDRESS_TESTNET,
@@ -271,7 +270,7 @@ export default function Transfer(props: ITransferProps) {
 
   return (
     <div className="w-full h-screen flex flex-col">
-      <Navbar />
+
 
       <section className='w-full p-3 h-full'>
         <div className='container flex flex-row mx-auto overflow-y-auto'>
