@@ -16,7 +16,7 @@ import { RECIPIENT_WALLET_ADDRESS_TESTNET } from '../constants_testnet';
 import {
   attestToken,
   createWrappedTokens,
-  deriveForeignToken,
+  getForeignAsset,
 } from '../functions';
 
 interface TokenRegisterForm {
@@ -116,7 +116,11 @@ export default function Register(props: IRegisterProps) {
 
       do {
         await createWrappedTokens(data.targetChain.value, RECIPIENT_WALLET_ADDRESS_TESTNET.toString(), keypair, signedVAA);
-        targetToken = await deriveForeignToken(data.sourceToken.value, data.sourceChain.value, data.targetChain.value);
+        targetToken = await getForeignAsset(
+          data.sourceToken.value,
+          data.sourceChain.value,
+          data.targetChain.value
+        );
       } while (targetToken == null)
 
       setData({
