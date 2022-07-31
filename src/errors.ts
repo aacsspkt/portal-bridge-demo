@@ -1,5 +1,5 @@
 export const NOT_IMPLEMENTED = "Not implemented";
-export const ARGUMENT_NULL = "Argument null";
+export const ARGUMENT_NULL_UNDEFINED = "Argument is null or undefined";
 export const INVALID_ARGUMENT = "Invalid argument";
 
 export class NotImplementedError extends Error {
@@ -8,9 +8,9 @@ export class NotImplementedError extends Error {
 	}
 }
 
-export class ArgumentNullError extends Error {
+export class ArgumentNullOrUndefinedError extends Error {
 	constructor() {
-		super(ARGUMENT_NULL);
+		super(ARGUMENT_NULL_UNDEFINED);
 	}
 }
 
