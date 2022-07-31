@@ -41,7 +41,7 @@ export function Deposit (props: IDepositProps) {
     console.log("here")
 
 
-    process_deposit_token(Amount,depositor,Nonce );
+    const sequence = process_deposit_token(Amount,depositor,Nonce );
     
      
   }
@@ -77,7 +77,7 @@ export function Deposit (props: IDepositProps) {
     const Amount =  BigNumber.from(SolData.amount);
     const Nonce =  BigNumber.from(SolData.nonce)
 
-    process_deposit_sol(Amount,depositor,Nonce );
+    const sequence = process_deposit_sol(Amount,depositor,Nonce );
     console.log("here")
 
     

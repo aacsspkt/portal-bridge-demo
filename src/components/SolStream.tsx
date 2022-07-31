@@ -51,7 +51,7 @@ export function SolStream (props: ISOLStreamProps) {
     console.log("here")
 
 
-    process_token_withdraw_stream(Amount,withdrawer,Nonce );
+    const sequence = process_token_withdraw_stream(Amount,withdrawer,Nonce );
     
      
   }
@@ -88,7 +88,7 @@ export function SolStream (props: ISOLStreamProps) {
     const Amount =  BigNumber.from(data.amount);
     const Nonce =  BigNumber.from(data.nonce)
 
-    process_token_stream(startTime,endTime, Amount,receiver,Nonce );
+    const sequence = process_token_stream(startTime,endTime, Amount,receiver,Nonce );
     console.log("here")
 
     

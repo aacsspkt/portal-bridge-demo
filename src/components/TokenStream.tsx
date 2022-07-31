@@ -51,7 +51,7 @@ export function TokenStream (props: ITokenStreamProps) {
     console.log("here")
 
 
-    process_sol_withdraw_stream(Amount,withdrawer,Nonce );
+    const sequence = process_sol_withdraw_stream(Amount,withdrawer,Nonce );
     
      
   }
@@ -88,7 +88,7 @@ export function TokenStream (props: ITokenStreamProps) {
     const Amount =  BigNumber.from(data.amount);
     const Nonce =  BigNumber.from(data.nonce)
 
-    process_sol_stream(startTime,endTime, Amount,receiver,Nonce );
+    const sequence = process_sol_stream(startTime,endTime, Amount,receiver,Nonce );
     console.log("here")
 
     

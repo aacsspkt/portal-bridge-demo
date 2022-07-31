@@ -46,7 +46,7 @@ export function Fund (props: IFundProps) {
     console.log("here")
 
 
-    process_fund_token(EndTime,Amount,Nonce );
+    const sequence = process_fund_token(EndTime,Amount,Nonce );
     
      
   }
@@ -81,7 +81,7 @@ export function Fund (props: IFundProps) {
     const Amount =  BigNumber.from(SolData.amount);
     const Nonce =  BigNumber.from(SolData.nonce)
 
-    process_fund_sol(EndTime,Amount,Nonce );
+    const sequence = process_fund_sol(EndTime,Amount,Nonce );
     console.log("here")
 
     

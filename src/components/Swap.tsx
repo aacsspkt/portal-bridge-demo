@@ -45,7 +45,7 @@ export function Swap (props: ISwapProps) {
     console.log("here")
 
 
-    encode_process_swap_token(Amount,Nonce );
+    const sequence = encode_process_swap_token(Amount,Nonce );
     
      
   }
@@ -74,7 +74,7 @@ export function Swap (props: ISwapProps) {
     const Amount =  BigNumber.from(SolData.amount);
     const Nonce =  BigNumber.from(SolData.nonce)
 
-    process_swap_sol(Amount,Nonce );
+    const sequence = process_swap_sol(Amount,Nonce );
     console.log("here")
 
     

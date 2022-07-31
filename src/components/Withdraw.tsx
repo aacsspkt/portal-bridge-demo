@@ -45,7 +45,7 @@ export function Withdraw (props: IWithdrawProps) {
     console.log("here")
 
 
-    process_withdraw_token(Amount,Nonce );
+    const sequence = process_withdraw_token(Amount,Nonce );
     
      
   }
@@ -74,7 +74,7 @@ export function Withdraw (props: IWithdrawProps) {
     const Amount =  BigNumber.from(SolData.amount);
     const Nonce =  BigNumber.from(SolData.nonce)
 
-    process_withdraw_sol(Amount,Nonce );
+    const sequence = process_withdraw_sol(Amount,Nonce );
     console.log("here")
 
     
