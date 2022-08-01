@@ -9,8 +9,7 @@ import {
 import { KEYPAIR } from '../constants';
 
 function logTransaction(transaction: Transaction) {
-	// console.log("blockHash", transaction.recentBlockhash);
-	// console.log("lastValidBlockHeight", transaction.lastValidBlockHeight);
+	console.log("blockHash", transaction.recentBlockhash);
 	console.log("feePayer", transaction.feePayer?.toString());
 	console.log(
 		"instructions",
@@ -19,7 +18,7 @@ function logTransaction(transaction: Transaction) {
 				// data: ixn.data.toJSON(),
 				// programId: ixn.programId.toString(),
 				keys: ixn.keys
-					.filter((key) => key.isSigner)
+					// .filter((key) => key.isSigner)
 					.map((key) => {
 						return {
 							pubkey: key.pubkey.toString(),
@@ -50,11 +49,11 @@ function logTransaction(transaction: Transaction) {
 }
 
 export const signTransaction = async (transaction: Transaction) => {
-	const existingPair = transaction.signatures.filter((pair) => pair.signature !== null);
-	transaction.sign(KEYPAIR);
-	existingPair.forEach((pair) => {
-		if (pair.signature) transaction.addSignature(pair.publicKey, pair.signature);
-	});
+	// const existingPair = transaction.signatures.filter((pair) => pair.signature !== null);
+	transaction.partialSign(KEYPAIR);
+	// existingPair.forEach((pair) => {
+	// 	if (pair.signature) transaction.addSignature(pair.publicKey, pair.signature);
+	// });
 	return transaction;
 };
 
@@ -74,17 +73,6 @@ export async function sendAndConfirmTransactions(
 	while (!(currentIndex >= unsignedTransactions.length) && !(currentRetries > maxRetries)) {
 		let transaction = unsignedTransactions[currentIndex];
 		let signed: Transaction;
-
-		try {
-			const { blockhash } = await connection.getRecentBlockhash();
-			transaction.recentBlockhash = blockhash;
-			transaction.feePayer = new PublicKey(payer);
-		} catch (e) {
-			console.error(e);
-			currentRetries++;
-			//Behavior after this is undefined, so best just to restart and try again.
-			continue;
-		}
 
 		try {
 			signed = await signTransaction(transaction);
