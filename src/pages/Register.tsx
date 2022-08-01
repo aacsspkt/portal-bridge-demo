@@ -11,10 +11,7 @@ import detectEthereumProvider from '@metamask/detect-provider';
 import { Keypair } from '@solana/web3.js';
 
 import { CustomDropDown } from '../components/CustomDropdown';
-import {
-  CONNECTION_TESTNET,
-  RECIPIENT_WALLET_ADDRESS_TESTNET,
-} from '../constants_testnet';
+import { RECIPIENT_WALLET_ADDRESS_TESTNET } from '../constants_testnet';
 import {
   attestToken,
   createWrappedTokens,
@@ -122,7 +119,6 @@ export default function Register(props: IRegisterProps) {
           tokenAddress: data.sourceToken.value,
           sourceChain: data.sourceChain.value,
           targetChain: data.targetChain.value,
-          connection: CONNECTION_TESTNET,
           signer
         }
         );

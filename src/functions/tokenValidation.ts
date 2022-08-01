@@ -1,7 +1,7 @@
-import { utils } from "ethers";
+import { utils } from 'ethers';
 
-import { ChainName } from "@certusone/wormhole-sdk";
-import { PublicKey } from "@solana/web3.js";
+import { ChainName } from '@certusone/wormhole-sdk';
+import { PublicKey } from '@solana/web3.js';
 
 export function isValidToken(tokenAddress: string, sourceChain: ChainName) {
 	console.log("isValidToken");
@@ -11,7 +11,7 @@ export function isValidToken(tokenAddress: string, sourceChain: ChainName) {
 			return utils.isAddress(tokenAddress);
 
 		case "solana":
-			console.log("is solana addfedd");
+			console.log("is solana");
 			try {
 				const _ = new PublicKey(tokenAddress);
 				return true;
@@ -20,6 +20,7 @@ export function isValidToken(tokenAddress: string, sourceChain: ChainName) {
 			}
 
 		default:
+			console.log(`Not implemented for tokens in ${sourceChain}`);
 			return false; // temporarily return false until implemented for other chains
 	}
 }

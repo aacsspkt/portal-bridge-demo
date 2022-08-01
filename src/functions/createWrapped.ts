@@ -8,7 +8,6 @@ import {
 import {
   Keypair,
   SendTransactionError,
-  Transaction,
 } from '@solana/web3.js';
 
 import {
@@ -17,11 +16,14 @@ import {
   RECIPIENT_WALLET_ADDRESS_TESTNET,
   TOKEN_BRIDGE_ADDRESS_TESTNET,
 } from '../constants_testnet';
-import { sendAndConfirmTransactions } from '../utils/solana';
+import {
+  sendAndConfirmTransactions,
+  signTransaction,
+} from '../utils/solana';
 
 /**
- * @param sourceChain Source Chain Name
  * @param payerAddress Public Key of the fee payer
+ * @param targetChain Source Chain Name
  * @param signer Signer who signs and pay
  * @param signedVAA Vaa obtained after attestation
  * @returns Array of transaction signature
@@ -38,14 +40,6 @@ export async function createWrappedTokens(
 				if (!(signer instanceof Keypair)) throw new Error(`Signer should be instanceof Keypair. value: ${signer}`);
 				const bridgeAddress = BRIDGE_ADDRESS_TESTNET["solana"].address;
 				const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS_TESTNET["solana"].address;
-				const signTransaction = async (transaction: Transaction) => {
-					const existingPair = transaction.signatures.filter((pair) => pair.signature !== null);
-					transaction.sign(signer);
-					existingPair.forEach((pair) => {
-						if (pair.signature) transaction.addSignature(pair.publicKey, pair.signature);
-					});
-					return transaction;
-				};
 
 				//post vaa
 				console.log("posting vaa to solana");
@@ -67,7 +61,13 @@ export async function createWrappedTokens(
 					payerAddress,
 					signedVAA,
 				);
-				await sendAndConfirmTransactions(connection, [createWrappedTxn], RECIPIENT_WALLET_ADDRESS_TESTNET, [signer]);
+				await sendAndConfirmTransactions(
+					connection,
+					signTransaction,
+					[createWrappedTxn],
+					RECIPIENT_WALLET_ADDRESS_TESTNET,
+					10,
+				);
 
 				return;
 			} catch (error) {

@@ -12,9 +12,11 @@ import {
   tryNativeToHexString,
   tryUint8ArrayToNative,
 } from '@certusone/wormhole-sdk';
-import { Connection } from '@solana/web3.js';
 
-import { TOKEN_BRIDGE_ADDRESS_TESTNET } from '../constants_testnet';
+import {
+  CONNECTION_TESTNET,
+  TOKEN_BRIDGE_ADDRESS_TESTNET,
+} from '../constants_testnet';
 import {
   ArgumentNullOrUndefinedError,
   NotImplementedError,
@@ -25,14 +27,15 @@ export async function getCorrespondingToken(param: {
 	sourceChain: ChainName;
 	targetChain: ChainName;
 	signer?: ethers.Signer;
-	connection?: Connection;
 }) {
-	const { tokenAddress, sourceChain, targetChain, signer, connection } = param;
-	const isWrapped = await getIsWrapped({ tokenAddress, sourceChain, signer, connection });
+	const { tokenAddress, sourceChain, targetChain, signer } = param;
+	console.log(tokenAddress, sourceChain, targetChain, signer);
+
+	const isWrapped = await getIsWrapped({ tokenAddress, sourceChain, signer });
 	if (isWrapped) {
-		return await getOriginalAsset({ tokenAddress, sourceChain, targetChain, signer, connection });
+		return await getOriginalAsset({ tokenAddress, sourceChain, targetChain, signer });
 	} else {
-		return await getForeignAsset({ tokenAddress, sourceChain, targetChain, provider: signer, connection });
+		return await getForeignAsset({ tokenAddress, sourceChain, targetChain, provider: signer });
 	}
 }
 
@@ -40,17 +43,15 @@ export async function getForeignAsset(param: {
 	tokenAddress: string;
 	sourceChain: ChainName;
 	targetChain: ChainName;
-	connection?: Connection;
 	provider?: ethers.Signer | ethers.providers.Provider;
 }) {
 	console.log("get foreign asset");
-	const { tokenAddress, sourceChain, targetChain, connection, provider } = param;
+	const { tokenAddress, sourceChain, targetChain, provider } = param;
 	switch (targetChain) {
 		case "solana":
 			try {
-				if (!connection) throw new ArgumentNullOrUndefinedError();
 				const address = await getForeignAssetSolana(
-					connection,
+					CONNECTION_TESTNET,
 					TOKEN_BRIDGE_ADDRESS_TESTNET.solana.address,
 					sourceChain,
 					hexToUint8Array(tryNativeToHexString(tokenAddress, sourceChain)),
@@ -58,7 +59,6 @@ export async function getForeignAsset(param: {
 				console.log("address", address);
 				return address;
 			} catch (e) {
-				console.log(e);
 				throw e;
 			}
 
@@ -85,9 +85,8 @@ export async function getOriginalAsset(param: {
 	sourceChain: ChainName;
 	targetChain?: ChainName;
 	signer?: ethers.Signer;
-	connection?: Connection;
 }) {
-	const { tokenAddress, sourceChain, targetChain, signer, connection } = param;
+	const { tokenAddress, sourceChain, targetChain, signer } = param;
 	switch (sourceChain) {
 		case "ethereum": {
 			try {
@@ -105,8 +104,11 @@ export async function getOriginalAsset(param: {
 		}
 		case "solana": {
 			try {
-				if (!connection) throw new ArgumentNullOrUndefinedError();
-				let origin = await getOriginalAssetSol(connection, TOKEN_BRIDGE_ADDRESS_TESTNET.solana.address, tokenAddress);
+				let origin = await getOriginalAssetSol(
+					CONNECTION_TESTNET,
+					TOKEN_BRIDGE_ADDRESS_TESTNET.solana.address,
+					tokenAddress,
+				);
 				return tryUint8ArrayToNative(origin.assetAddress, origin.chainId);
 			} catch (e) {
 				throw e;
@@ -118,13 +120,8 @@ export async function getOriginalAsset(param: {
 	}
 }
 
-export async function getIsWrapped(param: {
-	tokenAddress: string;
-	sourceChain: ChainName;
-	signer?: ethers.Signer;
-	connection?: Connection;
-}) {
-	const { tokenAddress, sourceChain, signer, connection } = param;
+export async function getIsWrapped(param: { tokenAddress: string; sourceChain: ChainName; signer?: ethers.Signer }) {
+	const { tokenAddress, sourceChain, signer } = param;
 	switch (sourceChain) {
 		case "ethereum": {
 			if (!signer) throw new ArgumentNullOrUndefinedError();
@@ -137,9 +134,8 @@ export async function getIsWrapped(param: {
 			return is_wrapped;
 		}
 		case "solana": {
-			if (!connection) throw new ArgumentNullOrUndefinedError();
 			const is_wrapped = await getIsWrappedAssetSol(
-				connection,
+				CONNECTION_TESTNET,
 				TOKEN_BRIDGE_ADDRESS_TESTNET.solana.address,
 				tokenAddress,
 			);
