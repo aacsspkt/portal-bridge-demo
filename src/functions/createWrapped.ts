@@ -17,7 +17,7 @@ import {
   RECIPIENT_WALLET_ADDRESS_TESTNET,
   TOKEN_BRIDGE_ADDRESS_TESTNET,
 } from '../constants_testnet';
-import { sendAndConfirmTransactions } from './sendTransactionSolana';
+import { sendAndConfirmTransactions } from '../utils/solana';
 
 /**
  * @param sourceChain Source Chain Name
