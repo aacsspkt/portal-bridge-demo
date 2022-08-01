@@ -1,5 +1,7 @@
+import { parseSequenceFromLogEth } from '@certusone/wormhole-sdk';
 import { BigNumber } from 'ethers';
 import * as React from 'react';
+import { BRIDGE_ADDRESS_TESTNET } from '../constants_testnet';
 import { useRelayer } from '../hooks/useRelayer';
 
 export interface IFundProps {
@@ -46,7 +48,10 @@ export function Fund (props: IFundProps) {
     console.log("here")
 
 
-    const sequence = process_fund_token(EndTime,Amount,Nonce );
+    const tx = await(await process_fund_token(EndTime,Amount,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
     
      
   }
@@ -81,8 +86,10 @@ export function Fund (props: IFundProps) {
     const Amount =  BigNumber.from(SolData.amount);
     const Nonce =  BigNumber.from(SolData.nonce)
 
-    const sequence = process_fund_sol(EndTime,Amount,Nonce );
-    console.log("here")
+    const tx = await(await process_fund_sol(EndTime,Amount,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
 
     
      

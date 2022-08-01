@@ -1,107 +1,67 @@
 import { ChainId } from '@certusone/wormhole-sdk';
-import detectEthereumProvider from '@metamask/detect-provider';
 import { BigNumber, ethers } from 'ethers';
 import * as React from 'react';
 import Relayer from "../contracts/abi/Relayer.json"
+import { useEthereumProvider } from './EthereumContextProvider';
 
 
 export function useRelayer () {
+  const {
+    signer
+  } = useEthereumProvider();
  
 
-    const contractAddress = "";
-    const RelayerABI = JSON.stringify(Relayer);
-      
-
-    
-    
-
-    
+    const contractAddress = "0x75e1d4A30B482B27ba0c1C5c9C58fa8146609fEE";
+    const RelayerABI = Relayer.abi;
+ 
 
     const wormhole= async function () {
-        const detectedProvider = await detectEthereumProvider();
+
         
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
-        
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.wormhole();
         return result 
 
     }
 
     const process_sol_stream= async function (start_time: BigNumber,  end_time:BigNumber,  amount:BigNumber,  receiver: string,  nonce:BigNumber){
-        const detectedProvider = await detectEthereumProvider();
+       
+  
         
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
-        
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.process_sol_stream(start_time,  end_time,  amount,  receiver,  nonce);
+
         return result 
     }
 
     const process_token_stream=async function (start_time: BigNumber, end_time:BigNumber, amount:BigNumber, receiver: string,  nonce:BigNumber)  {
-        const detectedProvider = await detectEthereumProvider();
+      
         
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
-        
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.process_token_stream(start_time,  end_time,  amount,  receiver,  nonce);
         return result 
     }
 
     const process_sol_withdraw_stream=async function process_sol_withdraw_stream(amount:BigNumber, withdrawer: string,  nonce:BigNumber)  {
-        const detectedProvider = await detectEthereumProvider();
         
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
         
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.process_sol_withdraw_stream(amount, withdrawer,  nonce);
         return result 
     }
 
    const process_token_withdraw_stream= async function (amount:BigNumber, withdrawer: string,  nonce:BigNumber) {
-    const detectedProvider = await detectEthereumProvider();
-        
-    const provider = new ethers.providers.Web3Provider(
-      // @ts-ignore
-      detectedProvider,
-      "any"
-    );
-
-        
    
-    
-    const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+    const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
     const result = await contract.process_token_withdraw_stream(amount, withdrawer,  nonce);
         return result 
 
     }
 
     const process_deposit_sol=async function (amount:BigNumber, depositor: string,  nonce:BigNumber) {
-        const detectedProvider = await detectEthereumProvider();
+       
         
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
-        
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.process_deposit_sol(amount, depositor,  nonce);
         return result 
 
@@ -110,30 +70,17 @@ export function useRelayer () {
     }
 
     const process_deposit_token=async function (amount:BigNumber, depositor: string,  nonce:BigNumber)  {
-        const detectedProvider = await detectEthereumProvider();
-        
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
-        
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+   
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.process_deposit_token(amount, depositor,  nonce);
         return result 
  
     }
 
     const process_fund_sol= async function (end_time:BigNumber, amount:BigNumber, nonce:BigNumber)  {
-        const detectedProvider = await detectEthereumProvider();
+      
         
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
-        
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.process_fund_sol(amount, amount,  nonce);
         return result 
         
@@ -141,45 +88,28 @@ export function useRelayer () {
     }
 
     const process_fund_token = async function (end_time:BigNumber, amount:BigNumber, nonce:BigNumber)  {
-        const detectedProvider = await detectEthereumProvider();
+
         
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
-        
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         
         const result = await contract.process_fund_token(amount, amount,  nonce);
+        console.log(result)
         return result 
     }
 
     const process_withdraw_sol=async function (amount:BigNumber, nonce:BigNumber) {
-        const detectedProvider = await detectEthereumProvider();
+     
         
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
-        
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.process_withdraw_sol(amount, nonce);
         return result 
 
     }
 
     const process_withdraw_token=async function (amount:BigNumber, nonce:BigNumber)  {
-        const detectedProvider = await detectEthereumProvider();
+     
         
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
-        
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.process_withdraw_token(amount, nonce);
         return result 
 
@@ -187,15 +117,9 @@ export function useRelayer () {
     }
 
    const  process_swap_sol= async function (amount:BigNumber, nonce:BigNumber)  {
-    const detectedProvider = await detectEthereumProvider();
-        
-    const provider = new ethers.providers.Web3Provider(
-      // @ts-ignore
-      detectedProvider,
-      "any"
-    );
+ 
     
-    const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+    const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.process_swap_sol(amount, nonce);
         return result 
 
@@ -204,15 +128,8 @@ export function useRelayer () {
   
 
     const encode_process_swap_token=async function (amount:BigNumber, nonce:BigNumber)  {
-        const detectedProvider = await detectEthereumProvider();
-        
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
-        
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+    
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.encode_process_swap_token(amount, nonce);
         return result 
 
@@ -221,15 +138,8 @@ export function useRelayer () {
 
    
     const registerApplicationContracts= async function (chainId:ChainId, applicationAddr:string)  {
-        const detectedProvider = await detectEthereumProvider();
-        
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
-        
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+  
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.registerApplicationcontracts(chainId, applicationAddr);
         return result 
 
@@ -237,15 +147,9 @@ export function useRelayer () {
     }
 
     const receiveEncodedMsg =async function (encodedMsg:string)  {
-        const detectedProvider = await detectEthereumProvider();
+     
         
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
-        
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.receiveEncodedMsg(encodedMsg);
         return result 
 
@@ -253,15 +157,9 @@ export function useRelayer () {
     }
 
     const getCurrentMsg=async function () {
-        const detectedProvider = await detectEthereumProvider();
+       
         
-        const provider = new ethers.providers.Web3Provider(
-          // @ts-ignore
-          detectedProvider,
-          "any"
-        );
-        
-        const contract = new ethers.Contract(contractAddress, RelayerABI, provider);
+        const contract = new ethers.Contract(contractAddress, RelayerABI, signer);
         const result = await contract.getCurrentMsg();
         return result 
         

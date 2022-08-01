@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { parseSequenceFromLogEth } from '@certusone/wormhole-sdk';
 import { BigNumber } from 'ethers';
 import * as React from 'react';
+import { BRIDGE_ADDRESS_TESTNET } from '../constants_testnet';
 import { useRelayer } from '../hooks/useRelayer';
 
 
@@ -39,10 +41,10 @@ export function Deposit (props: IDepositProps) {
     const Nonce =  BigNumber.from(tokenData.nonce)
     const depositor= tokenData.depositor
     console.log("here")
-
-
-    const sequence = process_deposit_token(Amount,depositor,Nonce );
-    
+    const tx = await(await process_deposit_token(Amount,depositor,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
      
   }
 
@@ -77,8 +79,10 @@ export function Deposit (props: IDepositProps) {
     const Amount =  BigNumber.from(SolData.amount);
     const Nonce =  BigNumber.from(SolData.nonce)
 
-    const sequence = process_deposit_sol(Amount,depositor,Nonce );
-    console.log("here")
+    const tx = await(await process_deposit_sol( Amount,depositor,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
 
     
      

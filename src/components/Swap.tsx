@@ -1,5 +1,7 @@
+import { parseSequenceFromLogEth } from '@certusone/wormhole-sdk';
 import { BigNumber } from 'ethers';
 import * as React from 'react';
+import { BRIDGE_ADDRESS_TESTNET } from '../constants_testnet';
 import { useRelayer } from '../hooks/useRelayer';
 
 export interface ISwapProps {
@@ -43,9 +45,10 @@ export function Swap (props: ISwapProps) {
     const Amount =  BigNumber.from(tokenData.amount);
     const Nonce =  BigNumber.from(tokenData.nonce)
     console.log("here")
-
-
-    const sequence = encode_process_swap_token(Amount,Nonce );
+    const tx = await(await encode_process_swap_token(Amount,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
     
      
   }
@@ -74,8 +77,11 @@ export function Swap (props: ISwapProps) {
     const Amount =  BigNumber.from(SolData.amount);
     const Nonce =  BigNumber.from(SolData.nonce)
 
-    const sequence = process_swap_sol(Amount,Nonce );
-    console.log("here")
+
+    const tx = await(await process_swap_sol(Amount,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
 
     
      

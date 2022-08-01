@@ -1,5 +1,7 @@
+import { parseSequenceFromLogEth } from '@certusone/wormhole-sdk';
 import { BigNumber } from 'ethers';
 import * as React from 'react';
+import { BRIDGE_ADDRESS_TESTNET, TOKEN_BRIDGE_ADDRESS_TESTNET } from '../constants_testnet';
 import { useRelayer } from '../hooks/useRelayer';
 
 export interface ISOLStreamProps {
@@ -37,8 +39,8 @@ export function SolStream (props: ISOLStreamProps) {
 
   const {
  
-    process_token_stream,
-    process_token_withdraw_stream,
+    process_sol_stream,
+    process_sol_withdraw_stream,
 
 
   }  = useRelayer();
@@ -48,11 +50,11 @@ export function SolStream (props: ISOLStreamProps) {
     const withdrawer = withdrawData.withdrawer;
     const Amount =  BigNumber.from(withdrawData.amount);
     const Nonce =  BigNumber.from(withdrawData.nonce)
-    console.log("here")
-
-
-    const sequence = process_token_withdraw_stream(Amount,withdrawer,Nonce );
-    
+    console.log("Sol Withdraw Stream ");
+    const tx = await (await process_sol_withdraw_stream(Amount,withdrawer,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
      
   }
 
@@ -87,9 +89,12 @@ export function SolStream (props: ISOLStreamProps) {
     const receiver = data.receiver;
     const Amount =  BigNumber.from(data.amount);
     const Nonce =  BigNumber.from(data.nonce)
-
-    const sequence = process_token_stream(startTime,endTime, Amount,receiver,Nonce );
-    console.log("here")
+    console.log("Sol Stream")
+    const tx = await(await process_sol_stream(startTime,endTime, Amount,receiver,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
+ 
 
     
      
@@ -216,7 +221,6 @@ export function SolStream (props: ISOLStreamProps) {
           onChange={handleSOLReceiverChange}
           className='h-9 w-full border p-2 text-md focus:outline-none'
           title='Receiver'
-          disabled
           name='receiver'
           type='text' />
       </div>

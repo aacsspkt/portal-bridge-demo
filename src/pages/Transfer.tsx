@@ -149,7 +149,7 @@ export default function Transfer(props: ITransferProps) {
       "any"
     );
     const signer = provider.getSigner();
-    const contract = new ethers.Contract(data.sourceToken.value, JSON.stringify(minABI), provider)
+    const contract = new ethers.Contract(data.sourceToken.value, JSON.stringify(minABI), signer)
     const decimals = await contract.decimals();
     console.log(decimals)
     const amount = ethers.utils.parseUnits(data.transferAmount.value, decimals)

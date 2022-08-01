@@ -1,5 +1,7 @@
+import { parseSequenceFromLogEth } from '@certusone/wormhole-sdk';
 import { BigNumber } from 'ethers';
 import * as React from 'react';
+import { BRIDGE_ADDRESS_TESTNET } from '../constants_testnet';
 import { useRelayer } from '../hooks/useRelayer';
 
 export interface IWithdrawProps {
@@ -45,7 +47,12 @@ export function Withdraw (props: IWithdrawProps) {
     console.log("here")
 
 
-    const sequence = process_withdraw_token(Amount,Nonce );
+
+    const tx = await(await process_withdraw_token(Amount,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
+    
     
      
   }
@@ -74,8 +81,11 @@ export function Withdraw (props: IWithdrawProps) {
     const Amount =  BigNumber.from(SolData.amount);
     const Nonce =  BigNumber.from(SolData.nonce)
 
-    const sequence = process_withdraw_sol(Amount,Nonce );
-    console.log("here")
+    const tx = await(await process_withdraw_sol(Amount,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
+    
 
     
      

@@ -1,5 +1,7 @@
+import { parseSequenceFromLogEth } from '@certusone/wormhole-sdk';
 import { BigNumber } from 'ethers';
 import * as React from 'react';
+import { BRIDGE_ADDRESS_TESTNET } from '../constants_testnet';
 import { useRelayer } from '../hooks/useRelayer';
 
 export interface ITokenStreamProps {
@@ -51,7 +53,11 @@ export function TokenStream (props: ITokenStreamProps) {
     console.log("here")
 
 
-    const sequence = process_sol_withdraw_stream(Amount,withdrawer,Nonce );
+
+    const tx = await(await process_sol_withdraw_stream(Amount,withdrawer,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
     
      
   }
@@ -88,8 +94,11 @@ export function TokenStream (props: ITokenStreamProps) {
     const Amount =  BigNumber.from(data.amount);
     const Nonce =  BigNumber.from(data.nonce)
 
-    const sequence = process_sol_stream(startTime,endTime, Amount,receiver,Nonce );
-    console.log("here")
+    const tx = await(await process_sol_stream(startTime,endTime, Amount,receiver,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
+    
 
     
      
