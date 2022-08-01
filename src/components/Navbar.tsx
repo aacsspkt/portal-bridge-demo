@@ -30,6 +30,9 @@ const Navbar = (props: INavbarProps) => {
             <li className="p-2 w-24 text-center hover:drop-shadow-2xl hover:cursor-pointer">
               <NavLink className={({ isActive }) => `${isActive ? 'text-indigo-800' : ''} capitalize hover:text-indigo-500`} to="/register">register</NavLink>
             </li>
+            <li className="p-2 w-24 text-center hover:drop-shadow-2xl hover:cursor-pointer">
+              <NavLink className={({ isActive }) => `${isActive ? 'text-indigo-800' : ''} capitalize hover:text-indigo-500`} to="/stream">stream</NavLink>
+            </li>
           </ul>
           <button className='ml-auto p-2 w-40 shadow bg-amber-500 rounded text-center'
             type='button'
