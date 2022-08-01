@@ -36,18 +36,21 @@ export async function sendAndConfirmTransactions(
 			transaction.recentBlockhash = blockhash;
 			transaction.lastValidBlockHeight = lastValidBlockHeight;
 			transaction.feePayer = payer;
-			console.log("blockHash",transaction.recentBlockhash  )
-			console.log("lastValidBlockHeight",transaction.lastValidBlockHeight  )
-			console.log("feePayer",transaction.feePayer  )
+			console.log("blockHash", transaction.recentBlockhash);
+			console.log("lastValidBlockHeight", transaction.lastValidBlockHeight);
+			console.log("feePayer", transaction.feePayer);
 			try {
 				const txid = await connection.sendTransaction(transaction, signers);
-				console.log("txid",txid)
+				console.log("txid", txid);
 				const receipt = await connection.confirmTransaction({
 					signature: txid,
 					blockhash,
 					lastValidBlockHeight,
 				});
-				transactionReceipts.push(receipt);
+				if (receipt.value.err) {
+					throw new Error(receipt.value.err.toString());
+				}
+				transactionReceipts.push(txid);
 				currentIndex++;
 			} catch (e) {
 				throw e;

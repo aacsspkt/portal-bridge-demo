@@ -11,7 +11,6 @@ import detectEthereumProvider from '@metamask/detect-provider';
 import { Keypair } from '@solana/web3.js';
 
 import { CustomDropDown } from '../components/CustomDropdown';
-import Navbar from '../components/Navbar';
 import {
   CONNECTION_TESTNET,
   RECIPIENT_WALLET_ADDRESS_TESTNET,
@@ -145,8 +144,6 @@ export default function Register(props: IRegisterProps) {
   return (
     <>
       <div className="w-full h-screen flex flex-col">
-        <Navbar />
-
         <section className='w-full p-3 h-full'>
           <div className='container flex flex-row mx-auto overflow-y-auto'>
             <form className='w-full space-y-3' onSubmit={handleSubmit}>

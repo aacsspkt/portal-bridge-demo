@@ -1,52 +1,88 @@
 import {
   BigNumberish,
-  Signer,
+  ethers,
 } from 'ethers';
 
 import {
   approveEth,
   ChainName,
   getEmitterAddressEth,
+  getEmitterAddressSolana,
+  getIsTransferCompletedEth,
   getSignedVAAWithRetry,
   parseSequenceFromLogEth,
+  parseSequenceFromLogSolana,
+  postVaaSolanaWithRetry,
+  redeemOnSolana,
   transferFromEth,
+  transferFromSolana,
+  tryNativeToUint8Array,
 } from '@certusone/wormhole-sdk';
+import {
+  Account,
+  getMint,
+  getOrCreateAssociatedTokenAccount,
+} from '@solana/spl-token';
+import { PublicKey } from '@solana/web3.js';
 
+import { KEYPAIR } from '../constants';
 import {
   BRIDGE_ADDRESS_TESTNET,
+  CONNECTION_TESTNET,
+  RECIPIENT_WALLET_ADDRESS_TESTNET,
   TOKEN_BRIDGE_ADDRESS_TESTNET,
   WORMHOLE_REST_ADDRESS_TESTNET,
 } from '../constants_testnet';
+import minABI from '../contracts/abi/minAbi.json';
 import { NotImplementedError } from '../errors';
+import {
+  sendAndConfirmTransactions,
+  signTransaction,
+} from '../utils/solana';
 
 export async function transferTokens(
 	sourceChain: ChainName,
-	signer: Signer,
+	targetChain: ChainName,
+	provider: ethers.providers.Web3Provider,
 	tokenAddress: string,
-	amount: BigNumberish,
-	recipientAddress: Uint8Array,
+	amount: number,
+	recipientAddress: string,
 	relayerFee?: BigNumberish,
 ) {
+	let recipientTokenAddress: Account;
+	let transferAmount: BigNumberish;
 	switch (sourceChain) {
 		case "ethereum":
+			const contract = new ethers.Contract(tokenAddress, JSON.stringify(minABI), provider);
+			const decimals = await contract.decimals();
+			console.log(decimals);
+			transferAmount = ethers.utils.parseUnits(amount.toString(), decimals);
+			console.log(transferAmount);
+			const ethSigner = provider.getSigner();
 			console.log("transfering token: " + tokenAddress);
 			console.log("approve token transfer");
 			const approve_receipt = await approveEth(
 				TOKEN_BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address,
 				tokenAddress,
-				signer,
-				amount,
+				ethSigner,
+				transferAmount,
 			);
 			console.log("approval receipt hash:", approve_receipt.transactionHash);
+			recipientTokenAddress = await getOrCreateAssociatedTokenAccount(
+				CONNECTION_TESTNET,
+				KEYPAIR,
+				new PublicKey(tokenAddress),
+				RECIPIENT_WALLET_ADDRESS_TESTNET,
+			);
 
 			console.log("transfering");
 			const transfer_receipt = await transferFromEth(
 				TOKEN_BRIDGE_ADDRESS_TESTNET["ethereum_goerli"].address,
-				signer,
+				ethSigner,
 				tokenAddress,
-				amount,
+				transferAmount,
 				"solana",
-				recipientAddress,
+				recipientTokenAddress.address.toBytes(),
 				relayerFee,
 				{ gasLimit: 10000000 },
 			);
@@ -65,7 +101,91 @@ export async function transferTokens(
 				sequence,
 			);
 			console.log("signedVaa:", vaaBytes.toString());
-			return vaaBytes;
+
+			try {
+				//post vaa
+				console.log("posting vaa");
+				await postVaaSolanaWithRetry(
+					CONNECTION_TESTNET,
+					signTransaction,
+					BRIDGE_ADDRESS_TESTNET["solana"].address,
+					RECIPIENT_WALLET_ADDRESS_TESTNET.toString(),
+					Buffer.from(vaaBytes),
+					10,
+				);
+				console.log("vaa posted");
+
+				// redeem token
+				console.log("redeeming token on solana");
+				const redeemTxn = await redeemOnSolana(
+					CONNECTION_TESTNET,
+					BRIDGE_ADDRESS_TESTNET["solana"].address,
+					TOKEN_BRIDGE_ADDRESS_TESTNET["solana"].address,
+					RECIPIENT_WALLET_ADDRESS_TESTNET.toString(),
+					vaaBytes,
+				);
+				await sendAndConfirmTransactions(CONNECTION_TESTNET, [redeemTxn], RECIPIENT_WALLET_ADDRESS_TESTNET, [KEYPAIR]);
+				console.log("token redeemed");
+				return;
+			} catch (error) {
+				console.log(error);
+				throw error;
+			}
+
+		case "solana":
+			try {
+				recipientTokenAddress = await getOrCreateAssociatedTokenAccount(
+					CONNECTION_TESTNET,
+					KEYPAIR,
+					new PublicKey(tokenAddress),
+					RECIPIENT_WALLET_ADDRESS_TESTNET,
+				);
+				const mintInfo = await getMint(CONNECTION_TESTNET, new PublicKey(tokenAddress), "confirmed");
+				transferAmount = BigInt(amount) * BigInt(mintInfo.decimals);
+				const targetAddress = await provider.getSigner().getAddress();
+				const txn = await transferFromSolana(
+					CONNECTION_TESTNET,
+					BRIDGE_ADDRESS_TESTNET.solana.address,
+					TOKEN_BRIDGE_ADDRESS_TESTNET.solana.address,
+					recipientAddress,
+					recipientTokenAddress.address.toString(),
+					tokenAddress,
+					transferAmount,
+					tryNativeToUint8Array(targetAddress, targetChain),
+					targetChain,
+				);
+				const txnIds = await sendAndConfirmTransactions(
+					CONNECTION_TESTNET,
+					[txn],
+					RECIPIENT_WALLET_ADDRESS_TESTNET,
+					[KEYPAIR],
+					10,
+				);
+				const txnRes = await CONNECTION_TESTNET.getTransaction(txnIds[0]);
+				if (!txnRes) throw new Error("Transaction: " + txnIds[0] + " not found");
+				const sequence = parseSequenceFromLogSolana(txnRes);
+				const emitterAddress = await getEmitterAddressSolana(BRIDGE_ADDRESS_TESTNET.solana.address);
+				const { vaaBytes } = await getSignedVAAWithRetry(
+					[WORMHOLE_REST_ADDRESS_TESTNET],
+					"solana",
+					emitterAddress,
+					sequence,
+				);
+				let transferCompleted = false;
+				do {
+					transferCompleted = await getIsTransferCompletedEth(
+						TOKEN_BRIDGE_ADDRESS_TESTNET.ethereum_goerli.address,
+						provider.getSigner(),
+						vaaBytes,
+					);
+					await new Promise((r) => setTimeout(r, 5000));
+				} while (!transferCompleted);
+
+				return;
+			} catch (error) {
+				console.error(error);
+				throw error;
+			}
 
 		default:
 			throw new NotImplementedError();

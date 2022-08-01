@@ -3,6 +3,7 @@ import * as React from 'react';
 import { Deposit } from '../components/Deposit';
 import { Fund } from '../components/Fund';
 import Navbar from '../components/Navbar';
+import { RegisterFetch } from '../components/RegisterFetch';
 import { SolStream } from '../components/SolStream';
 import { Swap } from '../components/Swap';
 import { TokenStream } from '../components/TokenStream';
@@ -21,7 +22,7 @@ export function Stream (props: IStreamProps) {
     <>
     <div>
          <div className="w-full h-screen flex flex-col">
-      <Navbar/>
+     
 
 
 
@@ -34,6 +35,7 @@ export function Stream (props: IStreamProps) {
                 <div className= {index!==3? "text-slate-500 p-3 px-10":"text-black border-b-2 border-black p-3 px-10"} onClick={()=>setIndex(3)}>Withdraw</div>
                 <div className= {index!==4? "text-slate-500 p-3 px-10":"text-black border-b-2 border-black p-3 px-10"} onClick={()=>setIndex(4)}>Deposit</div>
                 <div className= {index!==5? "text-slate-500 p-3 px-10":"text-black border-b-2 border-black p-3 px-10"} onClick={()=>setIndex(5)}>Fund</div>
+                <div className= {index!==6? "text-slate-500 p-3 px-10":"text-black border-b-2 border-black p-3 px-10"} onClick={()=>setIndex(6)}>Register/Get Message</div>
             </div>
 
         <div className="tabscontentlist">
@@ -59,6 +61,10 @@ export function Stream (props: IStreamProps) {
             </div>
             <div  hidden={index!==5}> 
             <Fund/>
+            
+            </div>
+            <div  hidden={index!==6}> 
+            <RegisterFetch/>
             
             </div>
         </div>
