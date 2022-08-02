@@ -125,6 +125,10 @@ export async function transferTokens(
 					RECIPIENT_WALLET_ADDRESS_TESTNET.toString(),
 					vaaBytes,
 				);
+
+				const { blockhash } = await CONNECTION_TESTNET.getRecentBlockhash();
+				redeemTxn.recentBlockhash = blockhash;
+
 				await sendAndConfirmTransactions(
 					CONNECTION_TESTNET,
 					signTransaction,
@@ -152,22 +156,23 @@ export async function transferTokens(
 				console.log(" token address", tokenAddress)
 
 				const mintInfo = await getMint(CONNECTION_TESTNET, new PublicKey(tokenAddress), "confirmed");
-				transferAmount = BigInt(amount) * BigInt(mintInfo.decimals);
 
+				transferAmount = BigInt(amount) * BigInt(10 ** mintInfo.decimals);
+				console.log(transferAmount);
 				const targetAddress = await provider.getSigner().getAddress();
 				console.log("target address",targetAddress)
 
 				console.log("Creating transfer txn");
 				const txn = await transferFromSolana(
-					CONNECTION_TESTNET,
-					BRIDGE_ADDRESS_TESTNET.solana.address,
-					TOKEN_BRIDGE_ADDRESS_TESTNET.solana.address,
-					recipientAddress,
-					recipientTokenAddress.address.toString(),
-					tokenAddress,
-					transferAmount,
-					hexToUint8Array(tryNativeToHexString(targetAddress, targetChain)),
-					targetChain,
+					CONNECTION_TESTNET, // devnet connection
+					BRIDGE_ADDRESS_TESTNET.solana.address, // devnet solana bridge address
+					TOKEN_BRIDGE_ADDRESS_TESTNET.solana.address, // devnet solana token bridge address
+					recipientAddress, // wallet address for payer
+					recipientTokenAddress.address.toString(), // associated token account of wallet
+					tokenAddress, // token mint address of solana
+					transferAmount, // transfer amount
+					hexToUint8Array(tryNativeToHexString(targetAddress, targetChain)), // target address (eth account address)
+					targetChain, // target chain: "ethereum"
 				);
 
 				console.log("sending txn",txn);
