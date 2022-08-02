@@ -1,5 +1,7 @@
+import { getEmitterAddressEth, getSignedVAAWithRetry, parseSequenceFromLogEth } from '@certusone/wormhole-sdk';
 import { BigNumber } from 'ethers';
 import * as React from 'react';
+import { BRIDGE_ADDRESS_TESTNET, TOKEN_BRIDGE_ADDRESS_TESTNET, WORMHOLE_REST_ADDRESS_TESTNET } from '../constants_testnet';
 import { useRelayer } from '../hooks/useRelayer';
 
 export interface ISwapProps {
@@ -43,10 +45,23 @@ export function Swap (props: ISwapProps) {
     const Amount =  BigNumber.from(tokenData.amount);
     const Nonce =  BigNumber.from(tokenData.nonce)
     console.log("here")
+    const tx = await(await encode_process_swap_token(Amount,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
+    const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS_TESTNET["bsc"].address;
+    const emitterAddress = getEmitterAddressEth(tokenBridgeAddress);
+    console.log("emitter Address", emitterAddress)
+    console.log("fetching Vaa")
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      [WORMHOLE_REST_ADDRESS_TESTNET],
+      "bsc",
+      emitterAddress,
+      seq,
+    );
+   
 
-
-    const sequence = encode_process_swap_token(Amount,Nonce );
-    
+    console.log("vaa",vaaBytes)
      
   }
 
@@ -74,8 +89,24 @@ export function Swap (props: ISwapProps) {
     const Amount =  BigNumber.from(SolData.amount);
     const Nonce =  BigNumber.from(SolData.nonce)
 
-    const sequence = process_swap_sol(Amount,Nonce );
-    console.log("here")
+
+    const tx = await(await process_swap_sol(Amount,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
+    const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS_TESTNET["bsc"].address;
+    const emitterAddress = getEmitterAddressEth(tokenBridgeAddress);
+    console.log("emitter Address", emitterAddress)
+    console.log("fetching Vaa")
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      [WORMHOLE_REST_ADDRESS_TESTNET],
+      "bsc",
+      emitterAddress,
+      seq,
+    );
+   
+
+    console.log("vaa",vaaBytes)
 
     
      

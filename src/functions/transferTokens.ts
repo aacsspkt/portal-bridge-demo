@@ -141,12 +141,15 @@ export async function transferTokens(
 					new PublicKey(tokenAddress),
 					KEYPAIR.publicKey,
 				);
+				console.log("recipient token address", recipientTokenAddress.address.toString());
+				console.log(" token address", tokenAddress);
 
 				const mintInfo = await getMint(CONNECTION, new PublicKey(tokenAddress), "confirmed");
 
 				transferAmount = BigInt(amount) * BigInt(10 ** mintInfo.decimals);
 				console.log(transferAmount);
 				const targetAddress = await provider.getSigner().getAddress();
+				console.log("target address", targetAddress);
 
 				console.log("Creating transfer txn");
 				const txn = await transferFromSolana(

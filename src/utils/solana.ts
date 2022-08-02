@@ -70,10 +70,13 @@ export async function sendAndConfirmTransactions(
 	const transactionReceipts = [];
 	while (!(currentIndex >= unsignedTransactions.length) && !(currentRetries > maxRetries)) {
 		let transaction = unsignedTransactions[currentIndex];
+
 		let signed: Transaction;
+		const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
 		try {
 			signed = await signTransaction(transaction);
+			console.log("signed", signed);
 		} catch (e) {
 			//Eject here because this is most likely an intentional rejection from the user, or a genuine unrecoverable failure.
 			return Promise.reject("Failed to sign transaction.");

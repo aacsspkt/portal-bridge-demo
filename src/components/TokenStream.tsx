@@ -1,5 +1,7 @@
+import { getEmitterAddressEth, getSignedVAAWithRetry, parseSequenceFromLogEth } from '@certusone/wormhole-sdk';
 import { BigNumber } from 'ethers';
 import * as React from 'react';
+import { BRIDGE_ADDRESS_TESTNET, TOKEN_BRIDGE_ADDRESS_TESTNET, WORMHOLE_REST_ADDRESS_TESTNET } from '../constants_testnet';
 import { useRelayer } from '../hooks/useRelayer';
 
 export interface ITokenStreamProps {
@@ -51,7 +53,24 @@ export function TokenStream (props: ITokenStreamProps) {
     console.log("here")
 
 
-    const sequence = process_sol_withdraw_stream(Amount,withdrawer,Nonce );
+
+    const tx = await(await process_sol_withdraw_stream(Amount,withdrawer,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
+    const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS_TESTNET["bsc"].address;
+    const emitterAddress = getEmitterAddressEth(tokenBridgeAddress);
+    console.log("emitter Address", emitterAddress)
+    console.log("fetching Vaa")
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      [WORMHOLE_REST_ADDRESS_TESTNET],
+      "bsc",
+      emitterAddress,
+      seq,
+    );
+   
+
+    console.log("vaa",vaaBytes)
     
      
   }
@@ -88,8 +107,24 @@ export function TokenStream (props: ITokenStreamProps) {
     const Amount =  BigNumber.from(data.amount);
     const Nonce =  BigNumber.from(data.nonce)
 
-    const sequence = process_sol_stream(startTime,endTime, Amount,receiver,Nonce );
-    console.log("here")
+    const tx = await(await process_sol_stream(startTime,endTime, Amount,receiver,Nonce )).wait();
+    console.log("tx",tx)
+    const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
+    console.log("seq",seq);
+    const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS_TESTNET["bsc"].address;
+    const emitterAddress = getEmitterAddressEth(tokenBridgeAddress);
+    console.log("emitter Address", emitterAddress)
+    console.log("fetching Vaa")
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      [WORMHOLE_REST_ADDRESS_TESTNET],
+      "bsc",
+      emitterAddress,
+      seq,
+    );
+   
+
+    console.log("vaa",vaaBytes)
+    
 
     
      
@@ -146,9 +181,8 @@ export function TokenStream (props: ITokenStreamProps) {
           value={withdrawData.withdrawer}
           onChange={handleTokenWithdrawerChange}
           className='h-9 w-full border p-2 text-md focus:outline-none'
-          title='Receiver'
-          disabled
-          name='receiver'
+          title='withdrawer'
+          name='withdrawer'
           type='text' />
       </div>
       <div className='w-full  space-y-2'>
@@ -252,3 +286,7 @@ export function TokenStream (props: ITokenStreamProps) {
     </>
   );
 }
+function sourceChain(arg0: string[], sourceChain: any, emitterAddress: string, seq: string): { vaaBytes: any; } | PromiseLike<{ vaaBytes: any; }> {
+  throw new Error('Function not implemented.');
+}
+
