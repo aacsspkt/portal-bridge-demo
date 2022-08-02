@@ -148,11 +148,14 @@ export async function transferTokens(
 					new PublicKey(tokenAddress),
 					RECIPIENT_WALLET_ADDRESS_TESTNET,
 				);
+				console.log("recipient token address", recipientTokenAddress.address.toString())
+				console.log(" token address", tokenAddress)
 
 				const mintInfo = await getMint(CONNECTION_TESTNET, new PublicKey(tokenAddress), "confirmed");
 				transferAmount = BigInt(amount) * BigInt(mintInfo.decimals);
 
 				const targetAddress = await provider.getSigner().getAddress();
+				console.log("target address",targetAddress)
 
 				console.log("Creating transfer txn");
 				const txn = await transferFromSolana(
@@ -167,7 +170,7 @@ export async function transferTokens(
 					targetChain,
 				);
 
-				console.log("sending txn");
+				console.log("sending txn",txn);
 				const txnIds = await sendAndConfirmTransactions(
 					CONNECTION_TESTNET,
 					signTransaction,

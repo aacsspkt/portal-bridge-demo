@@ -1,6 +1,6 @@
-import { ChainId, ChainName, CHAINS, CHAIN_ID_ETH, parseSequenceFromLogEth, toChainId } from '@certusone/wormhole-sdk';
+import { ChainId, ChainName, CHAINS, CHAIN_ID_ETH, getEmitterAddressEth, getSignedVAAWithRetry, parseSequenceFromLogEth, toChainId } from '@certusone/wormhole-sdk';
 import * as React from 'react';
-import { BRIDGE_ADDRESS_TESTNET } from '../constants_testnet';
+import { BRIDGE_ADDRESS_TESTNET, TOKEN_BRIDGE_ADDRESS_TESTNET, WORMHOLE_REST_ADDRESS_TESTNET } from '../constants_testnet';
 import { useRelayer } from '../hooks/useRelayer';
 import { CustomDropDown } from './CustomDropdown';
 
@@ -69,7 +69,20 @@ export function RegisterFetch (props: IRegisterFetchProps) {
         const tx = await(await registerApplicationContracts(chainId,applicationAddresses )).wait();
         console.log("tx",tx);
         const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
-        console.log("seq",seq);         
+        console.log("seq",seq);  
+        const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS_TESTNET["bsc"].address;
+    const emitterAddress = getEmitterAddressEth(tokenBridgeAddress);
+    console.log("emitter Address", emitterAddress)
+    console.log("fetching Vaa")
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      [WORMHOLE_REST_ADDRESS_TESTNET],
+      "bsc",
+      emitterAddress,
+      seq,
+    );
+   
+
+    console.log("vaa",vaaBytes)       
       }
 
       const handleGetMessage = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -86,7 +99,20 @@ export function RegisterFetch (props: IRegisterFetchProps) {
         const tx = await(await getCurrentMsg()).wait();
         console.log("tx",tx);
         const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
-        console.log("seq",seq);         
+        console.log("seq",seq);      
+        const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS_TESTNET["bsc"].address;
+    const emitterAddress = getEmitterAddressEth(tokenBridgeAddress);
+    console.log("emitter Address", emitterAddress)
+    console.log("fetching Vaa")
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      [WORMHOLE_REST_ADDRESS_TESTNET],
+      "bsc",
+      emitterAddress,
+      seq,
+    );
+   
+
+    console.log("vaa",vaaBytes)   
       }
 
       const handleEncodedMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -94,6 +120,7 @@ export function RegisterFetch (props: IRegisterFetchProps) {
           ...data,
           encodedMessage: e.target.value
         });
+        
       }
 
 

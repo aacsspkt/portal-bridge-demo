@@ -3,7 +3,7 @@ import nacl from 'tweetnacl';
 import {
   Connection,
   PublicKey,
-  Transaction,
+  Transaction
 } from '@solana/web3.js';
 
 import { KEYPAIR } from '../constants';
@@ -50,11 +50,15 @@ function logTransaction(transaction: Transaction) {
 }
 
 export const signTransaction = async (transaction: Transaction) => {
+	
 	const existingPair = transaction.signatures.filter((pair) => pair.signature !== null);
 	transaction.sign(KEYPAIR);
 	existingPair.forEach((pair) => {
+
 		if (pair.signature) transaction.addSignature(pair.publicKey, pair.signature);
+		console.log("after pair",pair.signature)
 	});
+
 	return transaction;
 };
 
@@ -73,10 +77,12 @@ export async function sendAndConfirmTransactions(
 	const transactionReceipts = [];
 	while (!(currentIndex >= unsignedTransactions.length) && !(currentRetries > maxRetries)) {
 		let transaction = unsignedTransactions[currentIndex];
+		
 		let signed: Transaction;
+		const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
 
 		try {
-			const { blockhash } = await connection.getRecentBlockhash();
+			transaction.lastValidBlockHeight = lastValidBlockHeight;
 			transaction.recentBlockhash = blockhash;
 			transaction.feePayer = new PublicKey(payer);
 		} catch (e) {
@@ -88,6 +94,7 @@ export async function sendAndConfirmTransactions(
 
 		try {
 			signed = await signTransaction(transaction);
+			console.log("signed",signed)
 		} catch (e) {
 			//Eject here because this is most likely an intentional rejection from the user, or a genuine unrecoverable failure.
 			return Promise.reject("Failed to sign transaction.");

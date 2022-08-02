@@ -1,7 +1,7 @@
-import { parseSequenceFromLogEth } from '@certusone/wormhole-sdk';
+import { getEmitterAddressEth, getSignedVAAWithRetry, parseSequenceFromLogEth } from '@certusone/wormhole-sdk';
 import { BigNumber } from 'ethers';
 import * as React from 'react';
-import { BRIDGE_ADDRESS_TESTNET } from '../constants_testnet';
+import { BRIDGE_ADDRESS_TESTNET, TOKEN_BRIDGE_ADDRESS_TESTNET, WORMHOLE_REST_ADDRESS_TESTNET } from '../constants_testnet';
 import { useRelayer } from '../hooks/useRelayer';
 
 export interface IFundProps {
@@ -52,6 +52,19 @@ export function Fund (props: IFundProps) {
     console.log("tx",tx)
     const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
     console.log("seq",seq);
+    const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS_TESTNET["bsc"].address;
+    const emitterAddress = getEmitterAddressEth(tokenBridgeAddress);
+    console.log("emitter Address", emitterAddress)
+    console.log("fetching Vaa")
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      [WORMHOLE_REST_ADDRESS_TESTNET],
+      "bsc",
+      emitterAddress,
+      seq,
+    );
+   
+
+    console.log("vaa",vaaBytes)
     
      
   }
@@ -90,6 +103,19 @@ export function Fund (props: IFundProps) {
     console.log("tx",tx)
     const seq = parseSequenceFromLogEth(tx,BRIDGE_ADDRESS_TESTNET["bsc"].address);
     console.log("seq",seq);
+    const tokenBridgeAddress = TOKEN_BRIDGE_ADDRESS_TESTNET["bsc"].address;
+    const emitterAddress = getEmitterAddressEth(tokenBridgeAddress);
+    console.log("emitter Address", emitterAddress)
+    console.log("fetching Vaa")
+    const { vaaBytes } = await getSignedVAAWithRetry(
+      [WORMHOLE_REST_ADDRESS_TESTNET],
+      "bsc",
+      emitterAddress,
+      seq,
+    );
+   
+
+    console.log("vaa",vaaBytes)
 
     
      
