@@ -2,7 +2,6 @@ import nacl from 'tweetnacl';
 
 import {
   Connection,
-  PublicKey,
   Transaction,
 } from '@solana/web3.js';
 
@@ -61,7 +60,6 @@ export async function sendAndConfirmTransactions(
 	connection: Connection,
 	signTransaction: (transaction: Transaction) => Promise<Transaction>,
 	unsignedTransactions: Transaction[],
-	payer: PublicKey,
 	maxRetries: number = 0,
 ): Promise<string[]> {
 	if (!(unsignedTransactions && unsignedTransactions.length)) {
