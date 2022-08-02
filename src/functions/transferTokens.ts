@@ -141,7 +141,7 @@ export async function transferTokens(
 					new PublicKey(tokenAddress),
 					KEYPAIR.publicKey,
 				);
-				console.log("recipient token address", recipientTokenAddress.address.toString());
+				console.log("recipient token address", recipientTokenAccount.address.toString());
 				console.log(" token address", tokenAddress);
 
 				const mintInfo = await getMint(CONNECTION, new PublicKey(tokenAddress), "confirmed");
