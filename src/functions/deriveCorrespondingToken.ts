@@ -12,11 +12,15 @@ import {
   tryNativeToHexString,
   tryUint8ArrayToNative,
 } from '@certusone/wormhole-sdk';
+import { Connection } from '@solana/web3.js';
 
 import {
-  CONNECTION_TESTNET,
-  TOKEN_BRIDGE_ADDRESS_TESTNET,
-} from '../constants_testnet';
+  ETH_BRIDGE_ADDRESS,
+  ETH_TOKEN_BRIDGE_ADDRESS,
+  SOL_BRIDGE_ADDRESS,
+  SOL_TOKEN_BRIDGE_ADDRESS,
+  SOLANA_HOST,
+} from '../constants';
 import {
   ArgumentNullOrUndefinedError,
   NotImplementedError,
@@ -51,8 +55,8 @@ export async function getForeignAsset(param: {
 		case "solana":
 			try {
 				const address = await getForeignAssetSolana(
-					CONNECTION_TESTNET,
-					TOKEN_BRIDGE_ADDRESS_TESTNET.solana.address,
+					new Connection(SOLANA_HOST),
+					SOL_BRIDGE_ADDRESS,
 					sourceChain,
 					hexToUint8Array(tryNativeToHexString(tokenAddress, sourceChain)),
 				);
@@ -66,7 +70,7 @@ export async function getForeignAsset(param: {
 			try {
 				if (!provider) throw new ArgumentNullOrUndefinedError();
 				return await getForeignAssetEth(
-					TOKEN_BRIDGE_ADDRESS_TESTNET.ethereum_goerli.address,
+					ETH_BRIDGE_ADDRESS,
 					provider,
 					sourceChain,
 					hexToUint8Array(tryNativeToHexString(tokenAddress, sourceChain)),
@@ -91,12 +95,7 @@ export async function getOriginalAsset(param: {
 		case "ethereum": {
 			try {
 				if (!targetChain || !signer) throw new ArgumentNullOrUndefinedError();
-				let origin = await getOriginalAssetEth(
-					TOKEN_BRIDGE_ADDRESS_TESTNET.ethereum_goerli.address,
-					signer,
-					tokenAddress,
-					targetChain,
-				);
+				let origin = await getOriginalAssetEth(ETH_TOKEN_BRIDGE_ADDRESS, signer, tokenAddress, targetChain);
 				return tryUint8ArrayToNative(origin.assetAddress, origin.chainId);
 			} catch (e) {
 				throw e;
@@ -104,11 +103,7 @@ export async function getOriginalAsset(param: {
 		}
 		case "solana": {
 			try {
-				let origin = await getOriginalAssetSol(
-					CONNECTION_TESTNET,
-					TOKEN_BRIDGE_ADDRESS_TESTNET.solana.address,
-					tokenAddress,
-				);
+				let origin = await getOriginalAssetSol(new Connection(SOLANA_HOST), SOL_TOKEN_BRIDGE_ADDRESS, tokenAddress);
 				return tryUint8ArrayToNative(origin.assetAddress, origin.chainId);
 			} catch (e) {
 				throw e;
@@ -125,18 +120,14 @@ export async function getIsWrapped(param: { tokenAddress: string; sourceChain: C
 	switch (sourceChain) {
 		case "ethereum": {
 			if (!signer) throw new ArgumentNullOrUndefinedError();
-			const is_wrapped = await getIsWrappedAssetEth(
-				TOKEN_BRIDGE_ADDRESS_TESTNET.ethereum_goerli.address,
-				signer,
-				tokenAddress,
-			);
+			const is_wrapped = await getIsWrappedAssetEth(ETH_TOKEN_BRIDGE_ADDRESS, signer, tokenAddress);
 			console.log("Token Wrapped? ==> ", is_wrapped);
 			return is_wrapped;
 		}
 		case "solana": {
 			const is_wrapped = await getIsWrappedAssetSol(
-				CONNECTION_TESTNET,
-				TOKEN_BRIDGE_ADDRESS_TESTNET.solana.address,
+				new Connection(SOLANA_HOST),
+				SOL_TOKEN_BRIDGE_ADDRESS,
 				tokenAddress,
 			);
 			console.log("Token Wrapped? ==> ", is_wrapped);

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-import base58 from 'bs58';
 import { ethers } from 'ethers';
 
 import {
@@ -8,10 +7,9 @@ import {
   CHAINS,
 } from '@certusone/wormhole-sdk';
 import detectEthereumProvider from '@metamask/detect-provider';
-import { Keypair } from '@solana/web3.js';
 
 import { CustomDropDown } from '../components/CustomDropdown';
-import { RECIPIENT_WALLET_ADDRESS_TESTNET } from '../constants_testnet';
+import { KEYPAIR } from '../constants';
 import {
   attestToken,
   createWrappedTokens,
@@ -110,11 +108,10 @@ export default function Register(props: IRegisterProps) {
 
     const signedVAA = await attestToken(data.sourceChain.value, signer, data.sourceToken.value);
     if (signedVAA) {
-      const keypair = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
       let targetToken: string | null;
 
       do {
-        await createWrappedTokens(data.targetChain.value, RECIPIENT_WALLET_ADDRESS_TESTNET.toString(), keypair, signedVAA);
+        await createWrappedTokens(data.targetChain.value, KEYPAIR.publicKey.toString(), KEYPAIR, signedVAA);
         targetToken = await getCorrespondingToken({
           tokenAddress: data.sourceToken.value,
           sourceChain: data.sourceChain.value,

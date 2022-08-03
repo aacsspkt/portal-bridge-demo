@@ -1,5 +1,3 @@
-import { ChainId } from "@certusone/wormhole-sdk";
-
 export type CHAIN_NAMES =
 	| "solana"
 	| "ethereum"
@@ -31,9 +29,3 @@ export type CHAIN_NAMES_TESTNET =
 	| "acala"
 	| "klaytn"
 	| "celo";
-
-export type BridgeConfig = {
-	wormholeChainId: ChainId;
-	networkId: string | number | undefined;
-	address: string;
-};

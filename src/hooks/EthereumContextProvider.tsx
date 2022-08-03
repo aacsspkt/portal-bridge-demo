@@ -39,6 +39,7 @@ const EthereumProviderContext = React.createContext<IEthereumProviderContext>({
   walletConnected: false,
   trimWalletAddress: (walletAddress: string | undefined) => walletAddress
 });
+
 export const EthereumProviderProvider = ({
   children
 }: any) => {
@@ -50,6 +51,7 @@ export const EthereumProviderProvider = ({
     undefined
   );
   const [walletConnected, setWalletConnected] = useState<boolean>(false)
+
   const connect = useCallback(() => {
     setProviderError(null);
     detectEthereumProvider()

@@ -8,7 +8,7 @@ import { ethers } from 'ethers';
 import { ChainName } from '@certusone/wormhole-sdk';
 import detectEthereumProvider from '@metamask/detect-provider';
 
-import { RECIPIENT_WALLET_ADDRESS_TESTNET } from '../constants_testnet';
+import { KEYPAIR } from '../constants';
 import {
   getCorrespondingToken,
   isValidToken,
@@ -75,7 +75,7 @@ export const useTransferForm = (list: ChainName[]) => {
 			provider,
 			data.sourceToken,
 			parseFloat(data.transferAmount),
-			RECIPIENT_WALLET_ADDRESS_TESTNET.toString(),
+			KEYPAIR.publicKey.toString(),
 		);
 		console.log("Result", result);
 	};
@@ -83,7 +83,6 @@ export const useTransferForm = (list: ChainName[]) => {
 	useEffect(() => {
 		const getAndSetTargetToken = async () => {
 			try {
-				console.log("Getting Target Token...");
 				if (data.sourceChain.includes(data.targetChain)) {
 					setData({
 						...data,
@@ -92,6 +91,7 @@ export const useTransferForm = (list: ChainName[]) => {
 					return;
 				}
 
+				console.log("Getting Target Token...");
 				const detectedProvider = await detectEthereumProvider();
 				const provider = new ethers.providers.Web3Provider(
 					// @ts-ignore
