@@ -1,6 +1,8 @@
 import { getEmitterAddressEth, getSignedVAAWithRetry, parseSequenceFromLogEth } from '@certusone/wormhole-sdk';
 import { BigNumber } from 'ethers';
 import * as React from 'react';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { setVaa } from '../app/slices/vaaSlice';
 import { BRIDGE_ADDRESS_TESTNET, TOKEN_BRIDGE_ADDRESS_TESTNET, WORMHOLE_REST_ADDRESS_TESTNET } from '../constants_testnet';
 import { useRelayer } from '../hooks/useRelayer';
 
@@ -24,6 +26,8 @@ interface TokenStream{
 }
 
 export function TokenStream (props: ITokenStreamProps) {
+  const dispatch = useAppDispatch()
+  const vaa = useAppSelector((state)=>state.vaa.vaaValue)
   const [withdrawData, setWithdrawData] = React.useState<TokenWithdrawStream>({
     withdrawer: "",
     amount:"",
@@ -70,7 +74,7 @@ export function TokenStream (props: ITokenStreamProps) {
     );
    
 
-    console.log("vaa",vaaBytes)
+    console.log("vaa",vaaBytes.toString())
     
      
   }
@@ -124,6 +128,8 @@ export function TokenStream (props: ITokenStreamProps) {
    
 
     console.log("vaa",vaaBytes)
+
+    dispatch(setVaa(vaaBytes));
     
 
     
@@ -174,7 +180,7 @@ export function TokenStream (props: ITokenStreamProps) {
   <div className='container flex flex-row mx-auto overflow-y-auto'>
     <form className='w-full space-y-3' onSubmit={handleTokenWithdrawSubmit}>
       <legend className='w-full text-3xl mt-5 mb-6'>Token Withdraw Stream </legend>
-             
+          
       <div className='w-full  space-y-2'>
         <label className='text-md '>Withdrawer</label>
         <input
@@ -221,6 +227,8 @@ export function TokenStream (props: ITokenStreamProps) {
   <div className='container flex flex-row mx-auto overflow-y-auto'>
     <form className='w-full space-y-3' onSubmit={handleTokenStream}>
       <legend className='w-full text-3xl mt-5 mb-6'>Token Stream </legend>
+      <div>VAA:</div>
+        <div>{vaa}</div>
       <div className='w-full  space-y-2'>
         <label className='text-md '>Start Time</label>
         <input
@@ -250,7 +258,6 @@ export function TokenStream (props: ITokenStreamProps) {
           onChange={handleTokenReceiverChange}
           className='h-9 w-full border p-2 text-md focus:outline-none'
           title='Receiver'
-          disabled
           name='receiver'
           type='text' />
       </div>

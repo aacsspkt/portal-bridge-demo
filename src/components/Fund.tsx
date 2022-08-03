@@ -1,6 +1,8 @@
 import { getEmitterAddressEth, getSignedVAAWithRetry, parseSequenceFromLogEth } from '@certusone/wormhole-sdk';
 import { BigNumber } from 'ethers';
 import * as React from 'react';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { setVaa } from '../app/slices/vaaSlice';
 import { BRIDGE_ADDRESS_TESTNET, TOKEN_BRIDGE_ADDRESS_TESTNET, WORMHOLE_REST_ADDRESS_TESTNET } from '../constants_testnet';
 import { useRelayer } from '../hooks/useRelayer';
 
@@ -23,6 +25,7 @@ interface SOLFundSubmit{
 
 
 export function Fund (props: IFundProps) {
+
   const [tokenData, setTokenData] = React.useState<TokenFundSubmit>({
     endTime:undefined,
     amount:undefined,
@@ -62,6 +65,7 @@ export function Fund (props: IFundProps) {
       emitterAddress,
       seq,
     );
+   
    
 
     console.log("vaa",vaaBytes)
@@ -152,7 +156,7 @@ export function Fund (props: IFundProps) {
   <div className='container flex flex-row mx-auto overflow-y-auto'>
     <form className='w-full space-y-3' onSubmit={handleTokenFundSubmit}>
       <legend className='w-full text-3xl mt-5 mb-6'>Token fund </legend>
-             
+         
       <div className='w-full  space-y-2'>
         <label className='text-md '>End Time</label>
         <input
