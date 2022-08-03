@@ -1,11 +1,12 @@
 import {
+	useCallback,
   useEffect,
   useState,
 } from 'react';
 
 import { ethers } from 'ethers';
 
-import { ChainName } from '@certusone/wormhole-sdk';
+import { ChainId, ChainName, toChainId, toChainName } from '@certusone/wormhole-sdk';
 import detectEthereumProvider from '@metamask/detect-provider';
 
 import { KEYPAIR } from '../constants';
@@ -14,6 +15,8 @@ import {
   isValidToken,
   transferTokens,
 } from '../functions';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { setAmount, setSourceChain, setTargetChain } from '../app/slices/transferSlice';
 
 interface TokenTransferForm {
 	sourceChain: ChainName;
@@ -24,6 +27,12 @@ interface TokenTransferForm {
 }
 
 export const useTransferForm = (list: ChainName[]) => {
+	const sourceChain = useAppSelector((state) => state.transfer.sourceChain)
+	const targetChain = useAppSelector((state) => state.transfer.targetChain)
+	const targetAsset = useAppSelector((state) => state.transfer.targetAsset)
+	const sourceToken = useAppSelector((state) => state.transfer.sourceParsedTokenAccount);
+	const amount = useAppSelector((state)=> state.transfer.amount)
+	const dispatch = useAppDispatch();
 	const [data, setData] = useState<TokenTransferForm>({
 		sourceChain: list[0],
 		sourceToken: "",
@@ -32,32 +41,39 @@ export const useTransferForm = (list: ChainName[]) => {
 		transferAmount: "",
 	});
 
-	const handleSourceChainChange = async (value: string) => {
-		setData({
-			...data,
-			sourceChain: value as ChainName,
-		});
-	};
-
+	
+	
+	const handleSourceChainChange = useCallback(
+		(event: any) => {
+			console.log(event)
+      dispatch(setSourceChain(toChainId(event)));
+    },
+    [dispatch]
+  );
 	const handleSourceTokenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setData({
 			...data,
 			sourceToken: e.target.value,
 		});
+		
+		
 	};
 
-	const handleTargetChainChange = async (value: string) => {
-		setData({
-			...data,
-			targetChain: value as ChainName,
-		});
-	};
+	const handleTargetChainChange = useCallback(
+		(event: any) => {
+			console.log(event)
+      dispatch(setTargetChain(toChainId(event)));
+    },
+    [dispatch]
+  );
 
 	const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setData({
 			...data,
 			transferAmount: e.target.value,
 		});
+		dispatch(setAmount(data.transferAmount));
+		console.log("amount",amount)
 	};
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -70,8 +86,8 @@ export const useTransferForm = (list: ChainName[]) => {
 		);
 
 		const result = await transferTokens(
-			data.sourceChain,
-			data.targetChain,
+			toChainName(sourceChain),
+			toChainName(targetChain),
 			provider,
 			data.sourceToken,
 			parseFloat(data.transferAmount),
@@ -83,7 +99,7 @@ export const useTransferForm = (list: ChainName[]) => {
 	useEffect(() => {
 		const getAndSetTargetToken = async () => {
 			try {
-				if (data.sourceChain.includes(data.targetChain)) {
+				if (toChainName(sourceChain).includes(toChainName(targetChain))) {
 					setData({
 						...data,
 						targetToken: "",
@@ -99,27 +115,18 @@ export const useTransferForm = (list: ChainName[]) => {
 					"any",
 				);
 
-				if (isValidToken(data.sourceToken, data.sourceChain)) {
+				if (isValidToken(data.sourceToken, toChainName(sourceChain))) {
 					const targetToken = await getCorrespondingToken({
-						sourceChain: data.sourceChain,
-						targetChain: data.targetChain,
+						dispatch: dispatch,
+						sourceChain: toChainName(sourceChain),
+						targetChain: toChainName(targetChain),
 						tokenAddress: data.sourceToken,
 						signer: provider.getSigner(),
 					});
+					
 
-					console.log("targetToken:", targetToken);
+					console.log("targetToken:", targetAsset.address);
 
-					if (targetToken != null) {
-						setData({
-							...data,
-							targetToken: targetToken,
-						});
-					} else {
-						setData({
-							...data,
-							targetToken: "",
-						});
-					}
 				}
 			} catch (error) {
 				console.log(error);
@@ -129,7 +136,7 @@ export const useTransferForm = (list: ChainName[]) => {
 		if (data.sourceToken !== "") {
 			getAndSetTargetToken();
 		}
-	}, [data.sourceChain, data.sourceToken, data.targetChain]);
+	}, [sourceChain, data.sourceToken, targetChain]);
 
 	return {
 		data,

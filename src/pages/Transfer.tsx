@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import {
   ChainName,
   CHAINS,
+  toChainName,
 } from '@certusone/wormhole-sdk';
 
 import { CustomDropDown } from '../components/CustomDropdown';
@@ -14,6 +15,10 @@ interface ITransferProps {
 
 
 export default function Transfer(props: ITransferProps) {
+  const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
+  let sourceChains: number;
+  const targetChain = useAppSelector((state) => state.transfer.targetChain)
+  const targetAsset= useAppSelector((state)=> state.transfer.targetAsset)
   const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item !== "unset");
 
   const {
@@ -24,6 +29,7 @@ export default function Transfer(props: ITransferProps) {
     handleAmountChange,
     handleSubmit
   } = useTransferForm(chainList);
+
 
 
  
@@ -37,7 +43,7 @@ export default function Transfer(props: ITransferProps) {
 
             <div className='w-4/5 space-y-2'>
               <label className='text-md '>Source Chain</label>
-              <CustomDropDown value={data.sourceChain} onChange={handleSourceChainChange} dropdownList={chainList} />
+              <CustomDropDown value={toChainName(sourceChain)} onChange={handleSourceChainChange} dropdownList={chainList} />
 
             </div>
             <div className='w-4/5 space-y-2'>
@@ -52,17 +58,12 @@ export default function Transfer(props: ITransferProps) {
             </div>
             <div className='w-4/5 space-y-2'>
               <label className='text-md '>Target Chain</label>
-              <CustomDropDown value={data.targetChain} onChange={handleTargetChainChange} dropdownList={chainList} />
+              <CustomDropDown value={toChainName(targetChain)} onChange={handleTargetChainChange} dropdownList={chainList} />
             </div>
             <div className='w-4/5 space-y-2'>
               <label className='text-md '>Target Token</label>
-              <input
-                value={data.targetToken}
-                className='h-9 w-full border p-2 text-md focus:outline-none'
-                title='Target Token'
-                disabled
-                name='targetToken'
-                type='text' />
+              <div   className='h-9 w-full border p-2 text-md focus:outline-none'>{targetAsset.address}</div>
+             
             </div>
             <div className='w-4/5 space-y-2'>
               <label className='text-md '>Amount</label>

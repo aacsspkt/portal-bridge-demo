@@ -1,6 +1,4 @@
 import * as React from 'react';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { setVaa } from '../app/slices/vaaSlice';
 import { BigNumber } from 'ethers';
 
 import {

@@ -5,15 +5,14 @@ import {
     ThunkAction
   } from "@reduxjs/toolkit"
 import counterSlice from "./slices/counterSlice"
-import vaaSlice from "./slices/vaaSlice"
-
+import transferSlice from "./slices/transferSlice"
 
 
 
   
   const combineReducer = combineReducers({
     counter: counterSlice,
-    vaa:vaaSlice,
+    transfer:transferSlice,
 
     
   })

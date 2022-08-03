@@ -15,7 +15,7 @@ import {
 } from '../constants';
 import { useRelayer } from '../hooks/useRelayer';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { setVaa } from '../app/slices/vaaSlice';
+
 
 export interface ITokenStreamProps {
 }
@@ -37,8 +37,7 @@ interface TokenStream {
 }
 
 export function TokenStream(props: ITokenStreamProps) {
-  const vaa = useAppSelector((state)=>state.vaa.vaaValue)
-  const dispatch = useAppDispatch();
+ 
   const [withdrawData, setWithdrawData] = React.useState<TokenWithdrawStream>({
     withdrawer: "",
     amount: "",
@@ -138,7 +137,6 @@ export function TokenStream(props: ITokenStreamProps) {
 
     console.log("vaa", vaaBytes)
 
-    dispatch(setVaa(vaaBytes))
 
 
 
@@ -236,8 +234,7 @@ export function TokenStream(props: ITokenStreamProps) {
   <div className='container flex flex-row mx-auto overflow-y-auto'>
     <form className='w-full space-y-3' onSubmit={handleTokenStream}>
       <legend className='w-full text-3xl mt-5 mb-6'>Token Stream </legend>
-      <div>VAA:</div>
-        <div>{vaa}</div>
+    
       <div className='w-full  space-y-2'>
         <label className='text-md '>Start Time</label>
         <input

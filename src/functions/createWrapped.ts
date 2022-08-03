@@ -26,6 +26,7 @@ import {
   sendAndConfirmTransactions,
   signTransaction,
 } from '../utils/solana';
+import { Dispatch } from 'redux';
 
 /**
  * @param payerAddress Public Key of the fee payer
@@ -35,6 +36,7 @@ import {
  * @returns Array of transaction signature
  */
 export async function createWrappedTokens(
+	dispatch:Dispatch,
 	targetChain: ChainName,
 	payerAddress: string,
 	signer: Keypair | ethers.Signer,

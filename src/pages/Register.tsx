@@ -15,6 +15,7 @@ import {
   createWrappedTokens,
   getCorrespondingToken,
 } from '../functions';
+import { useAppDispatch } from '../app/hooks';
 
 interface TokenRegisterForm {
   sourceChain: {
@@ -41,7 +42,7 @@ interface IRegisterProps {
 export default function Register(props: IRegisterProps) {
   const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item !== "unset");
   const [tokenExists, setTokenExists] = useState<boolean>(false);
-
+  const dispatch = useAppDispatch();
 
   const [data, setData] = useState<TokenRegisterForm>({
     sourceChain: {
@@ -111,8 +112,9 @@ export default function Register(props: IRegisterProps) {
       let targetToken: string | null;
 
       do {
-        await createWrappedTokens(data.targetChain.value, KEYPAIR.publicKey.toString(), KEYPAIR, signedVAA);
+        await createWrappedTokens(dispatch,data.targetChain.value, KEYPAIR.publicKey.toString(), KEYPAIR, signedVAA);
         targetToken = await getCorrespondingToken({
+          dispatch:dispatch,
           tokenAddress: data.sourceToken.value,
           sourceChain: data.sourceChain.value,
           targetChain: data.targetChain.value,
