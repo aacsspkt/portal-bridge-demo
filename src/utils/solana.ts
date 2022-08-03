@@ -56,24 +56,16 @@ export const signTransaction = async (transaction: Transaction) => {
 	return transaction;
 };
 
-export async function sendAndConfirmTransactions(
+export async function sendAndConfirmTransaction(
 	connection: Connection,
 	signTransaction: (transaction: Transaction) => Promise<Transaction>,
-	unsignedTransactions: Transaction[],
+	transaction: Transaction,
 	maxRetries: number = 0,
-): Promise<string[]> {
-	if (!(unsignedTransactions && unsignedTransactions.length)) {
-		return Promise.reject("No transactions provided to send.");
-	}
+): Promise<string> {
 	let currentRetries = 0;
-	let currentIndex = 0;
-	const transactionReceipts = [];
-	while (!(currentIndex >= unsignedTransactions.length) && !(currentRetries > maxRetries)) {
-		let transaction = unsignedTransactions[currentIndex];
-
+	let transactionReceipt: string = "";
+	while (!(currentRetries > maxRetries)) {
 		let signed: Transaction;
-		const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-
 		try {
 			signed = await signTransaction(transaction);
 			console.log("signed", signed);
@@ -81,13 +73,11 @@ export async function sendAndConfirmTransactions(
 			//Eject here because this is most likely an intentional rejection from the user, or a genuine unrecoverable failure.
 			return Promise.reject("Failed to sign transaction.");
 		}
-
 		try {
 			logTransaction(signed);
 			const txid = await connection.sendRawTransaction(signed.serialize());
-			const receipt = await connection.confirmTransaction(txid);
-			transactionReceipts.push(txid);
-			currentIndex++;
+			await connection.confirmTransaction(txid);
+			transactionReceipt = txid;
 		} catch (e: any) {
 			console.log(e.logs ? e.logs : e);
 			currentRetries++;
@@ -97,6 +87,6 @@ export async function sendAndConfirmTransactions(
 	if (currentRetries > maxRetries) {
 		return Promise.reject("Reached the maximum number of retries.");
 	} else {
-		return Promise.resolve(transactionReceipts);
+		return Promise.resolve(transactionReceipt);
 	}
 }

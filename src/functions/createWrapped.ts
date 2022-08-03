@@ -23,7 +23,7 @@ import {
 //   TOKEN_BRIDGE_ADDRESS_TESTNET,
 // } from '../constants_testnet';
 import {
-  sendAndConfirmTransactions,
+  sendAndConfirmTransaction,
   signTransaction,
 } from '../utils/solana';
 
@@ -66,7 +66,7 @@ export async function createWrappedTokens(
 					payerAddress,
 					signedVAA,
 				);
-				await sendAndConfirmTransactions(connection, signTransaction, [createWrappedTxn], 10);
+				await sendAndConfirmTransaction(connection, signTransaction, createWrappedTxn, 10);
 
 				return;
 			} catch (error) {
