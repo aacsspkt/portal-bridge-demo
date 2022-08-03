@@ -5,16 +5,21 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { EthereumProviderProvider } from './hooks/EthereumContextProvider';
+import { Provider } from 'react-redux';
+import { store } from './app/store';
+
 
 
 //import { MetaMaskProvider } from 'metamask-react';
 
 ReactDOM.render(
+  <Provider store={store}>
   <React.StrictMode>
     <EthereumProviderProvider>
       <App/>
     </EthereumProviderProvider>
   </React.StrictMode>
+  </Provider>
   , document.getElementById('root') as HTMLElement);
 
 

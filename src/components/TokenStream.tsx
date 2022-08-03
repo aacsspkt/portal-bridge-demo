@@ -14,6 +14,8 @@ import {
   WORMHOLE_RPC_HOSTS,
 } from '../constants';
 import { useRelayer } from '../hooks/useRelayer';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { setVaa } from '../app/slices/vaaSlice';
 
 export interface ITokenStreamProps {
 }
@@ -35,6 +37,8 @@ interface TokenStream {
 }
 
 export function TokenStream(props: ITokenStreamProps) {
+  const vaa = useAppSelector((state)=>state.vaa.vaaValue)
+  const dispatch = useAppDispatch();
   const [withdrawData, setWithdrawData] = React.useState<TokenWithdrawStream>({
     withdrawer: "",
     amount: "",
@@ -134,6 +138,8 @@ export function TokenStream(props: ITokenStreamProps) {
 
     console.log("vaa", vaaBytes)
 
+    dispatch(setVaa(vaaBytes))
+
 
 
 
@@ -226,77 +232,81 @@ export function TokenStream(props: ITokenStreamProps) {
         </div>
         <div className='w-96'>
 
-
-          <section className='w-full p-3 h-full'>
-            <div className='container flex flex-row mx-auto overflow-y-auto'>
-              <form className='w-full space-y-3' onSubmit={handleTokenStream}>
-                <legend className='w-full text-3xl mt-5 mb-6'>Token Stream </legend>
-                <div className='w-full  space-y-2'>
-                  <label className='text-md '>Start Time</label>
-                  <input
-                    className='h-9 w-full border p-2 text-md focus:outline-none'
-                    value={data.startTime}
-                    onChange={handleTokenStartTimeChange}
-                    title='StartTime'
-                    name='StartTime'
-                    type='text' />
-                </div>
-                <div className='w-full  space-y-2'>
-                  <label className='text-md '>End Time</label>
-                  <input
-                    className='h-9 w-full border p-2 text-md focus:outline-none'
-                    value={data.endTime}
-                    onChange={handleTokenEndTimeChange}
-                    title='End Time'
-                    name='end Time'
-                    type='text' />
-                </div>
-
-
-                <div className='w-full  space-y-2'>
-                  <label className='text-md '>Receiver</label>
-                  <input
-                    value={data.receiver}
-                    onChange={handleTokenReceiverChange}
-                    className='h-9 w-full border p-2 text-md focus:outline-none'
-                    title='Receiver'
-                    disabled
-                    name='receiver'
-                    type='text' />
-                </div>
-                <div className='w-full  space-y-2'>
-                  <label className='text-md '>Amount</label>
-                  <input
-                    className='h-9 w-full border p-2 text-md focus:outline-none'
-                    value={data.amount}
-                    onChange={handleTokenAmountChange}
-                    title='Amount'
-                    name='transferAmount'
-                    type='text' />
-                </div>
-                <div className='w-full  space-y-2'>
-                  <label className='text-md '>Nonce</label>
-                  <input
-                    className='h-9 w-full border p-2 text-md focus:outline-none'
-                    value={data.nonce}
-                    onChange={handleTokenNonceChange}
-                    title='Nonce'
-                    name='nonce'
-                    type='text' />
-                </div>
-
-                <button type='submit' className='p-2 w-full shadow text-white bg-blue-500 my-4 rounded text-center'
-                >Process Token Stream</button>
-              </form>
-            </div>
-          </section>
-        </div>
-
+        <section className='w-full p-3 h-full'>
+  <div className='container flex flex-row mx-auto overflow-y-auto'>
+    <form className='w-full space-y-3' onSubmit={handleTokenStream}>
+      <legend className='w-full text-3xl mt-5 mb-6'>Token Stream </legend>
+      <div>VAA:</div>
+        <div>{vaa}</div>
+      <div className='w-full  space-y-2'>
+        <label className='text-md '>Start Time</label>
+        <input
+          className='h-9 w-full border p-2 text-md focus:outline-none'
+          value={data.startTime}
+          onChange={handleTokenStartTimeChange}
+          title='StartTime'
+          name='StartTime'
+          type='text' />
       </div>
+      <div className='w-full  space-y-2'>
+        <label className='text-md '>End Time</label>
+        <input
+          className='h-9 w-full border p-2 text-md focus:outline-none'
+          value={data.endTime}
+          onChange={handleTokenEndTimeChange}
+          title='End Time'
+          name='end Time'
+          type='text' />
+      </div>
+
+  
+      <div className='w-full  space-y-2'>
+        <label className='text-md '>Receiver</label>
+        <input
+          value={data.receiver}
+          onChange={handleTokenReceiverChange}
+          className='h-9 w-full border p-2 text-md focus:outline-none'
+          title='Receiver'
+          name='receiver'
+          type='text' />
+      </div>
+      <div className='w-full  space-y-2'>
+        <label className='text-md '>Amount</label>
+        <input
+          className='h-9 w-full border p-2 text-md focus:outline-none'
+          value={data.amount}
+          onChange={handleTokenAmountChange}
+          title='Amount'
+          name='transferAmount'
+          type='text' />
+      </div>
+      <div className='w-full  space-y-2'>
+        <label className='text-md '>Nonce</label>
+        <input
+          className='h-9 w-full border p-2 text-md focus:outline-none'
+          value={data.nonce}
+          onChange={handleTokenNonceChange}
+          title='Nonce'
+          name='nonce'
+          type='text' />
+      </div>
+  
+      <button type='submit' className='p-2 w-full shadow text-white bg-blue-500 my-4 rounded text-center'
+      >Process Token Stream</button>
+    </form>
+  </div>
+</section>
+</div>
+      
+    </div>
     </>
   );
 }
 function sourceChain(arg0: string[], sourceChain: any, emitterAddress: string, seq: string): { vaaBytes: any; } | PromiseLike<{ vaaBytes: any; }> {
   throw new Error('Function not implemented.');
 }
+
+
+
+
 

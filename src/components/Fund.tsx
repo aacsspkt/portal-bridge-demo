@@ -1,5 +1,6 @@
 import * as React from 'react';
-
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { setVaa } from '../app/slices/vaaSlice';
 import { BigNumber } from 'ethers';
 
 import {
@@ -33,7 +34,7 @@ interface SOLFundSubmit {
 }
 
 
-export function Fund(props: IFundProps) {
+export function Fund (props: IFundProps) {
   const [tokenData, setTokenData] = React.useState<TokenFundSubmit>({
     endTime: undefined,
     amount: undefined,
