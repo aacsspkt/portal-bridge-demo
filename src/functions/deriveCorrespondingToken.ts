@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 
 import {
-	ChainId,
+  ChainId,
   ChainName,
   getForeignAssetEth,
   getForeignAssetSolana,
@@ -11,14 +11,15 @@ import {
   getOriginalAssetSol,
   hexToUint8Array,
   tryNativeToHexString,
+  tryNativeToUint8Array,
   tryUint8ArrayToNative,
 } from '@certusone/wormhole-sdk';
 import { Connection } from '@solana/web3.js';
 
+import { setTargetAsset } from '../app/slices/transferSlice';
+import { AppDispatch } from '../app/store';
 import {
-  ETH_BRIDGE_ADDRESS,
   ETH_TOKEN_BRIDGE_ADDRESS,
-  SOL_BRIDGE_ADDRESS,
   SOL_TOKEN_BRIDGE_ADDRESS,
   SOLANA_HOST,
 } from '../constants';
@@ -27,18 +28,15 @@ import {
   NotImplementedError,
 } from '../errors';
 
-import { setTargetAsset } from '../app/slices/transferSlice';
-
-import { AppDispatch } from '../app/store';
 export type ForeignAssetInfo = {
-  doesExist: boolean;
-  address: string | null;
+	doesExist: boolean;
+	address: string | null;
 };
 export interface StateSafeWormholeWrappedInfo {
-  isWrapped: boolean;
-  chainId: ChainId;
-  assetAddress: string;
-  tokenId?: string;
+	isWrapped: boolean;
+	chainId: ChainId;
+	assetAddress: string;
+	tokenId?: string;
 }
 
 export async function getCorrespondingToken(param: {
@@ -48,14 +46,14 @@ export async function getCorrespondingToken(param: {
 	targetChain: ChainName;
 	signer?: ethers.Signer;
 }) {
-	const { dispatch,tokenAddress, sourceChain, targetChain, signer } = param;
+	const { dispatch, tokenAddress, sourceChain, targetChain, signer } = param;
 	console.log(tokenAddress, sourceChain, targetChain, signer);
 
 	const isWrapped = await getIsWrapped({ tokenAddress, sourceChain, signer });
 	if (isWrapped) {
 		return await getOriginalAsset({ dispatch, tokenAddress, sourceChain, targetChain, signer });
 	} else {
-		return await getForeignAsset({dispatch,tokenAddress, sourceChain, targetChain, provider: signer });
+		return await getForeignAsset({ dispatch, tokenAddress, sourceChain, targetChain, provider: signer });
 	}
 }
 
@@ -68,25 +66,25 @@ export async function getForeignAsset(param: {
 }) {
 	console.log("get foreign asset");
 
-	const { dispatch,tokenAddress, sourceChain, targetChain, provider } = param;
+	const { dispatch, tokenAddress, sourceChain, targetChain, provider } = param;
 	switch (targetChain) {
 		case "solana":
 			try {
-				
+				console.log(SOLANA_HOST);
 				const address = await getForeignAssetSolana(
 					new Connection(SOLANA_HOST),
 					SOL_TOKEN_BRIDGE_ADDRESS,
 					sourceChain,
-					hexToUint8Array(tryNativeToHexString(tokenAddress, sourceChain)),
+					tryNativeToUint8Array(tokenAddress, sourceChain),
 				);
-				console.log(address)
+				console.log(address);
 
 				dispatch(
-              setTargetAsset({
-                  doesExist: !!address,
-                  address: address ,
-                })
-              )
+					setTargetAsset({
+						doesExist: !!address,
+						address: address,
+					}),
+				);
 				console.log("address", address);
 				return address;
 			} catch (e) {
@@ -96,19 +94,20 @@ export async function getForeignAsset(param: {
 		case "ethereum":
 			try {
 				if (!provider) throw new ArgumentNullOrUndefinedError();
-				const address =  await getForeignAssetEth(
+				const address = await getForeignAssetEth(
 					ETH_TOKEN_BRIDGE_ADDRESS,
 					provider,
 					sourceChain,
 					hexToUint8Array(tryNativeToHexString(tokenAddress, sourceChain)),
 				);
-				console.log("address",address)
+				console.log("address", address);
 				dispatch(
-              setTargetAsset({
-                  doesExist: !!address,
-                  address: address ,
-			  }))
-				return address
+					setTargetAsset({
+						doesExist: !!address,
+						address: address,
+					}),
+				);
+				return address;
 			} catch (e) {
 				throw e;
 			}
@@ -132,13 +131,14 @@ export async function getOriginalAsset(param: {
 				if (!targetChain || !signer) throw new ArgumentNullOrUndefinedError();
 				let origin = await getOriginalAssetEth(ETH_TOKEN_BRIDGE_ADDRESS, signer, tokenAddress, targetChain);
 				const address = tryUint8ArrayToNative(origin.assetAddress, origin.chainId);
-				console.log("address",address)
+				console.log("address", address);
 				dispatch(
 					setTargetAsset({
 						doesExist: !!address,
 						address: address,
-					}));
-				return address
+					}),
+				);
+				return address;
 			} catch (e) {
 				throw e;
 			}
@@ -147,13 +147,14 @@ export async function getOriginalAsset(param: {
 			try {
 				let origin = await getOriginalAssetSol(new Connection(SOLANA_HOST), SOL_TOKEN_BRIDGE_ADDRESS, tokenAddress);
 				const address = tryUint8ArrayToNative(origin.assetAddress, origin.chainId);
-				console.log("address",address)
+				console.log("address", address);
 				dispatch(
 					setTargetAsset({
 						doesExist: !!address,
 						address: address,
-					}));
-				return address
+					}),
+				);
+				return address;
 			} catch (e) {
 				throw e;
 			}

@@ -49,11 +49,11 @@ async function evm(
     });
     console.log("token attest txn hash:", tokenAttestation.transactionHash);
 	const emitterAddress = getEmitterAddressEth(ETH_TOKEN_BRIDGE_ADDRESS);
-	console.log("fetching vaa");
+        
 	console.log("emitterAddress:", emitterAddress);
 	const sequence = parseSequenceFromLogEth(tokenAttestation, ETH_BRIDGE_ADDRESS);
     console.log("sequence:", sequence);
-    
+    console.log("fetching vaa");
 	const { vaaBytes } = await getSignedVAAWithRetry(WORMHOLE_RPC_HOSTS, sourceChain, emitterAddress, sequence);
     console.log("vaa:", vaaBytes.toString());
     dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
@@ -122,7 +122,7 @@ export function useAttest() {
       });
         
         console.log(targetToken)
-        if (targetToken != null) {
+        if (targetToken != null ) {
             dispatch(setTargetAsset(targetToken))
             dispatch(setTokenExists(true))
           
@@ -148,11 +148,12 @@ export function useAttest() {
     );
 
     const signer = provider.getSigner();
-    console.log("targetToken ===>", sourceToken);
+    console.log("targetToken ===>", targetToken);
 
      if (isEVMChain(sourceChain) && !!signer) {
-      evm(dispatch, enqueueSnackbar, signer, sourceToken, toChainName(sourceChain));
-    } 
+      await evm(dispatch, enqueueSnackbar, signer, sourceToken, toChainName(sourceChain));
+      } 
+      console.log("signedVAA",signedVAA)
   
     if (signedVAA) {
       let targetAsset: string | null;

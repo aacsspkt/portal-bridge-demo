@@ -1,7 +1,6 @@
 import {
-	useCallback,
+  useCallback,
   useEffect,
-  useState,
 } from 'react';
 
 import {
@@ -25,12 +24,12 @@ import {
   hexToUint8Array,
   parseSequenceFromLogEth,
   parseSequenceFromLogSolana,
+  toChainId,
+  toChainName,
   transferFromEth,
   transferFromEthNative,
   transferFromSolana,
   transferNativeSol,
-  toChainId,
-  toChainName,
 } from '@certusone/wormhole-sdk';
 import detectEthereumProvider from '@metamask/detect-provider';
 import {
@@ -38,6 +37,15 @@ import {
   Keypair,
 } from '@solana/web3.js';
 
+import {
+  useAppDispatch,
+  useAppSelector,
+} from '../app/hooks';
+import {
+  setAmount,
+  setSourceChain,
+  setTargetChain,
+} from '../app/slices/transferSlice';
 import Alert from '../components/Alert';
 import {
   getBridgeAddressForChain,
@@ -57,8 +65,6 @@ import {
   sendAndConfirmTransaction,
   signTransaction,
 } from '../utils/solana';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { setAmount, setSourceChain, setTargetChain } from '../app/slices/transferSlice';
 
 async function evm(
 	dispatch: any,
@@ -203,64 +209,71 @@ async function solana(
 		// dispatch(setIsSending(false));
 	}
 }
+
+interface ParsedTokenAccount {
+	publicKey: string;
+	mintKey: string;
+	amount: string;
+	decimals: number;
+	uiAmount: number;
+	uiAmountString: string;
+	symbol?: string;
+	name?: string;
+	logo?: string;
+	isNativeAsset?: boolean;
+}
+
 interface TokenTransferForm {
 	sourceChain: ChainName;
-	sourceToken: string;
+	sourceAsset: string | undefined;
+	isSourceAssetWormholeWrapped: boolean | undefined;
+	sourceParsedTokenAccount: ParsedTokenAccount | undefined;
+
+	sourceWalletAddress: string | undefined;
 	targetChain: ChainName;
-	targetToken: string;
-	transferAmount: string;
+	targetAsset: string | undefined;
+	transferAmount: string | undefined;
+	originAddress: string | undefined;
+	originChain: ChainName;
 }
 
 export const useTransferForm = (list: ChainName[]) => {
-	const sourceChain = useAppSelector((state) => state.transfer.sourceChain)
-	const targetChain = useAppSelector((state) => state.transfer.targetChain)
-	const targetAsset = useAppSelector((state) => state.transfer.targetAsset)
+	const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
+	const targetChain = useAppSelector((state) => state.transfer.targetChain);
+	const targetAsset = useAppSelector((state) => state.transfer.targetAsset);
 	const sourceToken = useAppSelector((state) => state.transfer.sourceParsedTokenAccount);
-	const amount = useAppSelector((state)=> state.transfer.amount)
+	const amount = useAppSelector((state) => state.transfer.amount);
 	const dispatch = useAppDispatch();
-	const [data, setData] = useState<TokenTransferForm>({
-		sourceChain: list[0],
-		sourceToken: "",
-		targetChain: list[0],
-		targetToken: "",
-		transferAmount: "",
-	});
 
-	
-	
 	const handleSourceChainChange = useCallback(
 		(event: any) => {
-			console.log(event)
-      dispatch(setSourceChain(toChainId(event)));
-    },
-    [dispatch]
-  );
+			console.log(event);
+			dispatch(setSourceChain(toChainId(event)));
+		},
+		[dispatch],
+	);
 	const handleSourceTokenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setData({
 			...data,
-			sourceToken: e.target.value,
+			sourceAsset: e.target.value,
 		});
-		
-		
 	};
 
 	const handleTargetChainChange = useCallback(
 		(event: any) => {
-			console.log(event)
-      dispatch(setTargetChain(toChainId(event)));
-    },
-    [dispatch]
-  );
+			console.log(event);
+			dispatch(setTargetChain(toChainId(event)));
+		},
+		[dispatch],
+	);
 
-	const handleAmountChange =
-		useCallback(
+	const handleAmountChange = useCallback(
 		(event: any) => {
-			console.log(event.target.value)
-				dispatch(setAmount(event.target.value));
-
-    },
-    [dispatch]
-  );
+			console.log(event.target.value);
+			dispatch(setAmount(event.target.value));
+		},
+		[dispatch],
+	);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -275,7 +288,7 @@ export const useTransferForm = (list: ChainName[]) => {
 			toChainName(sourceChain),
 			toChainName(targetChain),
 			provider,
-			data.sourceToken,
+			data.sourceAsset,
 			parseFloat(amount),
 			KEYPAIR.publicKey.toString(),
 		);
@@ -288,7 +301,7 @@ export const useTransferForm = (list: ChainName[]) => {
 				if (toChainName(sourceChain).includes(toChainName(targetChain))) {
 					setData({
 						...data,
-						targetToken: "",
+						targetAsset: "",
 					});
 					return;
 				}
@@ -301,28 +314,37 @@ export const useTransferForm = (list: ChainName[]) => {
 					"any",
 				);
 
-				if (isValidToken(data.sourceToken, toChainName(sourceChain))) {
-					const targetToken = await getCorrespondingToken({
-						dispatch: dispatch,
-						sourceChain: toChainName(sourceChain),
-						targetChain: toChainName(targetChain),
-						tokenAddress: data.sourceToken,
+				if (isValidToken(data.sourceAsset, data.sourceChain)) {
+					const targetAsset = await getCorrespondingToken({
+						sourceChain: data.sourceChain,
+						targetChain: data.targetChain,
+						tokenAddress: data.sourceAsset,
 						signer: provider.getSigner(),
 					});
-					
 
-					console.log("targetToken:", targetAsset.address);
+					console.log("targetAsset:", targetAsset);
 
+					if (targetAsset != null) {
+						setData({
+							...data,
+							targetAsset: targetAsset,
+						});
+					} else {
+						setData({
+							...data,
+							targetAsset: "",
+						});
+					}
 				}
 			} catch (error) {
 				console.log(error);
 			}
 		};
 
-		if (data.sourceToken !== "") {
+		if (data.sourceAsset !== "") {
 			getAndSetTargetToken();
 		}
-	}, [sourceChain, data.sourceToken, targetChain]);
+	}, [data.sourceChain, data.sourceAsset, data.targetChain]);
 
 	return {
 		data,
