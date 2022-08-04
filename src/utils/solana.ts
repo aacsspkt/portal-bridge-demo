@@ -1,14 +1,40 @@
 import nacl from 'tweetnacl';
 
+import { MintLayout } from '@solana/spl-token';
 import {
+  AccountInfo,
   Connection,
+  PublicKey,
   SendTransactionError,
   Transaction,
 } from '@solana/web3.js';
 
 import { KEYPAIR } from '../constants';
 
-function logTransaction(transaction: Transaction) {
+export function parseSolPubKey(address: string) {
+	try {
+		return new PublicKey(address);
+	} catch (error) {
+		throw error;
+	}
+}
+
+export interface ExtractedMintInfo {
+	mintAuthority?: string;
+	supply?: string;
+}
+
+export function extractMintInfo(account: AccountInfo<Buffer>): ExtractedMintInfo {
+	const data = Buffer.from(account.data);
+	const mintInfo = MintLayout.decode(data);
+
+	return {
+		mintAuthority: mintInfo.mintAuthorityOption === 1 ? mintInfo.mintAuthority.toString() : undefined,
+		supply: mintInfo.supply.toString(),
+	};
+}
+
+export function logTransaction(transaction: Transaction) {
 	console.log("blockHash", transaction.recentBlockhash);
 	console.log("feePayer", transaction.feePayer?.toString());
 	console.log(
@@ -90,3 +116,4 @@ export async function sendAndConfirmTransaction(
 		return Promise.resolve(transactionReceipt);
 	}
 }
+w;

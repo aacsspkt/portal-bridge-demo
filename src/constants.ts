@@ -419,3 +419,21 @@ export const getTokenBridgeAddressForChain = (chainId: ChainId) =>
 		: chainId === CHAIN_ID_NEON
 		? NEON_TOKEN_BRIDGE_ADDRESS
 		: "";
+
+export const WETH_ADDRESS =
+	CLUSTER === "mainnet"
+		? "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+		: CLUSTER === "testnet"
+		? "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6"
+		: "0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E";
+
+export const WETH_DECIMALS = 18;
+
+export const ROPSTEN_WETH_ADDRESS =
+	CLUSTER === "mainnet"
+		? "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+		: CLUSTER === "testnet"
+		? "0xc778417e063141139fce010982780140aa0cd5ab"
+		: "0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E";
+
+export const ROPSTEN_WETH_DECIMALS = 18;
