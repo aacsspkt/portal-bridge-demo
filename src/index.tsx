@@ -1,27 +1,41 @@
-import React from 'react';
 import './index.css';
+
+import React from 'react';
 import ReactDOM from 'react-dom';
 
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-import { EthereumProviderProvider } from './hooks/EthereumContextProvider';
 import { Provider } from 'react-redux';
+import { ToastContainer } from 'react-toastify';
+
+import App from './App';
 import { store } from './app/store';
-import { SnackbarProvider } from 'notistack';
-
-
+import { context2CssClass } from './constants';
+import { EthereumProviderProvider } from './hooks/EthereumContextProvider';
+import reportWebVitals from './reportWebVitals';
 
 //import { MetaMaskProvider } from 'metamask-react';
 
 ReactDOM.render(
   <Provider store={store}>
-        <SnackbarProvider maxSnack={3}>
-  <React.StrictMode>
-    <EthereumProviderProvider>
-      <App/>
-    </EthereumProviderProvider>
-      </React.StrictMode>
-      </SnackbarProvider>
+    <React.StrictMode>
+      <EthereumProviderProvider>
+        <App />
+        <ToastContainer
+          toastClassName={(context) => context2CssClass[context?.type || "default"] +
+            " relative flex p-1 min-h-10 rounded-md justify-between overflow-hidden cursor-pointer"}
+          bodyClassName={() => "text-sm font-white font-med block p-3"}
+          position="bottom-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          icon={false}
+        />
+      </EthereumProviderProvider>
+    </React.StrictMode>
   </Provider>
   , document.getElementById('root') as HTMLElement);
 
