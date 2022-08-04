@@ -344,7 +344,7 @@ export const useTransferForm = (list: ChainName[]) => {
 		if (data.sourceAsset !== "") {
 			getAndSetTargetToken();
 		}
-	}, [data.sourceChain, data.sourceAsset, data.targetChain]);
+	}, [sourceChain, sourceAsset, targetChain]);
 
 	return {
 		data,
