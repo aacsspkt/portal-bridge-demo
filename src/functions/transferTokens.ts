@@ -10,14 +10,13 @@ import {
   getEmitterAddressSolana,
   getIsTransferCompletedEth,
   getSignedVAAWithRetry,
-  hexToUint8Array,
   parseSequenceFromLogEth,
   parseSequenceFromLogSolana,
   postVaaSolanaWithRetry,
   redeemOnSolana,
   transferFromEth,
   transferFromSolana,
-  tryNativeToHexString,
+  tryNativeToUint8Array,
 } from '@certusone/wormhole-sdk';
 import {
   Account,
@@ -52,6 +51,8 @@ export async function transferTokens(
 	provider: ethers.providers.Web3Provider,
 	tokenAddress: string,
 	amount: number,
+	originAddress: string,
+	originChain: ChainName,
 	recipientAddress: string,
 	relayerFee?: BigNumberish,
 ) {
@@ -141,6 +142,7 @@ export async function transferTokens(
 					new PublicKey(tokenAddress),
 					KEYPAIR.publicKey,
 				);
+				console.log("recipient address", recipientAddress);
 				console.log("recipient token address", recipientTokenAccount.address.toString());
 				console.log(" token address", tokenAddress);
 
@@ -160,21 +162,24 @@ export async function transferTokens(
 					recipientTokenAccount.address.toString(),
 					tokenAddress,
 					transferAmount,
-					hexToUint8Array(tryNativeToHexString(targetAddress, targetChain)),
-					targetChain,
-					hexToUint8Array(tryNativeToHexString(targetAddress, targetChain)),
+					tryNativeToUint8Array(targetAddress, targetChain),
+					originChain,
+					tryNativeToUint8Array(originAddress, originChain),
 					"ethereum",
 				);
 
 				console.log("sending txn");
-				const txnIds = await sendAndConfirmTransaction(CONNECTION, signTransaction, txn, 10);
-				const txnRes = await CONNECTION.getTransaction(txnIds[0]);
-				if (!txnRes) throw new Error("Transaction: " + txnIds[0] + " not found");
+				const txnId = await sendAndConfirmTransaction(CONNECTION, signTransaction, txn, 10);
+				console.log("txnId:", txnId);
+				const txnRes = await CONNECTION.getTransaction(txnId);
+				if (!txnRes) throw new Error("Transaction: " + txnId + " not found");
 				const sequence = parseSequenceFromLogSolana(txnRes);
 				const emitterAddress = await getEmitterAddressSolana(SOL_BRIDGE_ADDRESS);
 
 				console.log("Fetching signed vaa.");
 				const { vaaBytes } = await getSignedVAAWithRetry(WORMHOLE_RPC_HOSTS, "solana", emitterAddress, sequence);
+				console.log("vaabytes:", vaaBytes);
+
 				let transferCompleted = false;
 				do {
 					transferCompleted = await getIsTransferCompletedEth(SOL_TOKEN_BRIDGE_ADDRESS, provider.getSigner(), vaaBytes);

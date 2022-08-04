@@ -2,6 +2,7 @@ import nacl from 'tweetnacl';
 
 import {
   Connection,
+  SendTransactionError,
   Transaction,
 } from '@solana/web3.js';
 
@@ -48,11 +49,7 @@ function logTransaction(transaction: Transaction) {
 }
 
 export const signTransaction = async (transaction: Transaction) => {
-	// const existingPair = transaction.signatures.filter((pair) => pair.signature !== null);
 	transaction.partialSign(KEYPAIR);
-	// existingPair.forEach((pair) => {
-	// 	if (pair.signature) transaction.addSignature(pair.publicKey, pair.signature);
-	// });
 	return transaction;
 };
 
@@ -63,8 +60,9 @@ export async function sendAndConfirmTransaction(
 	maxRetries: number = 0,
 ): Promise<string> {
 	let currentRetries = 0;
+	let success = false;
 	let transactionReceipt: string = "";
-	while (!(currentRetries > maxRetries)) {
+	while (!success && !(currentRetries > maxRetries)) {
 		let signed: Transaction;
 		try {
 			signed = await signTransaction(transaction);
@@ -78,8 +76,10 @@ export async function sendAndConfirmTransaction(
 			const txid = await connection.sendRawTransaction(signed.serialize());
 			await connection.confirmTransaction(txid);
 			transactionReceipt = txid;
-		} catch (e: any) {
-			console.log(e.logs ? e.logs : e);
+			success = true;
+		} catch (e) {
+			console.log("error occured");
+			console.log(e instanceof SendTransactionError ? e.logs : e);
 			currentRetries++;
 		}
 	}
