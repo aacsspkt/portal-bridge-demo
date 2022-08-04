@@ -4,6 +4,7 @@ import {
     configureStore,
     ThunkAction
   } from "@reduxjs/toolkit"
+import attestSlice from "./slices/attestSlice"
 import counterSlice from "./slices/counterSlice"
 import transferSlice from "./slices/transferSlice"
 
@@ -12,7 +13,8 @@ import transferSlice from "./slices/transferSlice"
   
   const combineReducer = combineReducers({
     counter: counterSlice,
-    transfer:transferSlice,
+    transfer: transferSlice,
+    attest: attestSlice,
 
     
   })
