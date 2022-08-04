@@ -42,7 +42,7 @@ import {
 import minABI from '../contracts/abi/minAbi.json';
 import { NotImplementedError } from '../errors';
 import {
-  sendAndConfirmTransactions,
+  sendAndConfirmTransaction,
   signTransaction,
 } from '../utils/solana';
 
@@ -124,7 +124,7 @@ export async function transferTokens(
 				const { blockhash } = await CONNECTION.getRecentBlockhash();
 				redeemTxn.recentBlockhash = blockhash;
 
-				await sendAndConfirmTransactions(CONNECTION, signTransaction, [redeemTxn], 10);
+				await sendAndConfirmTransaction(CONNECTION, signTransaction, redeemTxn, 10);
 				console.log("token redeemed");
 				break;
 			} catch (error) {
@@ -162,10 +162,12 @@ export async function transferTokens(
 					transferAmount,
 					hexToUint8Array(tryNativeToHexString(targetAddress, targetChain)),
 					targetChain,
+					hexToUint8Array(tryNativeToHexString(targetAddress, targetChain)),
+					"ethereum",
 				);
 
 				console.log("sending txn");
-				const txnIds = await sendAndConfirmTransactions(CONNECTION, signTransaction, [txn], 10);
+				const txnIds = await sendAndConfirmTransaction(CONNECTION, signTransaction, txn, 10);
 				const txnRes = await CONNECTION.getTransaction(txnIds[0]);
 				if (!txnRes) throw new Error("Transaction: " + txnIds[0] + " not found");
 				const sequence = parseSequenceFromLogSolana(txnRes);

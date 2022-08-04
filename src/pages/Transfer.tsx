@@ -18,7 +18,8 @@ export default function Transfer(props: ITransferProps) {
   const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
   let sourceChains: number;
   const targetChain = useAppSelector((state) => state.transfer.targetChain)
-  const targetAsset= useAppSelector((state)=> state.transfer.targetAsset)
+  const targetAsset = useAppSelector((state) => state.transfer.targetAsset)
+   	const amount = useAppSelector((state)=> state.transfer.amount)
   const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item !== "unset");
 
   const {
@@ -32,7 +33,7 @@ export default function Transfer(props: ITransferProps) {
 
 
 
- 
+
 
   return (
     <div className="w-full h-screen flex flex-col">
@@ -69,7 +70,7 @@ export default function Transfer(props: ITransferProps) {
               <label className='text-md '>Amount</label>
               <input
                 className='h-9 w-full border p-2 text-md focus:outline-none'
-                value={data.transferAmount}
+                value={amount}
                 onChange={handleAmountChange}
                 title='Amount'
                 name='transferAmount'
