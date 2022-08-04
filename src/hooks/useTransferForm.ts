@@ -44,6 +44,7 @@ import {
 import {
   setAmount,
   setSourceChain,
+  setSourceParsedTokenAccount,
   setTargetChain,
 } from '../app/slices/transferSlice';
 import Alert from '../components/Alert';
@@ -210,53 +211,36 @@ async function solana(
 	}
 }
 
-interface ParsedTokenAccount {
-	publicKey: string;
-	mintKey: string;
-	amount: string;
-	decimals: number;
-	uiAmount: number;
-	uiAmountString: string;
-	symbol?: string;
-	name?: string;
-	logo?: string;
-	isNativeAsset?: boolean;
-}
+// interface TokenTransferForm {
+// 	sourceChain: ChainName;
+// 	sourceAsset: string | undefined;
+// 	isSourceAssetWormholeWrapped: boolean | undefined;
+// 	sourceParsedTokenAccount: ParsedTokenAccount | undefined;
 
-interface TokenTransferForm {
-	sourceChain: ChainName;
-	sourceAsset: string | undefined;
-	isSourceAssetWormholeWrapped: boolean | undefined;
-	sourceParsedTokenAccount: ParsedTokenAccount | undefined;
-
-	sourceWalletAddress: string | undefined;
-	targetChain: ChainName;
-	targetAsset: string | undefined;
-	transferAmount: string | undefined;
-	originAddress: string | undefined;
-	originChain: ChainName;
-}
+// 	sourceWalletAddress: string | undefined;
+// 	targetChain: ChainName;
+// 	targetAsset: string | undefined;
+// 	transferAmount: string | undefined;
+// 	originAddress: string | undefined;
+// 	originChain: ChainName;
+// }
 
 export const useTransferForm = (list: ChainName[]) => {
 	const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
 	const targetChain = useAppSelector((state) => state.transfer.targetChain);
 	const targetAsset = useAppSelector((state) => state.transfer.targetAsset);
-	const sourceToken = useAppSelector((state) => state.transfer.sourceParsedTokenAccount);
+	const sourceAsset = useAppSelector((state) => state.transfer.sourceParsedTokenAccount);
 	const amount = useAppSelector((state) => state.transfer.amount);
 	const dispatch = useAppDispatch();
 
 	const handleSourceChainChange = useCallback(
-		(event: any) => {
-			console.log(event);
-			dispatch(setSourceChain(toChainId(event)));
+		(chain: ChainName) => {
+			dispatch(setSourceChain(toChainId(chain)));
 		},
 		[dispatch],
 	);
-	const handleSourceTokenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		setData({
-			...data,
-			sourceAsset: e.target.value,
-		});
+	const handleSourceAssetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setSourceParsedTokenAccount();
 	};
 
 	const handleTargetChainChange = useCallback(
@@ -299,7 +283,7 @@ export const useTransferForm = (list: ChainName[]) => {
 		const getAndSetTargetToken = async () => {
 			try {
 				if (toChainName(sourceChain).includes(toChainName(targetChain))) {
-					setData({
+					setTargetChain({
 						...data,
 						targetAsset: "",
 					});
@@ -314,7 +298,7 @@ export const useTransferForm = (list: ChainName[]) => {
 					"any",
 				);
 
-				if (isValidToken(data.sourceAsset, data.sourceChain)) {
+				if (isValidToken(sourceAsset, sourceChain)) {
 					const targetAsset = await getCorrespondingToken({
 						sourceChain: data.sourceChain,
 						targetChain: data.targetChain,
@@ -347,9 +331,8 @@ export const useTransferForm = (list: ChainName[]) => {
 	}, [data.sourceChain, data.sourceAsset, data.targetChain]);
 
 	return {
-		data,
 		handleSourceChainChange,
-		handleSourceTokenChange,
+		handleSourceAssetChange,
 		handleTargetChainChange,
 		handleAmountChange,
 		handleSubmit,
