@@ -163,9 +163,9 @@ export async function transferTokens(
 					tokenAddress,
 					transferAmount,
 					tryNativeToUint8Array(targetAddress, targetChain),
-					originChain,
+					targetChain,
 					tryNativeToUint8Array(originAddress, originChain),
-					"ethereum",
+					originChain,
 				);
 
 				console.log("sending txn");
