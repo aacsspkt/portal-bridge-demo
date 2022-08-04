@@ -6,23 +6,24 @@ import {
 interface DropDownProps<T extends string | Object, K extends string | Object> {
     className?: string | undefined;
     options: T[];
-    value: T;
     getLabel: (value: T) => K;
     onChange: (value: T) => void;
 }
 
 export default function CustomDropDown<T extends string | Object, K extends string | Object>(props: DropDownProps<T, K>) {
-    const { className, options, value, getLabel, onChange } = props;
+    const { className, options, getLabel, onChange } = props;
     const [isFocused, setIsFocused] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
+    const [value, setValue] = useState<T>();
     const onSelected = (selected: T) => {
         onChange(selected);
+        setValue(selected);
         ref.current?.blur();
     };
     return (
         <div ref={ref} className={`w-full relative ${className}`} tabIndex={0} onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}>
             <div className='border p-1 h-9'>
-                <span className='text-md capitalize'>{value.toString()}</span>
+                <span className='text-md capitalize'>{getLabel(value ? value : options[0]).toString()}</span>
             </div>
             {
                 isFocused &&
