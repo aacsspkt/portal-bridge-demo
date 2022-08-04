@@ -26,13 +26,15 @@ export interface Transaction {
 interface TransferState {
   sourceChain: ChainId; 
   targetChain: ChainId;
+  amount: string;
+  signedVAAHex: string | undefined;
   isSourceAssetWormholeWrapped: boolean | undefined;
   originChain: ChainId | undefined;
   originAsset: string | undefined;
   sourceWalletAddress: string | undefined;
   sourceParsedTokenAccount: ParsedTokenAccount | undefined;
   sourceParsedTokenAccounts: DataWrapper<ParsedTokenAccount[]>;
-  amount: string;
+  
   targetAddressHex: string | undefined;
   targetAsset: ForeignAssetInfo;
   targetParsedTokenAccount: ParsedTokenAccount | undefined;
@@ -47,7 +49,9 @@ const initialState: TransferState = {
     sourceParsedTokenAccount: undefined,
     sourceParsedTokenAccounts: getEmptyDataWrapper(),
     originChain: undefined,
-    originAsset: undefined,
+  originAsset: undefined,
+   signedVAAHex: undefined,
+ 
     amount: "",
     targetAddressHex: undefined,
     targetAsset: {
@@ -103,6 +107,9 @@ export const transferSlice = createSlice({
       state.isSourceAssetWormholeWrapped = undefined;
       state.originChain = undefined;
       state.originAsset = undefined;
+    },
+    setSignedVAAHex: (state, action: PayloadAction<string>) => {
+      state.signedVAAHex = action.payload;
     },
     setSourceParsedTokenAccounts: (
       state,

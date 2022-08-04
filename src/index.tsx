@@ -7,6 +7,7 @@ import reportWebVitals from './reportWebVitals';
 import { EthereumProviderProvider } from './hooks/EthereumContextProvider';
 import { Provider } from 'react-redux';
 import { store } from './app/store';
+import { SnackbarProvider } from 'notistack';
 
 
 
@@ -14,11 +15,13 @@ import { store } from './app/store';
 
 ReactDOM.render(
   <Provider store={store}>
+        <SnackbarProvider maxSnack={3}>
   <React.StrictMode>
     <EthereumProviderProvider>
       <App/>
     </EthereumProviderProvider>
-  </React.StrictMode>
+      </React.StrictMode>
+      </SnackbarProvider>
   </Provider>
   , document.getElementById('root') as HTMLElement);
 

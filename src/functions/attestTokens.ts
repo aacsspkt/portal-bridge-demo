@@ -13,8 +13,9 @@ import {
   ETH_TOKEN_BRIDGE_ADDRESS,
   WORMHOLE_RPC_HOSTS,
 } from '../constants';
+import { AppDispatch } from '../app/store';
 
-export async function attestToken(sourceChain: ChainName, signer: ethers.Signer, tokenAddress: string) {
+export async function attestToken(dispatch:AppDispatch,sourceChain: ChainName, signer: ethers.Signer, tokenAddress: string) {
 	switch (sourceChain) {
 		case "ethereum":
 			// const gasLimit: ethers.BigNumberish = 1000000;
