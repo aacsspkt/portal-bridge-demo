@@ -116,4 +116,3 @@ export async function sendAndConfirmTransaction(
 		return Promise.resolve(transactionReceipt);
 	}
 }
-w;

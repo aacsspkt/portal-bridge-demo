@@ -8,6 +8,7 @@ import {
 
 import { useAppSelector } from '../app/hooks';
 import CustomDropDown from '../components/CustomDropdown';
+import useGetAvailableTokens from '../hooks/useGetSourceParsedTokenAccounts';
 import { useTransferForm } from '../hooks/useTransferForm';
 
 interface ITransferProps {
@@ -16,23 +17,23 @@ interface ITransferProps {
 
 export default function Transfer(props: ITransferProps) {
   const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
-  let sourceChains: number;
-  const targetChain = useAppSelector((state) => state.transfer.targetChain)
-  const targetAsset = useAppSelector((state) => state.transfer.targetAsset)
-  const amount = useAppSelector((state) => state.transfer.amount)
+  const targetChain = useAppSelector((state) => state.transfer.targetChain);
+  const targetAsset = useAppSelector((state) => state.transfer.targetAsset);
+  const sourceTokenAccount = useAppSelector((state) => state.transfer.sourceParsedTokenAccount);
+  const sourceTokenAccounts = useAppSelector((state) => state.transfer.sourceParsedTokenAccounts);
+  const amount = useAppSelector((state) => state.transfer.amount);
+
   const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item !== "unset");
 
   const {
     handleSourceChainChange,
-    handleSourceTokenChange,
+    handleSourceTokenAccountChange,
     handleTargetChainChange,
     handleAmountChange,
     handleSubmit
   } = useTransferForm(chainList);
 
-
-
-
+  useGetAvailableTokens();
 
   return (
     <div className="w-full h-screen flex flex-col">
@@ -48,13 +49,7 @@ export default function Transfer(props: ITransferProps) {
             </div>
             <div className='w-4/5 space-y-2'>
               <label className='text-md '>Source Token</label>
-              <input
-                value={data.sourceToken}
-                className='h-9 w-full border p-2 text-md focus:outline-none'
-                title='Source Token'
-                name='sourceToken'
-                onChange={handleSourceTokenChange}
-                type='text' />
+              <CustomDropDown value={sourceTokenAccount} onChange={handleSourceTokenAccountChange} label={(account) => account?.name || account?.amount} options={sourceTokenAccounts.data ?? []} />
             </div>
             <div className='w-4/5 space-y-2'>
               <label className='text-md '>Target Chain</label>

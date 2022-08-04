@@ -1,22 +1,22 @@
-import { toChainName } from '@certusone/wormhole-sdk';
 import React from 'react';
 
-import { CustomDropDown } from '../components/CustomDropdown';
-import { useAttest } from '../hooks/useAttest';
+import { toChainName } from '@certusone/wormhole-sdk';
 
+import CustomDropDown from '../components/CustomDropdown';
+import { useAttest } from '../hooks/useAttest';
 
 interface IRegisterProps {
 }
 
 export default function Register(props: IRegisterProps) {
   const {
-       sourceChain,
-	targetChain,
+    sourceChain,
+    targetChain,
     sourceToken,
     targetToken,
     chainList,
     tokenExists,
-   
+
     handleChange,
     handleSourceChainChange,
     handleTargetChainChange,
@@ -33,7 +33,7 @@ export default function Register(props: IRegisterProps) {
 
               <div className='w-2/5 space-y-2'>
                 <label className='text-md '>Source Chain</label>
-                <CustomDropDown className="" value={toChainName(sourceChain)} onChange={handleSourceChainChange} dropdownList={chainList} />
+                <CustomDropDown className="" value={toChainName(sourceChain)} onChange={handleSourceChainChange} label={chain => chain} options={chainList} />
 
               </div>
               <div className='w-2/5 space-y-2'>
@@ -48,7 +48,7 @@ export default function Register(props: IRegisterProps) {
               </div>
               <div className='w-2/5 space-y-2'>
                 <label className='text-md '>Target Chain</label>
-                <CustomDropDown value={toChainName(targetChain)} onChange={handleTargetChainChange} dropdownList={chainList} />
+                <CustomDropDown value={toChainName(targetChain)} onChange={handleTargetChainChange} label={chain => chain} options={chainList} />
               </div>
               {tokenExists && (<div>
                 <div>
