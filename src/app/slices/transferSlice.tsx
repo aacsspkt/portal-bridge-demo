@@ -1,8 +1,24 @@
-import { ChainId, CHAIN_ID_ETH, CHAIN_ID_SOLANA } from "@certusone/wormhole-sdk";
-import { createSlice, PayloadAction} from "@reduxjs/toolkit"
-import { ForeignAssetInfo, StateSafeWormholeWrappedInfo } from "../../functions";
-import { DataWrapper, errorDataWrapper, fetchDataWrapper, getEmptyDataWrapper, receiveDataWrapper } from "./helpers";
+import {
+  CHAIN_ID_ETH,
+  CHAIN_ID_SOLANA,
+  ChainId,
+} from '@certusone/wormhole-sdk';
+import {
+  createSlice,
+  PayloadAction,
+} from '@reduxjs/toolkit';
 
+import {
+  ForeignAssetInfo,
+  StateSafeWormholeWrappedInfo,
+} from '../../functions';
+import {
+  DataWrapper,
+  errorDataWrapper,
+  fetchDataWrapper,
+  getEmptyDataWrapper,
+  receiveDataWrapper,
+} from './helpers';
 
 export interface ParsedTokenAccount {
   publicKey: string;
@@ -24,7 +40,7 @@ export interface Transaction {
 
 //declare types for state
 interface TransferState {
-  sourceChain: ChainId; 
+  sourceChain: ChainId;
   targetChain: ChainId;
   amount: string;
   signedVAAHex: string | undefined;
@@ -34,32 +50,31 @@ interface TransferState {
   sourceWalletAddress: string | undefined;
   sourceParsedTokenAccount: ParsedTokenAccount | undefined;
   sourceParsedTokenAccounts: DataWrapper<ParsedTokenAccount[]>;
-  
   targetAddressHex: string | undefined;
   targetAsset: ForeignAssetInfo;
   targetParsedTokenAccount: ParsedTokenAccount | undefined;
-    
+
 }
 
 const initialState: TransferState = {
-    sourceChain: CHAIN_ID_SOLANA,
-    targetChain: CHAIN_ID_ETH,
-    isSourceAssetWormholeWrapped: false,
-    sourceWalletAddress: undefined,
-    sourceParsedTokenAccount: undefined,
-    sourceParsedTokenAccounts: getEmptyDataWrapper(),
-    originChain: undefined,
+  sourceChain: CHAIN_ID_SOLANA,
+  targetChain: CHAIN_ID_ETH,
+  isSourceAssetWormholeWrapped: false,
+  sourceWalletAddress: undefined,
+  sourceParsedTokenAccount: undefined,
+  sourceParsedTokenAccounts: getEmptyDataWrapper(),
+  originChain: undefined,
   originAsset: undefined,
-   signedVAAHex: undefined,
- 
-    amount: "",
-    targetAddressHex: undefined,
-    targetAsset: {
-        doesExist: false,
-        address:null
-    },
-    targetParsedTokenAccount: undefined,
-    
+  signedVAAHex: undefined,
+
+  amount: "",
+  targetAddressHex: undefined,
+  targetAsset: {
+    doesExist: false,
+    address: null
+  },
+  targetParsedTokenAccount: undefined,
+
 }
 
 export const transferSlice = createSlice({
@@ -67,20 +82,20 @@ export const transferSlice = createSlice({
   initialState,
   reducers: {
     setSourceChain: (state, action: PayloadAction<ChainId>) => {
-    state.sourceChain = action.payload;
-    state.sourceParsedTokenAccount = undefined;
+      state.sourceChain = action.payload;
+      state.sourceParsedTokenAccount = undefined;
       state.sourceParsedTokenAccounts = getEmptyDataWrapper();
-   
-          state.targetAsset.doesExist = false;
-          state.targetAsset.address = null;
-          
+
+      state.targetAsset.doesExist = false;
+      state.targetAsset.address = null;
+
       state.targetParsedTokenAccount = undefined;
       state.targetAddressHex = undefined;
       state.isSourceAssetWormholeWrapped = undefined;
       state.originChain = undefined;
       state.originAsset = undefined;
-      },
-       setSourceWormholeWrappedInfo: (
+    },
+    setSourceWormholeWrappedInfo: (
       state,
       action: PayloadAction<StateSafeWormholeWrappedInfo>
     ) => {
@@ -100,8 +115,8 @@ export const transferSlice = createSlice({
     ) => {
       state.sourceParsedTokenAccount = action.payload;
       // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
-       state.targetAsset.doesExist = false;
-          state.targetAsset.address = null;
+      state.targetAsset.doesExist = false;
+      state.targetAsset.address = null;
       state.targetParsedTokenAccount = undefined;
       state.targetAddressHex = undefined;
       state.isSourceAssetWormholeWrapped = undefined;
@@ -144,8 +159,8 @@ export const transferSlice = createSlice({
       state.targetChain = action.payload;
       state.targetAddressHex = undefined;
       // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
-       state.targetAsset.doesExist = false;
-          state.targetAsset.address = null;
+      state.targetAsset.doesExist = false;
+      state.targetAsset.address = null;
       state.targetParsedTokenAccount = undefined;
 
     },
@@ -156,9 +171,9 @@ export const transferSlice = createSlice({
       state,
       action: PayloadAction<ForeignAssetInfo>
     ) => {
-        console.log("inside reducer", action.payload)
-        state.targetAsset.doesExist = action.payload.doesExist;
-        state.targetAsset.address= action.payload.address
+      console.log("inside reducer", action.payload)
+      state.targetAsset.doesExist = action.payload.doesExist;
+      state.targetAsset.address = action.payload.address
       state.targetParsedTokenAccount = undefined;
     },
     setTargetParsedTokenAccount: (
@@ -173,8 +188,8 @@ export const transferSlice = createSlice({
 
 
 
-export const { 
-setSourceChain,
+export const {
+  setSourceChain,
   setSourceWormholeWrappedInfo,
   setSourceWalletAddress,
   setSourceParsedTokenAccount,
@@ -186,7 +201,8 @@ setSourceChain,
   setTargetChain,
   setTargetAddressHex,
   setTargetAsset,
-  setTargetParsedTokenAccount} =
-  transferSlice.actions
+  setTargetParsedTokenAccount,
+  setSignedVAAHex,
+} = transferSlice.actions
 
 export default transferSlice.reducer
