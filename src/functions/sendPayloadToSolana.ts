@@ -9,7 +9,7 @@ import {
   SOL_BRIDGE_ADDRESS,
   KEYPAIR 
 } from "../constants"
-import idl from "../solana_project.json";
+import idl from "../idl/solana_project.json";
 import { PublicKey } from '@solana/web3.js';
 import * as anchor from "@project-serum/anchor";
 import { findProgramAddressSync } from '@project-serum/anchor/dist/cjs/utils/pubkey';
@@ -31,6 +31,9 @@ import { TransactionResponse } from "@solana/web3.js";
 
 const SOL_CONTRACT_ADDRESS = "72LwKH2vh1DT5JvSeQseVp2P1oQbpA2FWr8v45ZMHAVT";
 const BSC_CONTRACT_ADDRESS = "0x75e1d4A30B482B27ba0c1C5c9C58fa8146609fEE";
+const CALLING_SC_ADDRESS = new anchor.web3.PublicKey(
+  "Bxi8KcfKcCDA6n8gmyZaHSfpXBBSjuTZTxsgfmdSBU1g"
+);
 // const KEYPAIR = anchor.web3.Keypair.generate()
 
 const getProvider = () => {
@@ -78,7 +81,7 @@ export async function register_eth_address() {
   console.log("emmitter acc when registering ===> ", emmiter_acc.toBase58());
   console.log("Emitter address===>", getEmitterAddressEth(BSC_CONTRACT_ADDRESS));
   await program.methods.registerChain(
-    BSC_BRIDGE_ADDRESS,
+    CHAIN_ID_BSC,
     getEmitterAddressEth(BSC_CONTRACT_ADDRESS)
   )
     .accounts({
@@ -184,12 +187,12 @@ export async function postAndSendPayload(tx: any) {
   ], program.programId)[0];
   console.log("Derived emmiter in confirm_msg ==> ", emitter_address_acc.toBase58());
 
-// console.log("Find processed vaa")
-// let processed_vaa_key = findProgramAddressSync([
-//     // Buffer.from(getEmitterAddressEth("0xdDdE435E715F9f1319E6cb054b72Ef02Fe30f529").toString(), "hex"),
-//     b.serializeUint16(parsed_vaa.emitter_chain),
-//     b.serializeUint64(parsed_vaa.sequence)
-// ], program.programId)[0];
+console.log("Find processed vaa")
+let processed_vaa_key = findProgramAddressSync([
+    Buffer.from(getEmitterAddressEth(BSC_CONTRACT_ADDRESS).toString(), "hex"),
+    b.serializeUint16(parsed_vaa.emitter_chain),
+    b.serializeUint64(parsed_vaa.sequence)
+], program.programId)[0];
 
   //Create VAA Hash to use in core bridge key
   let buffer_array = []
@@ -217,10 +220,11 @@ export async function postAndSendPayload(tx: any) {
     .accounts({
       payer: KEYPAIR.publicKey,
       systemProgram: anchor.web3.SystemProgram.programId,
-      // processedVaa: processed_vaa_key,
+      processedVaa: processed_vaa_key,
       emitterAcc: emitter_address_acc,
       coreBridgeVaa: core_bridge_vaa_key,
-      config: config_acc
+      config: config_acc,
+      cpiProgram: CALLING_SC_ADDRESS
     })
     .rpc();
 
