@@ -11,6 +11,7 @@ import {
 } from 'ethers/lib/utils';
 
 import {
+	ChainId,
   CHAIN_ID_ETH,
   CHAIN_ID_ETHEREUM_ROPSTEN,
   CHAIN_ID_SOLANA,
@@ -42,6 +43,7 @@ import {
 } from '../app/slices/transferSlice';
 import { AppDispatch } from '../app/store';
 import {
+	getDefaultNativeCurrencyAddressEvm,
   KEYPAIR,
   ROPSTEN_WETH_ADDRESS,
   ROPSTEN_WETH_DECIMALS,
@@ -58,6 +60,17 @@ import {
   Provider,
   useEthereumProvider,
 } from './EthereumContextProvider';
+import axios from 'axios';
+export type CovalentData = {
+  contract_decimals: number;
+  contract_ticker_symbol: string;
+  contract_name: string;
+  contract_address: string;
+  logo_url: string | undefined;
+  balance: string;
+  quote: number | undefined;
+  quote_rate: number | undefined;
+};
 
 export function createParsedTokenAccount(
 	publicKey: string,
@@ -149,12 +162,88 @@ const getSolanaParsedTokenAccounts = async (walletAddress: string, dispatch: App
 
 /** for ethereum */
 
+const getEthereumAccountsCovalent = async (
+  url: string,
+  nft: boolean,
+  chainId: ChainId
+): Promise<CovalentData[]> => {
+  try {
+    const output = [] as CovalentData[];
+    const response = await axios.get(url);
+    const tokens = response.data.data.items;
+
+    if (tokens instanceof Array && tokens.length) {
+      for (const item of tokens) {
+        // TODO: filter?
+        if (
+          item.contract_decimals !== undefined &&
+          item.contract_address &&
+          item.contract_address.toLowerCase() !==
+            getDefaultNativeCurrencyAddressEvm(chainId).toLowerCase() && // native balance comes from querying token bridge
+          item.balance &&
+          item.balance !== "0" &&
+          (nft
+            ? item.supports_erc?.includes("erc721")
+            : item.supports_erc?.includes("erc20"))
+        ) {
+          output.push({ ...item } as CovalentData);
+        }
+      }
+    }
+
+    return output;
+  } catch (error) {
+    return Promise.reject("Unable to retrieve your Ethereum Tokens.");
+  }
+};
+
+export const getEthereumAccountsBlockscout = async (
+  url: string,
+  nft: boolean,
+  chainId: ChainId
+): Promise<CovalentData[]> => {
+  try {
+    const output = [] as CovalentData[];
+    const response = await axios.get(url);
+    const tokens = response.data.result;
+
+    if (tokens instanceof Array && tokens.length) {
+      for (const item of tokens) {
+        if (
+          item.decimals !== undefined &&
+          item.contractAddress &&
+          item.contractAddress.toLowerCase() !==
+            getDefaultNativeCurrencyAddressEvm(chainId).toLowerCase() && // native balance comes from querying token bridge
+          item.balance &&
+          item.balance !== "0" &&
+          (nft ? item.type?.includes("ERC-721") : item.type?.includes("ERC-20"))
+        ) {
+          output.push({
+            contract_decimals: item.decimals,
+            contract_address: item.contractAddress,
+            balance: item.balance,
+            contract_ticker_symbol: item.symbol,
+            contract_name: item.name,
+            logo_url: "",
+            quote: 0,
+            quote_rate: 0,
+          });
+        }
+      }
+    }
+
+    return output;
+  } catch (error) {
+    return Promise.reject("Unable to retrieve your Ethereum Tokens.");
+  }
+};
+
 const createNativeEthParsedTokenAccount = async (provider: Provider, signerAddress: string | undefined) => {
 	try {
 		if (provider && signerAddress) {
 			let balanceInWei = await provider.getBalance(signerAddress);
 			const balanceInEth = formatEther(balanceInWei);
-			
+
 			return createParsedTokenAccount(
 				signerAddress,
 				WETH_ADDRESS,
