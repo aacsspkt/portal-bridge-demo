@@ -14,6 +14,7 @@ import {
   WORMHOLE_RPC_HOSTS,
 } from '../constants';
 import { useRelayer } from '../hooks/useRelayer';
+import { postAndSendPayload, init, register_eth_address } from "../functions/sendPayloadToSolana";
 
 export interface ISOLStreamProps {
 }
@@ -115,24 +116,12 @@ export function SolStream(props: ISOLStreamProps) {
     console.log("Sol Stream")
     const tx = await (await process_sol_stream(startTime, endTime, Amount, receiver, Nonce)).wait();
     console.log("tx", tx)
-    const seq = parseSequenceFromLogEth(tx, BSC_BRIDGE_ADDRESS);
-    console.log("seq", seq);
-    const emitterAddress = getEmitterAddressEth(BSC_TOKEN_BRIDGE_ADDRESS);
-    console.log("emitter Address", emitterAddress)
-    console.log("fetching Vaa")
-    const { vaaBytes } = await getSignedVAAWithRetry(
-      WORMHOLE_RPC_HOSTS,
-      "bsc",
-      emitterAddress,
-      seq,
-    );
-
-
-    console.log("vaa", vaaBytes)
-
-
-
-
+    console.log("initiallizing")
+    await init();
+    console.log("registering")
+    await register_eth_address();
+    console.log("Post and send payload");
+    await postAndSendPayload(tx);
   }
   const handleSOLEndTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setData({
