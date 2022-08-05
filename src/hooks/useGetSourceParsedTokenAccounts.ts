@@ -154,6 +154,7 @@ const createNativeEthParsedTokenAccount = async (provider: Provider, signerAddre
 		if (provider && signerAddress) {
 			let balanceInWei = await provider.getBalance(signerAddress);
 			const balanceInEth = formatEther(balanceInWei);
+			
 			return createParsedTokenAccount(
 				signerAddress,
 				WETH_ADDRESS,
