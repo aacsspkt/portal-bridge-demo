@@ -16,7 +16,10 @@ import {
 } from '@certusone/wormhole-sdk';
 import { Connection } from '@solana/web3.js';
 
-import { setTargetAsset } from '../app/slices/transferSlice';
+import {
+  setSourceWormholeWrappedInfo,
+  setTargetAsset,
+} from '../app/slices/transferSlice';
 import { AppDispatch } from '../app/store';
 import {
   ETH_TOKEN_BRIDGE_ADDRESS,
@@ -32,6 +35,7 @@ export type ForeignAssetInfo = {
 	doesExist: boolean;
 	address: string | null;
 };
+
 export interface StateSafeWormholeWrappedInfo {
 	isWrapped: boolean;
 	chainId: ChainId;
@@ -63,15 +67,15 @@ export async function getForeignAsset(param: {
 	sourceChain: ChainName;
 	targetChain: ChainName;
 	provider?: ethers.Signer | ethers.providers.Provider;
-}) {
+}): Promise<string | null> {
 	console.log("get foreign asset");
-
 	const { dispatch, tokenAddress, sourceChain, targetChain, provider } = param;
+	let address: string | null = null;
 	switch (targetChain) {
 		case "solana":
 			try {
 				console.log(SOLANA_HOST);
-				const address = await getForeignAssetSolana(
+				address = await getForeignAssetSolana(
 					new Connection(SOLANA_HOST),
 					SOL_TOKEN_BRIDGE_ADDRESS,
 					sourceChain,
@@ -86,7 +90,7 @@ export async function getForeignAsset(param: {
 					}),
 				);
 				console.log("address", address);
-				return address;
+				break;
 			} catch (e) {
 				throw e;
 			}
@@ -94,7 +98,7 @@ export async function getForeignAsset(param: {
 		case "ethereum":
 			try {
 				if (!provider) throw new ArgumentNullOrUndefinedError();
-				const address = await getForeignAssetEth(
+				address = await getForeignAssetEth(
 					ETH_TOKEN_BRIDGE_ADDRESS,
 					provider,
 					sourceChain,
@@ -107,7 +111,7 @@ export async function getForeignAsset(param: {
 						address: address,
 					}),
 				);
-				return address;
+				break;
 			} catch (e) {
 				throw e;
 			}
@@ -115,6 +119,7 @@ export async function getForeignAsset(param: {
 		default:
 			throw new NotImplementedError();
 	}
+	return address;
 }
 
 export async function getOriginalAsset(param: {
@@ -123,14 +128,15 @@ export async function getOriginalAsset(param: {
 	sourceChain: ChainName;
 	targetChain?: ChainName;
 	signer?: ethers.Signer;
-}) {
+}): Promise<string | null> {
 	const { dispatch, tokenAddress, sourceChain, targetChain, signer } = param;
+	let address: string | null = null;
 	switch (sourceChain) {
 		case "ethereum": {
 			try {
 				if (!targetChain || !signer) throw new ArgumentNullOrUndefinedError();
 				let origin = await getOriginalAssetEth(ETH_TOKEN_BRIDGE_ADDRESS, signer, tokenAddress, targetChain);
-				const address = tryUint8ArrayToNative(origin.assetAddress, origin.chainId);
+				address = tryUint8ArrayToNative(origin.assetAddress, origin.chainId);
 				console.log("address", address);
 				dispatch(
 					setTargetAsset({
@@ -138,7 +144,16 @@ export async function getOriginalAsset(param: {
 						address: address,
 					}),
 				);
-				return address;
+				if (address) {
+					dispatch(
+						setSourceWormholeWrappedInfo({
+							assetAddress: address,
+							chainId: origin.chainId,
+							isWrapped: origin.isWrapped,
+						}),
+					);
+				}
+				break;
 			} catch (e) {
 				throw e;
 			}
@@ -146,7 +161,7 @@ export async function getOriginalAsset(param: {
 		case "solana": {
 			try {
 				let origin = await getOriginalAssetSol(new Connection(SOLANA_HOST), SOL_TOKEN_BRIDGE_ADDRESS, tokenAddress);
-				const address = tryUint8ArrayToNative(origin.assetAddress, origin.chainId);
+				address = tryUint8ArrayToNative(origin.assetAddress, origin.chainId);
 				console.log("address", address);
 				dispatch(
 					setTargetAsset({
@@ -154,7 +169,16 @@ export async function getOriginalAsset(param: {
 						address: address,
 					}),
 				);
-				return address;
+				if (address) {
+					dispatch(
+						setSourceWormholeWrappedInfo({
+							assetAddress: address,
+							chainId: origin.chainId,
+							isWrapped: origin.isWrapped,
+						}),
+					);
+				}
+				break;
 			} catch (e) {
 				throw e;
 			}
@@ -163,6 +187,7 @@ export async function getOriginalAsset(param: {
 		default:
 			throw new NotImplementedError();
 	}
+	return address;
 }
 
 export async function getIsWrapped(param: { tokenAddress: string; sourceChain: ChainName; signer?: ethers.Signer }) {

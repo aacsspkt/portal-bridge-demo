@@ -49,7 +49,7 @@ export default function Transfer(props: ITransferProps) {
             </div>
             <div className='w-4/5 space-y-2'>
               <label className='text-md '>Source Token</label>
-              <CustomDropDown value={sourceTokenAccount} onChange={handleSourceTokenAccountChange} label={(account) => account?.name || account?.amount} options={sourceTokenAccounts.data ?? []} />
+              <CustomDropDown value={sourceTokenAccount} onChange={handleSourceTokenAccountChange} label={(account) => account?.mintKey || account?.amount} options={sourceTokenAccounts.data ?? []} />
             </div>
             <div className='w-4/5 space-y-2'>
               <label className='text-md '>Target Chain</label>
