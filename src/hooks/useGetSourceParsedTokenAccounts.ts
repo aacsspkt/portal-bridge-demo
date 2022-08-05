@@ -11,6 +11,7 @@ import {
 } from 'ethers/lib/utils';
 
 import {
+	ChainId,
   CHAIN_ID_ETH,
   CHAIN_ID_ETHEREUM_ROPSTEN,
   CHAIN_ID_SOLANA,
@@ -42,6 +43,9 @@ import {
 } from '../app/slices/transferSlice';
 import { AppDispatch } from '../app/store';
 import {
+	BLOCKSCOUT_GET_TOKENS_URL,
+	COVALENT_GET_TOKENS_URL,
+	getDefaultNativeCurrencyAddressEvm,
   KEYPAIR,
   ROPSTEN_WETH_ADDRESS,
   ROPSTEN_WETH_DECIMALS,
@@ -58,6 +62,17 @@ import {
   Provider,
   useEthereumProvider,
 } from './EthereumContextProvider';
+import axios from 'axios';
+export type CovalentData = {
+  contract_decimals: number;
+  contract_ticker_symbol: string;
+  contract_name: string;
+  contract_address: string;
+  logo_url: string | undefined;
+  balance: string;
+  quote: number | undefined;
+  quote_rate: number | undefined;
+};
 
 export function createParsedTokenAccount(
 	publicKey: string,
@@ -149,11 +164,115 @@ const getSolanaParsedTokenAccounts = async (walletAddress: string, dispatch: App
 
 /** for ethereum */
 
+const getEthereumAccountsCovalent = async (
+  url: string,
+  nft: boolean,
+  chainId: ChainId
+): Promise<CovalentData[]> => {
+  try {
+    const output = [] as CovalentData[];
+    const response = await axios.get(url);
+    const tokens = response.data.data.items;
+
+    if (tokens instanceof Array && tokens.length) {
+      for (const item of tokens) {
+        // TODO: filter?
+        if (
+          item.contract_decimals !== undefined &&
+          item.contract_address &&
+          item.contract_address.toLowerCase() !==
+            getDefaultNativeCurrencyAddressEvm(chainId).toLowerCase() && // native balance comes from querying token bridge
+          item.balance &&
+          item.balance !== "0" &&
+          (nft
+            ? item.supports_erc?.includes("erc721")
+            : item.supports_erc?.includes("erc20"))
+        ) {
+          output.push({ ...item } as CovalentData);
+        }
+      }
+    }
+
+    return output;
+  } catch (error) {
+    return Promise.reject("Unable to retrieve your Ethereum Tokens.");
+  }
+};
+
+const createParsedTokenAccountFromCovalent = (
+  walletAddress: string,
+  covalent: CovalentData
+): ParsedTokenAccount => {
+	console.log("createParse",
+			walletAddress,
+			covalent.contract_address,
+    covalent.balance,
+    covalent.contract_decimals,
+    Number(formatUnits(covalent.balance, covalent.contract_decimals)),
+    formatUnits(covalent.balance, covalent.contract_decimals),
+ covalent.contract_ticker_symbol,
+			covalent.contract_name);
+	return {
+		
+    publicKey: walletAddress,
+    mintKey: covalent.contract_address,
+    amount: covalent.balance,
+    decimals: covalent.contract_decimals,
+    uiAmount: Number(formatUnits(covalent.balance, covalent.contract_decimals)),
+    uiAmountString: formatUnits(covalent.balance, covalent.contract_decimals),
+    symbol: covalent.contract_ticker_symbol,
+    name: covalent.contract_name
+  };
+};
+
+
+export const getEthereumAccountsBlockscout = async (
+  url: string,
+  nft: boolean,
+  chainId: ChainId
+): Promise<CovalentData[]> => {
+  try {
+    const output = [] as CovalentData[];
+    const response = await axios.get(url);
+    const tokens = response.data.result;
+
+    if (tokens instanceof Array && tokens.length) {
+      for (const item of tokens) {
+        if (
+          item.decimals !== undefined &&
+          item.contractAddress &&
+          item.contractAddress.toLowerCase() !==
+            getDefaultNativeCurrencyAddressEvm(chainId).toLowerCase() && // native balance comes from querying token bridge
+          item.balance &&
+          item.balance !== "0" &&
+          (nft ? item.type?.includes("ERC-721") : item.type?.includes("ERC-20"))
+        ) {
+          output.push({
+            contract_decimals: item.decimals,
+            contract_address: item.contractAddress,
+            balance: item.balance,
+            contract_ticker_symbol: item.symbol,
+            contract_name: item.name,
+            logo_url: "",
+            quote: 0,
+            quote_rate: 0,
+          });
+        }
+      }
+    }
+
+    return output;
+  } catch (error) {
+    return Promise.reject("Unable to retrieve your Ethereum Tokens.");
+  }
+};
+
 const createNativeEthParsedTokenAccount = async (provider: Provider, signerAddress: string | undefined) => {
 	try {
 		if (provider && signerAddress) {
 			let balanceInWei = await provider.getBalance(signerAddress);
 			const balanceInEth = formatEther(balanceInWei);
+
 			return createParsedTokenAccount(
 				signerAddress,
 				WETH_ADDRESS,
@@ -199,7 +318,7 @@ const createNativeEthRopstenParsedTokenAccount = async (provider: Provider, sign
 
 /** end for ethereum */
 
-function useGetAvailableTokens() {
+function useGetAvailableTokens(nft: boolean = false) {
 	const dispatch = useAppDispatch();
 	const tokenAccounts = useAppSelector((state) => state.transfer.sourceParsedTokenAccounts);
 	const lookupChain = useAppSelector((state) => state.transfer.sourceChain);
@@ -211,6 +330,11 @@ function useGetAvailableTokens() {
 	const [solanaMintAccounts, setSolanaMintAccounts] = useState<Map<string, ExtractedMintInfo | null> | undefined>(
 		undefined,
 	);
+	const [covalent, setCovalent] = useState<any>(undefined);
+  const [covalentLoading, setCovalentLoading] = useState(false);
+  const [covalentError, setCovalentError] = useState<string | undefined>(
+    undefined
+  );
 	const [solanaMintAccountsLoading, setSolanaMintAccountsLoading] = useState(false);
 	const [solanaMintAccountsError, setSolanaMintAccountsError] = useState<string | undefined>(undefined);
 
@@ -350,17 +474,64 @@ function useGetAvailableTokens() {
 	}, [lookupChain, provider, signerAddress, ethNativeAccount]);
 
 	//Ethereum token accounts load
-	useEffect(() => {
-		let cancelled = false;
-		const walletAddress = signerAddress;
-		if (walletAddress && isEVMChain(lookupChain)) {
-			// Todo
+  useEffect(() => {
+    //const testWallet = "0xf60c2ea62edbfe808163751dd0d8693dcb30019c";
+    // const nftTestWallet1 = "0x3f304c6721f35ff9af00fd32650c8e0a982180ab";
+    // const nftTestWallet2 = "0x98ed231428088eb440e8edb5cc8d66dcf913b86e";
+    // const nftTestWallet3 = "0xb1fadf677a7e9b90e9d4f31c8ffb3dc18c138c6f";
+    // const nftBscTestWallet1 = "0x5f464a652bd1991df0be37979b93b3306d64a909";
 
-			return () => {
-				cancelled = true;
-			};
-		}
-	}, [lookupChain, provider, signerAddress, dispatch]);
+    let cancelled = false;
+    const walletAddress = signerAddress;
+    if (walletAddress && isEVMChain(lookupChain) && !covalent) {
+		let url = COVALENT_GET_TOKENS_URL(lookupChain, walletAddress);
+		console.log(url)
+      let getAccounts;
+      if (url) {
+        getAccounts = getEthereumAccountsCovalent;
+      } else {
+        url = BLOCKSCOUT_GET_TOKENS_URL(lookupChain, walletAddress);
+        getAccounts = getEthereumAccountsBlockscout;
+      }
+      if (!url) {
+        return;
+	  }
+		
+		console.log("here")
+      //TODO less cancel
+      !cancelled && setCovalentLoading(true);
+      !cancelled &&
+        dispatch(fetchSourceParsedTokenAccounts()
+        );
+      getAccounts(url, nft,lookupChain).then(
+        (accounts) => {
+          
+            dispatch(
+              receiveSourceParsedTokenAccounts(
+                    accounts.map((x) =>
+                      createParsedTokenAccountFromCovalent(walletAddress, x)
+                    )
+                  )
+            );
+        },
+        () => {
+          !cancelled &&
+            dispatch(
+			errorSourceParsedTokenAccounts(
+                    "Cannot load your Ethereum tokens at the moment."
+                  )
+            );
+          !cancelled &&
+            setCovalentError("Cannot load your Ethereum tokens at the moment.");
+          !cancelled && setCovalentLoading(false);
+        }
+      );
+
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [lookupChain, provider, signerAddress, dispatch, covalent]);
 
 	const ethAccounts = useMemo(() => {
 		const output = { ...tokenAccounts };
@@ -385,12 +556,12 @@ function useGetAvailableTokens() {
 		: isEVMChain(lookupChain)
 		? {
 				tokenAccounts: ethAccounts,
-				// covalent: {
-				// 	data: covalent,
-				// 	isFetching: covalentLoading,
-				// 	error: covalentError,
-				// 	receivedAt: null, //TODO
-				// },
+				covalent: {
+					data: covalent,
+					isFetching: covalentLoading,
+					error: covalentError,
+					receivedAt: null, //TODO
+				},
 				resetAccounts: resetSourceAccounts,
 		  }
 		: undefined;

@@ -437,6 +437,21 @@ export const ROPSTEN_WETH_ADDRESS =
 		: "0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E";
 
 export const ROPSTEN_WETH_DECIMALS = 18;
+export const WBNB_ADDRESS =
+  CLUSTER === "mainnet"
+    ? "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"
+    : CLUSTER === "testnet"
+    ? "0xae13d989dac2f0debff460ac112a837c89baa7cd"
+    : "0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E";
+export const WBNB_DECIMALS = 18;
+
+export const WMATIC_ADDRESS =
+  CLUSTER === "mainnet"
+    ? "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270"
+    : CLUSTER === "testnet"
+    ? "0x9c3c9283d3e44854697cd22d3faa240cfb032889"
+    : "0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E";
+export const WMATIC_DECIMALS = 18;
 
 export const context2CssClass = {
 	success: "bg-blue-600",
@@ -445,4 +460,84 @@ export const context2CssClass = {
 	warning: "bg-orange-400",
 	default: "bg-indigo-600",
 	dark: "bg-white-600 font-gray-300",
+};
+export const COVALENT_ETHEREUM = 5; // Covalent only supports mainnet and Kovan
+export const COVALENT_BSC = CLUSTER === "devnet" ? 56 : CHAIN_ID_BSC;
+export const COVALENT_API_KEY = process.env.REACT_APP_COVALENT_API_KEY
+  ? process.env.REACT_APP_COVALENT_API_KEY
+  : "";
+
+export const COVALENT_POLYGON =
+  CLUSTER === "devnet" ? 137 : CHAIN_ID_POLYGON;
+export const COVALENT_GET_TOKENS_URL = (
+  chainId: ChainId,
+  walletAddress: string,
+  nft?: boolean,
+  noNftMetadata?: boolean
+) => {
+  const chainNum =
+    chainId === CHAIN_ID_ETH || chainId === CHAIN_ID_ETHEREUM_ROPSTEN
+      ? COVALENT_ETHEREUM
+      : chainId === CHAIN_ID_BSC
+      ? COVALENT_BSC
+      : chainId === CHAIN_ID_POLYGON
+      ? COVALENT_POLYGON
+      : "";
+  // https://www.covalenthq.com/docs/api/#get-/v1/{chain_id}/address/{address}/balances_v2/
+  return chainNum
+    ? `https://api.covalenthq.com/v1/${chainNum}/address/${walletAddress}/balances_v2/?key=${COVALENT_API_KEY}${
+        nft ? "&nft=true" : ""
+      }${noNftMetadata ? "&no-nft-fetch=true" : ""}`
+    : "";
+};
+export const getDefaultNativeCurrencyAddressEvm = (chainId: ChainId) => {
+  return chainId === CHAIN_ID_ETH
+    ? WETH_ADDRESS
+    : chainId === CHAIN_ID_BSC
+    ? WBNB_ADDRESS
+    : chainId === CHAIN_ID_POLYGON
+    ? WMATIC_ADDRESS
+    : chainId === CHAIN_ID_ETHEREUM_ROPSTEN
+    ? ROPSTEN_WETH_ADDRESS
+    : "";
+};
+export const BLOCKSCOUT_GET_TOKENS_URL = (
+  chainId: ChainId,
+  walletAddress: string
+) => {
+  const baseUrl =
+    chainId === CHAIN_ID_OASIS
+      ? CLUSTER === "mainnet"
+        ? "https://explorer.emerald.oasis.dev"
+        : CLUSTER === "testnet"
+        ? "https://testnet.explorer.emerald.oasis.dev"
+        : ""
+      : chainId === CHAIN_ID_AURORA
+      ? CLUSTER === "mainnet"
+        ? "https://explorer.mainnet.aurora.dev"
+        : CLUSTER === "testnet"
+        ? "https://explorer.testnet.aurora.dev"
+        : ""
+      : chainId === CHAIN_ID_ACALA
+      ? CLUSTER === "mainnet"
+        ? "https://blockscout.acala.network"
+        : CLUSTER === "testnet"
+        ? "https://blockscout.acala-dev.aca-dev.network"
+        : ""
+      : chainId === CHAIN_ID_KARURA
+      ? CLUSTER === "mainnet"
+        ? "https://blockscout.karura.network"
+        : CLUSTER === "testnet"
+        ? "https://blockscout.karura-dev.aca-dev.network"
+        : ""
+      : chainId === CHAIN_ID_CELO
+      ? CLUSTER === "mainnet"
+        ? "https://explorer.celo.org"
+        : CLUSTER === "testnet"
+        ? "https://alfajores-blockscout.celo-testnet.org"
+        : ""
+      : "";
+  return baseUrl
+    ? `${baseUrl}/api?module=account&action=tokenlist&address=${walletAddress}`
+    : "";
 };
