@@ -43,6 +43,8 @@ import {
 } from '../app/slices/transferSlice';
 import { AppDispatch } from '../app/store';
 import {
+	BLOCKSCOUT_GET_TOKENS_URL,
+	COVALENT_GET_TOKENS_URL,
 	getDefaultNativeCurrencyAddressEvm,
   KEYPAIR,
   ROPSTEN_WETH_ADDRESS,
@@ -197,6 +199,33 @@ const getEthereumAccountsCovalent = async (
   }
 };
 
+const createParsedTokenAccountFromCovalent = (
+  walletAddress: string,
+  covalent: CovalentData
+): ParsedTokenAccount => {
+	console.log("createParse",
+			walletAddress,
+			covalent.contract_address,
+    covalent.balance,
+    covalent.contract_decimals,
+    Number(formatUnits(covalent.balance, covalent.contract_decimals)),
+    formatUnits(covalent.balance, covalent.contract_decimals),
+ covalent.contract_ticker_symbol,
+			covalent.contract_name);
+	return {
+		
+    publicKey: walletAddress,
+    mintKey: covalent.contract_address,
+    amount: covalent.balance,
+    decimals: covalent.contract_decimals,
+    uiAmount: Number(formatUnits(covalent.balance, covalent.contract_decimals)),
+    uiAmountString: formatUnits(covalent.balance, covalent.contract_decimals),
+    symbol: covalent.contract_ticker_symbol,
+    name: covalent.contract_name
+  };
+};
+
+
 export const getEthereumAccountsBlockscout = async (
   url: string,
   nft: boolean,
@@ -289,7 +318,7 @@ const createNativeEthRopstenParsedTokenAccount = async (provider: Provider, sign
 
 /** end for ethereum */
 
-function useGetAvailableTokens() {
+function useGetAvailableTokens(nft: boolean = false) {
 	const dispatch = useAppDispatch();
 	const tokenAccounts = useAppSelector((state) => state.transfer.sourceParsedTokenAccounts);
 	const lookupChain = useAppSelector((state) => state.transfer.sourceChain);
@@ -301,6 +330,11 @@ function useGetAvailableTokens() {
 	const [solanaMintAccounts, setSolanaMintAccounts] = useState<Map<string, ExtractedMintInfo | null> | undefined>(
 		undefined,
 	);
+	const [covalent, setCovalent] = useState<any>(undefined);
+  const [covalentLoading, setCovalentLoading] = useState(false);
+  const [covalentError, setCovalentError] = useState<string | undefined>(
+    undefined
+  );
 	const [solanaMintAccountsLoading, setSolanaMintAccountsLoading] = useState(false);
 	const [solanaMintAccountsError, setSolanaMintAccountsError] = useState<string | undefined>(undefined);
 
@@ -440,17 +474,64 @@ function useGetAvailableTokens() {
 	}, [lookupChain, provider, signerAddress, ethNativeAccount]);
 
 	//Ethereum token accounts load
-	useEffect(() => {
-		let cancelled = false;
-		const walletAddress = signerAddress;
-		if (walletAddress && isEVMChain(lookupChain)) {
-			// Todo
+  useEffect(() => {
+    //const testWallet = "0xf60c2ea62edbfe808163751dd0d8693dcb30019c";
+    // const nftTestWallet1 = "0x3f304c6721f35ff9af00fd32650c8e0a982180ab";
+    // const nftTestWallet2 = "0x98ed231428088eb440e8edb5cc8d66dcf913b86e";
+    // const nftTestWallet3 = "0xb1fadf677a7e9b90e9d4f31c8ffb3dc18c138c6f";
+    // const nftBscTestWallet1 = "0x5f464a652bd1991df0be37979b93b3306d64a909";
 
-			return () => {
-				cancelled = true;
-			};
-		}
-	}, [lookupChain, provider, signerAddress, dispatch]);
+    let cancelled = false;
+    const walletAddress = signerAddress;
+    if (walletAddress && isEVMChain(lookupChain) && !covalent) {
+		let url = COVALENT_GET_TOKENS_URL(lookupChain, walletAddress);
+		console.log(url)
+      let getAccounts;
+      if (url) {
+        getAccounts = getEthereumAccountsCovalent;
+      } else {
+        url = BLOCKSCOUT_GET_TOKENS_URL(lookupChain, walletAddress);
+        getAccounts = getEthereumAccountsBlockscout;
+      }
+      if (!url) {
+        return;
+	  }
+		
+		console.log("here")
+      //TODO less cancel
+      !cancelled && setCovalentLoading(true);
+      !cancelled &&
+        dispatch(fetchSourceParsedTokenAccounts()
+        );
+      getAccounts(url, nft,lookupChain).then(
+        (accounts) => {
+          
+            dispatch(
+              receiveSourceParsedTokenAccounts(
+                    accounts.map((x) =>
+                      createParsedTokenAccountFromCovalent(walletAddress, x)
+                    )
+                  )
+            );
+        },
+        () => {
+          !cancelled &&
+            dispatch(
+			errorSourceParsedTokenAccounts(
+                    "Cannot load your Ethereum tokens at the moment."
+                  )
+            );
+          !cancelled &&
+            setCovalentError("Cannot load your Ethereum tokens at the moment.");
+          !cancelled && setCovalentLoading(false);
+        }
+      );
+
+      return () => {
+        cancelled = true;
+      };
+    }
+  }, [lookupChain, provider, signerAddress, dispatch, covalent]);
 
 	const ethAccounts = useMemo(() => {
 		const output = { ...tokenAccounts };
@@ -475,12 +556,12 @@ function useGetAvailableTokens() {
 		: isEVMChain(lookupChain)
 		? {
 				tokenAccounts: ethAccounts,
-				// covalent: {
-				// 	data: covalent,
-				// 	isFetching: covalentLoading,
-				// 	error: covalentError,
-				// 	receivedAt: null, //TODO
-				// },
+				covalent: {
+					data: covalent,
+					isFetching: covalentLoading,
+					error: covalentError,
+					receivedAt: null, //TODO
+				},
 				resetAccounts: resetSourceAccounts,
 		  }
 		: undefined;

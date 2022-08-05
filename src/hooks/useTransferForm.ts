@@ -66,6 +66,7 @@ import {
   sendAndConfirmTransaction,
   signTransaction,
 } from '../utils/solana';
+import { useEthereumProvider } from './EthereumContextProvider';
 
 async function evm(
 	dispatch: AppDispatch,
@@ -216,6 +217,9 @@ export const useTransferForm = (list: ChainName[]) => {
 	const amount = useAppSelector((state) => state.transfer.amount);
 	const originAsset = useAppSelector((state) => state.transfer.originAsset);
 	const originChain = useAppSelector((state) => state.transfer.originChain);
+	const {
+    provider,
+    signer} = useEthereumProvider()
 
 	// if (!sourceAsset) throw new ArgumentNullOrUndefinedError();
 
@@ -289,13 +293,15 @@ export const useTransferForm = (list: ChainName[]) => {
 				detectedProvider,
 				"any",
 			);
+			const signer = provider.getSigner();
 			dispatch(setTargetAddressHex((await provider.listAccounts()).at(0)));
 
 			await getCorrespondingToken({
 				dispatch,
+				tokenAddress,
 				sourceChain,
 				targetChain,
-				tokenAddress,
+				signer
 			});
 		};
 

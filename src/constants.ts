@@ -461,7 +461,7 @@ export const context2CssClass = {
 	default: "bg-indigo-600",
 	dark: "bg-white-600 font-gray-300",
 };
-export const COVALENT_ETHEREUM = 1; // Covalent only supports mainnet and Kovan
+export const COVALENT_ETHEREUM = 5; // Covalent only supports mainnet and Kovan
 export const COVALENT_BSC = CLUSTER === "devnet" ? 56 : CHAIN_ID_BSC;
 export const COVALENT_API_KEY = process.env.REACT_APP_COVALENT_API_KEY
   ? process.env.REACT_APP_COVALENT_API_KEY
