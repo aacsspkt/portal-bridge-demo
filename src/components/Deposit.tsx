@@ -21,14 +21,14 @@ export interface IDepositProps {
 interface TokenDepositSubmit {
   depositor: string,
   amount: string | undefined,
-  nonce: string | undefined
+
 
 }
 
 interface SOLDepositSubmit {
   depositor: string,
   amount: string | undefined,
-  nonce: string | undefined
+
 
 }
 
@@ -36,22 +36,19 @@ export function Deposit(props: IDepositProps) {
   const [tokenData, setTokenData] = React.useState<TokenDepositSubmit>({
     depositor: "",
     amount: undefined,
-    nonce: undefined
   })
   const [SolData, setSolData] = React.useState<SOLDepositSubmit>({
     depositor: "",
     amount: undefined,
-    nonce: undefined
   });
 
   const handleTokenDepositSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const Amount = BigNumber.from(tokenData.amount);
-    const Nonce = BigNumber.from(tokenData.nonce)
     const depositor = tokenData.depositor
     console.log("here")
-    const tx = await (await process_deposit_token(Amount, depositor, Nonce)).wait();
+    const tx = await (await process_deposit_token(Amount, depositor)).wait();
     console.log("tx", tx)
     const seq = parseSequenceFromLogEth(tx, BSC_BRIDGE_ADDRESS);
     console.log("seq", seq);
@@ -87,21 +84,15 @@ export function Deposit(props: IDepositProps) {
     });
 
   }
-  const handleTokenNonceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTokenData({
-      ...tokenData,
-      nonce: e.target.value,
 
-    });
-  }
 
   const handleSOLDepositSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const depositor = SolData.depositor
     const Amount = BigNumber.from(SolData.amount);
-    const Nonce = BigNumber.from(SolData.nonce)
 
-    const tx = await (await process_deposit_sol(Amount, depositor, Nonce)).wait();
+
+    const tx = await (await process_deposit_sol(Amount, depositor)).wait();
     console.log("tx", tx)
     const seq = parseSequenceFromLogEth(tx, BSC_BRIDGE_ADDRESS);
     console.log("seq", seq);
@@ -137,12 +128,7 @@ export function Deposit(props: IDepositProps) {
     });
 
   }
-  const handleSOLNonceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSolData({
-      ...SolData,
-      nonce: e.target.value,
-    })
-  }
+  
 
   const {
 
@@ -185,16 +171,7 @@ export function Deposit(props: IDepositProps) {
                     type='text' />
 
                 </div>
-                <div className='w-full  space-y-2'>
-                  <label className='text-md '>Nonce</label>
-                  <input
-                    className='h-9 w-full border p-2 text-md focus:outline-none'
-                    value={tokenData.nonce}
-                    onChange={handleTokenNonceChange}
-                    title='Nonce'
-                    name='nonce'
-                    type='text' />
-                </div>
+                
 
                 <button type='submit' className='p-2 w-full shadow text-white bg-blue-500 my-4 rounded text-center'
                 >Process Token Deposit</button>
@@ -234,16 +211,7 @@ export function Deposit(props: IDepositProps) {
                     name='transferAmount'
                     type='text' />
                 </div>
-                <div className='w-full  space-y-2'>
-                  <label className='text-md '>Nonce</label>
-                  <input
-                    className='h-9 w-full border p-2 text-md focus:outline-none'
-                    value={SolData.nonce}
-                    onChange={handleSOLNonceChange}
-                    title='Nonce'
-                    name='nonce'
-                    type='text' />
-                </div>
+          
 
                 <button type='submit' className='p-2 w-full shadow text-white bg-blue-500 my-4 rounded text-center'
                 >Process SOL Deposit</button>

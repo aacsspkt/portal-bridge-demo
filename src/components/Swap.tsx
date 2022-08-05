@@ -20,14 +20,14 @@ export interface ISwapProps {
 interface TokenSwapSubmit {
 
   amount: string | undefined,
-  nonce: string | undefined
+  sender: string 
 
 }
 
 interface SOLSwapSubmit {
 
   amount: string | undefined,
-  nonce: string | undefined
+  sender: string 
 
 }
 
@@ -36,12 +36,12 @@ export function Swap(props: ISwapProps) {
   const [tokenData, setTokenData] = React.useState<TokenSwapSubmit>({
 
     amount: undefined,
-    nonce: undefined
+    sender: ""
   })
   const [SolData, setSolData] = React.useState<SOLSwapSubmit>({
 
     amount: undefined,
-    nonce: undefined
+    sender: ""
   })
   const {
 
@@ -54,9 +54,9 @@ export function Swap(props: ISwapProps) {
     e.preventDefault();
 
     const Amount = BigNumber.from(tokenData.amount);
-    const Nonce = BigNumber.from(tokenData.nonce)
+    const sender = tokenData.sender
     console.log("here")
-    const tx = await (await encode_process_swap_token(Amount, Nonce)).wait();
+    const tx = await (await encode_process_swap_token(Amount, sender)).wait();
     console.log("tx", tx)
     const seq = parseSequenceFromLogEth(tx, BSC_BRIDGE_ADDRESS);
     console.log("seq", seq);
@@ -85,10 +85,10 @@ export function Swap(props: ISwapProps) {
     });
 
   }
-  const handleTokenNonceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTokensenderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTokenData({
       ...tokenData,
-      nonce: e.target.value,
+      sender: e.target.value,
 
     });
   }
@@ -97,10 +97,10 @@ export function Swap(props: ISwapProps) {
     e.preventDefault();
 
     const Amount = BigNumber.from(SolData.amount);
-    const Nonce = BigNumber.from(SolData.nonce)
+    const sender = SolData.sender
 
 
-    const tx = await (await process_swap_sol(Amount, Nonce)).wait();
+    const tx = await (await process_swap_sol(Amount, sender)).wait();
     console.log("tx", tx)
     const seq = parseSequenceFromLogEth(tx, BSC_BRIDGE_ADDRESS);
     console.log("seq", seq);
@@ -130,10 +130,10 @@ export function Swap(props: ISwapProps) {
     });
 
   }
-  const handleSOLNonceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSOLsenderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSolData({
       ...SolData,
-      nonce: e.target.value,
+      sender: e.target.value,
     })
   }
 
@@ -160,13 +160,13 @@ export function Swap(props: ISwapProps) {
                     type='text' />
                 </div>
                 <div className='w-full  space-y-2'>
-                  <label className='text-md '>Nonce</label>
+                  <label className='text-md '>Sender</label>
                   <input
                     className='h-9 w-full border p-2 text-md focus:outline-none'
-                    value={tokenData.nonce}
-                    onChange={handleTokenNonceChange}
-                    title='Nonce'
-                    name='nonce'
+                    value={tokenData.sender}
+                    onChange={handleTokensenderChange}
+                    title='sender'
+                    name='sender'
                     type='text' />
                 </div>
 
@@ -199,13 +199,13 @@ export function Swap(props: ISwapProps) {
                     type='text' />
                 </div>
                 <div className='w-full  space-y-2'>
-                  <label className='text-md '>Nonce</label>
+                  <label className='text-md '>Sender</label>
                   <input
                     className='h-9 w-full border p-2 text-md focus:outline-none'
                     value={SolData.amount}
-                    onChange={handleSOLNonceChange}
-                    title='Nonce'
-                    name='nonce'
+                    onChange={handleSOLsenderChange}
+                    title='sender'
+                    name='sender'
                     type='text' />
                 </div>
 

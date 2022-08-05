@@ -20,14 +20,14 @@ export interface IFundProps {
 interface TokenFundSubmit {
   endTime: string | undefined,
   amount: string | undefined,
-  nonce: string | undefined
+  sender: string 
 
 }
 
 interface SOLFundSubmit {
   endTime: string | undefined,
   amount: string | undefined,
-  nonce: string | undefined
+  sender: string 
 
 }
 
@@ -36,12 +36,12 @@ export function Fund (props: IFundProps) {
   const [tokenData, setTokenData] = React.useState<TokenFundSubmit>({
     endTime: undefined,
     amount: undefined,
-    nonce: undefined
+    sender: ""
   })
   const [SolData, setSolData] = React.useState<SOLFundSubmit>({
     endTime: undefined,
     amount: undefined,
-    nonce: undefined
+    sender: ""
   })
   const {
 
@@ -54,11 +54,11 @@ export function Fund (props: IFundProps) {
     e.preventDefault();
     const EndTime = BigNumber.from(tokenData.endTime);
     const Amount = BigNumber.from(tokenData.amount);
-    const Nonce = BigNumber.from(tokenData.nonce)
+    const sender = tokenData.sender
     console.log("here")
 
 
-    const tx = await (await process_fund_token(EndTime, Amount, Nonce)).wait();
+    const tx = await (await process_fund_token(EndTime, Amount, sender)).wait();
     console.log("tx", tx)
     const seq = parseSequenceFromLogEth(tx, BSC_BRIDGE_ADDRESS);
     console.log("seq", seq);
@@ -94,10 +94,10 @@ export function Fund (props: IFundProps) {
     });
 
   }
-  const handleTokenNonceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTokenSenderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTokenData({
       ...tokenData,
-      nonce: e.target.value,
+      sender: e.target.value,
 
     });
   }
@@ -106,9 +106,9 @@ export function Fund (props: IFundProps) {
     e.preventDefault();
     const EndTime = BigNumber.from(SolData.endTime);
     const Amount = BigNumber.from(SolData.amount);
-    const Nonce = BigNumber.from(SolData.nonce)
+    const sender = SolData.sender;
 
-    const tx = await (await process_fund_sol(EndTime, Amount, Nonce)).wait();
+    const tx = await (await process_fund_sol(EndTime, Amount, sender)).wait();
     console.log("tx", tx)
     const seq = parseSequenceFromLogEth(tx, BSC_BRIDGE_ADDRESS);
     console.log("seq", seq);
@@ -144,10 +144,10 @@ export function Fund (props: IFundProps) {
     });
 
   }
-  const handleSOLNonceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSOLSenderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSolData({
       ...SolData,
-      nonce: e.target.value,
+      sender: e.target.value,
     })
   }
 
@@ -183,13 +183,13 @@ export function Fund (props: IFundProps) {
                     type='text' />
                 </div>
                 <div className='w-full  space-y-2'>
-                  <label className='text-md '>Nonce</label>
+                  <label className='text-md '>Sender</label>
                   <input
                     className='h-9 w-full border p-2 text-md focus:outline-none'
-                    value={tokenData.nonce}
-                    onChange={handleTokenNonceChange}
-                    title='Nonce'
-                    name='nonce'
+                    value={tokenData.sender}
+                    onChange={handleTokenSenderChange}
+                    title='sender'
+                    name='sender'
                     type='text' />
                 </div>
 
@@ -232,13 +232,13 @@ export function Fund (props: IFundProps) {
                     type='text' />
                 </div>
                 <div className='w-full  space-y-2'>
-                  <label className='text-md '>Nonce</label>
+                  <label className='text-md '>sender</label>
                   <input
                     className='h-9 w-full border p-2 text-md focus:outline-none'
-                    value={SolData.nonce}
-                    onChange={handleSOLNonceChange}
-                    title='Nonce'
-                    name='nonce'
+                    value={SolData.sender}
+                    onChange={handleSOLSenderChange}
+                    title='sender'
+                    name='sender'
                     type='text' />
                 </div>
 

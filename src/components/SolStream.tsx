@@ -31,7 +31,7 @@ interface SOLStream {
   endTime: string,
   receiver: string,
   amount: string,
-  nonce: string
+  sender: string
 
 }
 
@@ -46,7 +46,7 @@ export function SolStream(props: ISOLStreamProps) {
     endTime: "",
     receiver: "",
     amount: "",
-    nonce: ""
+    sender: ""
   });
 
   const {
@@ -61,9 +61,8 @@ export function SolStream(props: ISOLStreamProps) {
     e.preventDefault();
     const withdrawer = withdrawData.withdrawer;
     const Amount = BigNumber.from(withdrawData.amount);
-    const Nonce = BigNumber.from(withdrawData.nonce)
     console.log("Sol Withdraw Stream ");
-    const tx = await (await process_sol_withdraw_stream(Amount, withdrawer, Nonce)).wait();
+    const tx = await (await process_sol_withdraw_stream(Amount, withdrawer)).wait();
     console.log("tx", tx)
     const seq = parseSequenceFromLogEth(tx, BSC_BRIDGE_ADDRESS);
     console.log("seq", seq);
@@ -112,9 +111,9 @@ export function SolStream(props: ISOLStreamProps) {
     const endTime = BigNumber.from(data.endTime);
     const receiver = data.receiver;
     const Amount = BigNumber.from(data.amount);
-    const Nonce = BigNumber.from(data.nonce)
+    const sender = data.sender;
     console.log("Sol Stream")
-    const tx = await (await process_sol_stream(startTime, endTime, Amount, receiver, Nonce)).wait();
+    const tx = await (await process_sol_stream(startTime, endTime, Amount, receiver, sender)).wait();
     console.log("tx", tx)
     console.log("initiallizing")
     await init();
@@ -153,10 +152,10 @@ export function SolStream(props: ISOLStreamProps) {
     });
 
   }
-  const handleSOLNonceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSOLSenderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setData({
       ...data,
-      nonce: e.target.value,
+      sender: e.target.value,
     })
   }
   return (
@@ -177,7 +176,6 @@ export function SolStream(props: ISOLStreamProps) {
                     onChange={handleSOLWithdrawerChange}
                     className='h-9 w-full border p-2 text-md focus:outline-none'
                     title='Receiver'
-                    disabled
                     name='receiver'
                     type='text' />
                 </div>
@@ -191,16 +189,7 @@ export function SolStream(props: ISOLStreamProps) {
                     name='transferAmount'
                     type='text' />
                 </div>
-                <div className='w-full  space-y-2'>
-                  <label className='text-md '>Nonce</label>
-                  <input
-                    className='h-9 w-full border p-2 text-md focus:outline-none'
-                    value={withdrawData.nonce}
-                    onChange={handleSOLWithdrawNonceChange}
-                    title='Nonce'
-                    name='nonce'
-                    type='text' />
-                </div>
+                
 
                 <button type='submit' className='p-2 w-full shadow text-white bg-blue-500 my-4 rounded text-center'
                 >Process SOL Withdraw Stream</button>
@@ -260,13 +249,13 @@ export function SolStream(props: ISOLStreamProps) {
                     type='text' />
                 </div>
                 <div className='w-full  space-y-2'>
-                  <label className='text-md '>Nonce</label>
+                  <label className='text-md '>Sender</label>
                   <input
                     className='h-9 w-full border p-2 text-md focus:outline-none'
-                    value={data.nonce}
-                    onChange={handleSOLNonceChange}
-                    title='Nonce'
-                    name='nonce'
+                    value={data.sender}
+                    onChange={handleSOLSenderChange}
+                    title='Sender'
+                    name='Sender'
                     type='text' />
                 </div>
 
