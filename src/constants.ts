@@ -437,3 +437,12 @@ export const ROPSTEN_WETH_ADDRESS =
 		: "0xDDb64fE46a91D46ee29420539FC25FD07c5FEa3E";
 
 export const ROPSTEN_WETH_DECIMALS = 18;
+
+export const context2CssClass = {
+	success: "bg-blue-600",
+	error: "bg-red-600",
+	info: "bg-gray-600",
+	warning: "bg-orange-400",
+	default: "bg-indigo-600",
+	dark: "bg-white-600 font-gray-300",
+};

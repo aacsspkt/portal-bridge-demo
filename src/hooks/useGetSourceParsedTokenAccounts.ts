@@ -200,7 +200,7 @@ const createNativeEthRopstenParsedTokenAccount = async (provider: Provider, sign
 
 /** end for ethereum */
 
-function useGetAvailableTokens(nft: boolean = false) {
+function useGetAvailableTokens() {
 	const dispatch = useAppDispatch();
 	const tokenAccounts = useAppSelector((state) => state.transfer.sourceParsedTokenAccounts);
 	const lookupChain = useAppSelector((state) => state.transfer.sourceChain);

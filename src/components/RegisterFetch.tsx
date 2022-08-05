@@ -15,7 +15,7 @@ import {
   WORMHOLE_RPC_HOSTS,
 } from '../constants';
 import { useRelayer } from '../hooks/useRelayer';
-import { CustomDropDown } from './CustomDropdown';
+import CustomDropDown from './CustomDropdown';
 
 export interface IRegisterFetchProps {
 }
@@ -149,7 +149,7 @@ export function RegisterFetch(props: IRegisterFetchProps) {
 
               <div className='w-full  space-y-2'>
                 <label className='text-md '>Chain</label>
-                <CustomDropDown value={data.targetChain} onChange={handleTargetChainChange} dropdownList={chainList} />
+                <CustomDropDown value={data.targetChain} onChange={handleTargetChainChange} label={chain => chain} options={chainList} />
 
               </div>
               <div className='w-full  space-y-2'>
