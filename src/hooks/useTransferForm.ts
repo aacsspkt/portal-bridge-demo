@@ -1,4 +1,7 @@
-import React, { useCallback } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+} from 'react';
 
 import {
   ethers,
@@ -21,6 +24,7 @@ import {
   parseSequenceFromLogEth,
   parseSequenceFromLogSolana,
   toChainId,
+  toChainName,
   transferFromEth,
   transferFromEthNative,
   transferFromSolana,
@@ -32,28 +36,36 @@ import {
   Keypair,
 } from '@solana/web3.js';
 
-import { useAppDispatch } from '../app/hooks';
+import {
+  useAppDispatch,
+  useAppSelector,
+} from '../app/hooks';
 import {
   ParsedTokenAccount,
   setAmount,
   setSourceChain,
   setSourceParsedTokenAccount,
+  setTargetAddressHex,
   setTargetChain,
 } from '../app/slices/transferSlice';
 import { AppDispatch } from '../app/store';
 import {
   getBridgeAddressForChain,
   getTokenBridgeAddressForChain,
+  KEYPAIR,
   SOL_BRIDGE_ADDRESS,
   SOL_TOKEN_BRIDGE_ADDRESS,
   SOLANA_HOST,
   WORMHOLE_RPC_HOSTS,
 } from '../constants';
 import {
+  getCorrespondingToken,
+  transferTokens,
+} from '../functions';
+import {
   sendAndConfirmTransaction,
   signTransaction,
 } from '../utils/solana';
-import useToast from './useToast';
 
 async function evm(
 	dispatch: AppDispatch,
@@ -196,8 +208,16 @@ async function solana(
 
 export const useTransferForm = (list: ChainName[]) => {
 	const dispatch = useAppDispatch();
+	const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
+	const targetChain = useAppSelector((state) => state.transfer.targetChain);
+	const sourceAsset = useAppSelector((state) => state.transfer.sourceParsedTokenAccount);
+	const targetAsset = useAppSelector((state) => state.transfer.targetAsset);
+	const targetAddressHex = useAppSelector((state) => state.transfer.targetAddressHex);
+	const amount = useAppSelector((state) => state.transfer.amount);
+	const originAsset = useAppSelector((state) => state.transfer.originAsset);
+	const originChain = useAppSelector((state) => state.transfer.originChain);
 
-	const { toastSuccess } = useToast();
+	// if (!sourceAsset) throw new ArgumentNullOrUndefinedError();
 
 	const handleSourceChainChange = useCallback(
 		(chain: ChainName) => {
@@ -235,70 +255,54 @@ export const useTransferForm = (list: ChainName[]) => {
 			detectedProvider,
 			"any",
 		);
+		// const { signerAddress, walletConnected, signer, connect } = useEthereumProvider();
+		// if (!walletConnected) connect();
+		// dispatch(setTargetAddressHex(signerAddress));
 
-		toastSuccess("Transfer Clicked");
-
-		// const result = await transferTokens(
-		// 	toChainName(sourceChain),
-		// 	toChainName(targetChain),
-		// 	provider,
-		// 	data.sourceAsset,
-		// 	parseFloat(amount),
-		// 	KEYPAIR.publicKey.toString(),
-		// );
-		// console.log("Result", result);
+		// const relayerFee = useAppSelector(state => state.transfer.relayerFee);
+		if (sourceAsset && targetAddressHex) {
+			const result = await transferTokens(
+				toChainName(sourceChain),
+				toChainName(targetChain),
+				provider,
+				sourceAsset,
+				targetAddressHex,
+				parseFloat(amount),
+				KEYPAIR.publicKey.toString(),
+				originAsset,
+				originChain ? toChainName(originChain) : undefined,
+			);
+			console.log("Result", result);
+		}
 	};
 
-	// useEffect(() => {
-	// 	const getAndSetTargetToken = async () => {
-	// 		try {
-	// 			if (toChainName(sourceChain).includes(toChainName(targetChain))) {
-	// 				// setTargetChain({
-	// 				// 	...data,
-	// 				// 	targetAsset: "",
-	// 				// });
-	// 				return;
-	// 			}
+	useEffect(() => {
+		const getAndSetTargetToken = async (sourceChain: ChainName, targetChain: ChainName, tokenAddress: string) => {
+			if (sourceChain.includes(targetChain)) {
+				return;
+			}
 
-	// 			console.log("Getting Target Token...");
-	// 			const detectedProvider = await detectEthereumProvider();
-	// 			const provider = new ethers.providers.Web3Provider(
-	// 				// @ts-ignore
-	// 				detectedProvider,
-	// 				"any",
-	// 			);
+			console.log("Getting Target Token...");
+			const detectedProvider = await detectEthereumProvider();
+			const provider = new ethers.providers.Web3Provider(
+				// @ts-ignore
+				detectedProvider,
+				"any",
+			);
+			dispatch(setTargetAddressHex((await provider.listAccounts()).at(0)));
 
-	// 			// if (isValidToken(sourceAsset, sourceChain)) {
-	// 			// 	const targetAsset = await getCorrespondingToken({
-	// 			// 		sourceChain: data.sourceChain,
-	// 			// 		targetChain: data.targetChain,
-	// 			// 		tokenAddress: data.sourceAsset,
-	// 			// 		signer: provider.getSigner(),
-	// 			// 	});
+			await getCorrespondingToken({
+				dispatch,
+				sourceChain,
+				targetChain,
+				tokenAddress,
+			});
+		};
 
-	// 			// 	console.log("targetAsset:", targetAsset);
-
-	// 			// 	if (targetAsset != null) {
-	// 			// 		setData({
-	// 			// 			...data,
-	// 			// 			targetAsset: targetAsset,
-	// 			// 		});
-	// 			// 	} else {
-	// 			// 		setData({
-	// 			// 			...data,
-	// 			// 			targetAsset: "",
-	// 			// 		});
-	// 			// 	}
-	// 			// }
-	// 		} catch (error) {
-	// 			console.log(error);
-	// 		}
-	// 	};
-
-	// 	if (sourceAsset !== "") {
-	// 		getAndSetTargetToken();
-	// 	}
-	// }, [data.sourceChain, data.sourceAsset, data.targetChain]);
+		if (sourceAsset?.mintKey) {
+			getAndSetTargetToken(toChainName(sourceChain), toChainName(targetChain), sourceAsset.mintKey);
+		}
+	}, [sourceChain, sourceAsset, targetChain]);
 
 	return {
 		handleSourceChainChange,
