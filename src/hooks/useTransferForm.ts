@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useEffect,
+  useState,
 } from 'react';
 
 import {
@@ -21,10 +22,10 @@ import {
   getEmitterAddressSolana,
   getSignedVAAWithRetry,
   hexToUint8Array,
+  isEVMChain,
   parseSequenceFromLogEth,
   parseSequenceFromLogSolana,
   toChainId,
-  toChainName,
   transferFromEth,
   transferFromEthNative,
   transferFromSolana,
@@ -45,25 +46,23 @@ import {
   setAmount,
   setSourceChain,
   setSourceParsedTokenAccount,
-  setTargetAddressHex,
   setTargetChain,
 } from '../app/slices/transferSlice';
 import { AppDispatch } from '../app/store';
 import {
   getBridgeAddressForChain,
   getTokenBridgeAddressForChain,
+  isSolanaChain,
   SOL_BRIDGE_ADDRESS,
   SOL_TOKEN_BRIDGE_ADDRESS,
   SOLANA_HOST,
   WORMHOLE_RPC_HOSTS,
 } from '../constants';
 import { useEthereumProvider } from '../contexts/EthereumContextProvider';
-import { getCorrespondingToken } from '../functions';
 import {
   sendAndConfirmTransaction,
   signTransaction,
 } from '../utils/solana';
-import useGetAvailableTokens from './useGetSourceParsedTokenAccounts';
 import useToast from './useToast';
 
 async function evm(
@@ -192,8 +191,6 @@ async function solana(
 }
 
 export const useTransferForm = (list: ChainName[]) => {
-	useGetAvailableTokens();
-
 	const dispatch = useAppDispatch();
 	const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
 	const targetChain = useAppSelector((state) => state.transfer.targetChain);
@@ -203,6 +200,22 @@ export const useTransferForm = (list: ChainName[]) => {
 	const amount = useAppSelector((state) => state.transfer.amount);
 	const originAsset = useAppSelector((state) => state.transfer.originAsset);
 	const originChain = useAppSelector((state) => state.transfer.originChain);
+	const sourceParsedTokenAccounts = useAppSelector((state) => state.transfer.sourceParsedTokenAccounts);
+
+	const [isAmountDisabled, setIsAmountDisabled] = useState(true);
+
+	useEffect(() => {
+		let ignore = false;
+		if (!sourceParsedTokenAccount) {
+			!ignore && setIsAmountDisabled(true);
+		} else {
+			!ignore && setIsAmountDisabled(false);
+		}
+		return () => {
+			ignore = true;
+		};
+	});
+
 	const { provider, signer } = useEthereumProvider();
 
 	const { toastSuccess } = useToast();
@@ -230,8 +243,8 @@ export const useTransferForm = (list: ChainName[]) => {
 	);
 
 	const handleAmountChange = useCallback(
-		(event: React.ChangeEvent<HTMLInputElement>) => {
-			dispatch(setAmount(event.target.value));
+		(value: string) => {
+			dispatch(setAmount(value));
 		},
 		[dispatch],
 	);
@@ -245,60 +258,33 @@ export const useTransferForm = (list: ChainName[]) => {
 			"any",
 		);
 
+		console.log(sourceChain);
+		console.log(targetChain);
+		console.log(sourceParsedTokenAccount);
+		console.log(targetAsset);
+		console.log(targetAddressHex);
+		console.log(originChain);
+		console.log(originAsset);
+		console.log(amount);
+
 		toastSuccess("Transfer Clicked");
 
-		// const { signerAddress, walletConnected, signer, connect } = useEthereumProvider();
-		// if (!walletConnected) connect();
-		// dispatch(setTargetAddressHex(signerAddress));
-
-		// const relayerFee = useAppSelector(state => state.transfer.relayerFee);
-		// if (sourceParsedTokenAccount && targetAddressHex) {
-		// 	const result = await transferTokens(
-		// 		toChainName(sourceChain),
-		// 		toChainName(targetChain),
-		// 		provider,
-		// 		sourceParsedTokenAccount,
-		// 		targetAddressHex,
-		// 		parseFloat(amount),
-		// 		KEYPAIR.publicKey.toString(),
-		// 		originAsset,
-		// 		originChain ? toChainName(originChain) : undefined,
-		// 	);
-		// 	console.log("Result", result);
-		// }
+		if (isSolanaChain(sourceChain) && !!sourceParsedTokenAccount) {
+			// todo: transfer to solana
+		} else if (isEVMChain(sourceChain) && !!signer && !!sourceParsedTokenAccount) {
+			// todo: transfer to ethereum
+		}
 	};
 
-	useEffect(() => {
-		const getAndSetTargetToken = async (sourceChain: ChainName, targetChain: ChainName, tokenAddress: string) => {
-			if (sourceChain.includes(targetChain)) {
-				return;
-			}
-
-			console.log("Getting Target Token...");
-			const detectedProvider = await detectEthereumProvider();
-			const provider = new ethers.providers.Web3Provider(
-				// @ts-ignore
-				detectedProvider,
-				"any",
-			);
-			const signer = provider.getSigner();
-			dispatch(setTargetAddressHex((await provider.listAccounts()).at(0)));
-
-			await getCorrespondingToken({
-				dispatch,
-				tokenAddress,
-				sourceChain,
-				targetChain,
-				signer,
-			});
-		};
-
-		if (sourceParsedTokenAccount?.mintKey) {
-			getAndSetTargetToken(toChainName(sourceChain), toChainName(targetChain), sourceParsedTokenAccount.mintKey);
-		}
-	}, [sourceChain, sourceParsedTokenAccount, targetChain]);
-
 	return {
+		sourceChain,
+		targetChain,
+		sourceParsedTokenAccount,
+		sourceParsedTokenAccounts,
+		targetAsset,
+		targetAddressHex,
+		amount,
+		isAmountDisabled,
 		handleSourceChainChange,
 		handleSourceTokenAccountChange,
 		handleTargetChainChange,

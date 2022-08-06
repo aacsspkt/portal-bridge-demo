@@ -6,9 +6,12 @@ import {
   toChainName,
 } from '@certusone/wormhole-sdk';
 
-import { useAppSelector } from '../app/hooks';
 import CustomDropDown from '../components/CustomDropdown';
+import useCheckIfWormholeWrapped from '../hooks/useCheckIfWormholeWrapped';
+import useFetchTargetAsset from '../hooks/useFetchTargetAsset';
 import useGetAvailableTokens from '../hooks/useGetSourceParsedTokenAccounts';
+import useGetTargetParsedTokenAccounts
+  from '../hooks/useGetTargetParsedTokenAccounts';
 import { useTransferForm } from '../hooks/useTransferForm';
 
 interface ITransferProps {
@@ -16,24 +19,34 @@ interface ITransferProps {
 
 
 export default function Transfer(props: ITransferProps) {
-  const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
-  const targetChain = useAppSelector((state) => state.transfer.targetChain);
-  const targetAsset = useAppSelector((state) => state.transfer.targetAsset);
-  const sourceTokenAccount = useAppSelector((state) => state.transfer.sourceParsedTokenAccount);
-  const sourceTokenAccounts = useAppSelector((state) => state.transfer.sourceParsedTokenAccounts);
-  const amount = useAppSelector((state) => state.transfer.amount);
+  useGetAvailableTokens();
+  useCheckIfWormholeWrapped();
+  useFetchTargetAsset();
+  useGetTargetParsedTokenAccounts();
 
-  const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item !== "unset");
+  // const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
+  // const targetChain = useAppSelector((state) => state.transfer.targetChain);
+  // const targetAsset = useAppSelector((state) => state.transfer.targetAsset);
+  // const sourceTokenAccount = useAppSelector((state) => state.transfer.sourceParsedTokenAccount);
+  // const sourceTokenAccounts = useAppSelector((state) => state.transfer.sourceParsedTokenAccounts);
+  // const amount = useAppSelector((state) => state.transfer.amount);
+
+  const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item === "solana" || item === "ethereum");
 
   const {
+    sourceChain,
+    targetChain,
+    sourceParsedTokenAccounts,
+    sourceParsedTokenAccount,
+    targetAsset,
+    amount,
+    isAmountDisabled,
     handleSourceChainChange,
     handleSourceTokenAccountChange,
     handleTargetChainChange,
     handleAmountChange,
     handleSubmit
   } = useTransferForm(chainList);
-
-  useGetAvailableTokens();
 
   return (
     <div className="w-full h-screen flex flex-col">
@@ -49,7 +62,7 @@ export default function Transfer(props: ITransferProps) {
             </div>
             <div className='w-4/5 space-y-2'>
               <label className='text-md '>Source Token</label>
-              <CustomDropDown value={sourceTokenAccount} onChange={handleSourceTokenAccountChange} label={(account) => account?.mintKey || account?.amount} options={sourceTokenAccounts.data ?? []} />
+              <CustomDropDown value={sourceParsedTokenAccount} onChange={handleSourceTokenAccountChange} label={(account) => account?.mintKey || account?.amount} options={sourceParsedTokenAccounts.data ?? []} />
             </div>
             <div className='w-4/5 space-y-2'>
               <label className='text-md '>Target Chain</label>
@@ -57,15 +70,16 @@ export default function Transfer(props: ITransferProps) {
             </div>
             <div className='w-4/5 space-y-2'>
               <label className='text-md '>Target Token</label>
-              <div className='h-9 w-full border p-2 text-md focus:outline-none'>{targetAsset.address}</div>
+              <div className='h-9 w-full border p-2 text-md focus:outline-none'>{targetAsset.data?.address}</div>
 
             </div>
             <div className='w-4/5 space-y-2'>
               <label className='text-md '>Amount</label>
               <input
+                disabled={isAmountDisabled}
                 className='h-9 w-full border p-2 text-md focus:outline-none'
                 value={amount}
-                onChange={handleAmountChange}
+                onChange={(e) => handleAmountChange(e.target.value)}
                 title='Amount'
                 name='transferAmount'
                 type='text' />
