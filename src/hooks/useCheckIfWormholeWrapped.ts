@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 
 import {
-  CHAIN_ID_SOLANA,
   ChainId,
   getOriginalAssetEth,
   getOriginalAssetSol,
@@ -17,6 +16,7 @@ import { useAppSelector } from '../app/hooks';
 import { setSourceWormholeWrappedInfo } from '../app/slices/transferSlice';
 import {
   getTokenBridgeAddressForChain,
+  isSolanaChain,
   SOL_TOKEN_BRIDGE_ADDRESS,
   SOLANA_HOST,
 } from '../constants';
@@ -28,10 +28,6 @@ export interface StateSafeWormholeWrappedInfo {
 	assetAddress: string;
 	tokenId?: string;
 }
-
-const isSolanaChain = (chain: ChainId) => {
-	return chain === CHAIN_ID_SOLANA;
-};
 
 const makeStateSafe = (info: WormholeWrappedInfo): StateSafeWormholeWrappedInfo => ({
 	...info,
@@ -45,13 +41,13 @@ function useCheckIfWormholeWrapped() {
 	const { provider } = useEthereumProvider();
 	useEffect(() => {
 		// TODO: loading state, error state
-		let cancelled = false;
+		let ignore = false;
 		(async () => {
 			if (isEVMChain(sourceChain) && provider && sourceAsset) {
 				const wrappedInfo = makeStateSafe(
 					await getOriginalAssetEth(getTokenBridgeAddressForChain(sourceChain), provider, sourceAsset, sourceChain),
 				);
-				if (!cancelled) {
+				if (!ignore) {
 					dispatch(setSourceWormholeWrappedInfo(wrappedInfo));
 				}
 			}
@@ -61,14 +57,14 @@ function useCheckIfWormholeWrapped() {
 					const wrappedInfo = makeStateSafe(
 						await getOriginalAssetSol(connection, SOL_TOKEN_BRIDGE_ADDRESS, sourceAsset),
 					);
-					if (!cancelled) {
+					if (!ignore) {
 						dispatch(setSourceWormholeWrappedInfo(wrappedInfo));
 					}
 				} catch (e) {}
 			}
 		})();
 		return () => {
-			cancelled = true;
+			ignore = true;
 		};
 	}, [dispatch, sourceChain, sourceAsset, provider, setSourceWormholeWrappedInfo]);
 }

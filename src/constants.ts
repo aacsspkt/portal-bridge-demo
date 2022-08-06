@@ -110,6 +110,10 @@ export const getEvmChainId = (chainId: ChainId) =>
 		? NEON_NETWORK_CHAIN_ID
 		: undefined;
 
+export const isSolanaChain = (chain: ChainId) => {
+	return chain === CHAIN_ID_SOLANA;
+};
+
 export const SOLANA_HOST = process.env.REACT_APP_SOLANA_API_URL
 	? process.env.REACT_APP_SOLANA_API_URL
 	: CLUSTER === "mainnet"

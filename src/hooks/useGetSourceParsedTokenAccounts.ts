@@ -165,7 +165,7 @@ const getSolanaParsedTokenAccounts = async (walletAddress: string, dispatch: App
 
 /** for ethereum */
 
-const getEthereumAccountsCovalent = async (url: string, nft: boolean, chainId: ChainId): Promise<CovalentData[]> => {
+const getEthereumAccountsCovalent = async (url: string, chainId: ChainId): Promise<CovalentData[]> => {
 	try {
 		const output = [] as CovalentData[];
 		const response = await axios.get(url);
@@ -180,7 +180,7 @@ const getEthereumAccountsCovalent = async (url: string, nft: boolean, chainId: C
 					item.contract_address.toLowerCase() !== getDefaultNativeCurrencyAddressEvm(chainId).toLowerCase() && // native balance comes from querying token bridge
 					item.balance &&
 					item.balance !== "0" &&
-					(nft ? item.supports_erc?.includes("erc721") : item.supports_erc?.includes("erc20"))
+					item.supports_erc?.includes("erc20")
 				) {
 					output.push({ ...item } as CovalentData);
 				}
@@ -217,11 +217,7 @@ const createParsedTokenAccountFromCovalent = (walletAddress: string, covalent: C
 	};
 };
 
-export const getEthereumAccountsBlockscout = async (
-	url: string,
-	nft: boolean,
-	chainId: ChainId,
-): Promise<CovalentData[]> => {
+export const getEthereumAccountsBlockscout = async (url: string, chainId: ChainId): Promise<CovalentData[]> => {
 	try {
 		const output = [] as CovalentData[];
 		const response = await axios.get(url);
@@ -235,7 +231,7 @@ export const getEthereumAccountsBlockscout = async (
 					item.contractAddress.toLowerCase() !== getDefaultNativeCurrencyAddressEvm(chainId).toLowerCase() && // native balance comes from querying token bridge
 					item.balance &&
 					item.balance !== "0" &&
-					(nft ? item.type?.includes("ERC-721") : item.type?.includes("ERC-20"))
+					item.type?.includes("ERC-20")
 				) {
 					output.push({
 						contract_decimals: item.decimals,
@@ -308,7 +304,7 @@ const createNativeEthRopstenParsedTokenAccount = async (provider: Provider, sign
 
 /** end for ethereum */
 
-function useGetAvailableTokens(nft: boolean = false) {
+function useGetAvailableTokens() {
 	const dispatch = useAppDispatch();
 	const tokenAccounts = useAppSelector((state) => state.transfer.sourceParsedTokenAccounts);
 	const lookupChain = useAppSelector((state) => state.transfer.sourceChain);
@@ -374,14 +370,14 @@ function useGetAvailableTokens(nft: boolean = false) {
 			return () => {};
 		}
 
-		let cancelled = false;
+		let ignore = false;
 		setSolanaMintAccountsLoading(true);
 		setSolanaMintAccountsError(undefined);
 		const mintAddresses = tokenAccounts.data.map((x) => x.mintKey);
 		const connection = new Connection(SOLANA_HOST, "confirmed");
 		connection.getMultipleAccountsInfo(mintAddresses.map((x) => parseSolPubKey(x))).then(
 			(results) => {
-				if (!cancelled) {
+				if (!ignore) {
 					const output = new Map<string, ExtractedMintInfo | null>();
 
 					results.forEach((result, index) =>
@@ -392,7 +388,7 @@ function useGetAvailableTokens(nft: boolean = false) {
 				}
 			},
 			(error) => {
-				if (!cancelled) {
+				if (!ignore) {
 					setSolanaMintAccounts(undefined);
 					setSolanaMintAccountsLoading(false);
 					setSolanaMintAccountsError("Could not retrieve Solana mint accounts.");
@@ -400,25 +396,25 @@ function useGetAvailableTokens(nft: boolean = false) {
 			},
 		);
 
-		return () => (cancelled = true);
+		return () => (ignore = true);
 	}, [tokenAccounts.data, lookupChain]);
 
 	//Ethereum native asset load
 	useEffect(() => {
-		let cancelled = false;
+		let ignore = false;
 		if (signerAddress && lookupChain === CHAIN_ID_ETH && !ethNativeAccount) {
 			setEthNativeAccountLoading(true);
 			createNativeEthParsedTokenAccount(provider, signerAddress).then(
 				(result) => {
 					console.log("create native account returned with value", result);
-					if (!cancelled) {
+					if (!ignore) {
 						setEthNativeAccount(result);
 						setEthNativeAccountLoading(false);
 						setEthNativeAccountError("");
 					}
 				},
 				(error) => {
-					if (!cancelled) {
+					if (!ignore) {
 						setEthNativeAccount(undefined);
 						setEthNativeAccountLoading(false);
 						setEthNativeAccountError("Unable to retrieve your ETH balance.");
@@ -428,26 +424,26 @@ function useGetAvailableTokens(nft: boolean = false) {
 		}
 
 		return () => {
-			cancelled = true;
+			ignore = true;
 		};
 	}, [lookupChain, provider, signerAddress, ethNativeAccount]);
 
 	//Ethereum (Ropsten) native asset load
 	useEffect(() => {
-		let cancelled = false;
+		let ignore = false;
 		if (signerAddress && lookupChain === CHAIN_ID_ETHEREUM_ROPSTEN && !ethNativeAccount) {
 			setEthNativeAccountLoading(true);
 			createNativeEthRopstenParsedTokenAccount(provider, signerAddress).then(
 				(result) => {
 					console.log("create native account returned with value", result);
-					if (!cancelled) {
+					if (!ignore) {
 						setEthNativeAccount(result);
 						setEthNativeAccountLoading(false);
 						setEthNativeAccountError("");
 					}
 				},
 				(error) => {
-					if (!cancelled) {
+					if (!ignore) {
 						setEthNativeAccount(undefined);
 						setEthNativeAccountLoading(false);
 						setEthNativeAccountError("Unable to retrieve your ETH balance.");
@@ -457,7 +453,7 @@ function useGetAvailableTokens(nft: boolean = false) {
 		}
 
 		return () => {
-			cancelled = true;
+			ignore = true;
 		};
 	}, [lookupChain, provider, signerAddress, ethNativeAccount]);
 
@@ -469,7 +465,7 @@ function useGetAvailableTokens(nft: boolean = false) {
 		// const nftTestWallet3 = "0xb1fadf677a7e9b90e9d4f31c8ffb3dc18c138c6f";
 		// const nftBscTestWallet1 = "0x5f464a652bd1991df0be37979b93b3306d64a909";
 
-		let cancelled = false;
+		let ignore = false;
 		const walletAddress = signerAddress;
 		if (walletAddress && isEVMChain(lookupChain) && !covalent) {
 			let url = COVALENT_GET_TOKENS_URL(lookupChain, walletAddress);
@@ -487,9 +483,9 @@ function useGetAvailableTokens(nft: boolean = false) {
 
 			console.log("here");
 			//TODO less cancel
-			!cancelled && setCovalentLoading(true);
-			!cancelled && dispatch(fetchSourceParsedTokenAccounts());
-			getAccounts(url, nft, lookupChain).then(
+			!ignore && setCovalentLoading(true);
+			!ignore && dispatch(fetchSourceParsedTokenAccounts());
+			getAccounts(url, lookupChain).then(
 				(accounts) => {
 					dispatch(
 						receiveSourceParsedTokenAccounts(
@@ -498,14 +494,14 @@ function useGetAvailableTokens(nft: boolean = false) {
 					);
 				},
 				() => {
-					!cancelled && dispatch(errorSourceParsedTokenAccounts("Cannot load your Ethereum tokens at the moment."));
-					!cancelled && setCovalentError("Cannot load your Ethereum tokens at the moment.");
-					!cancelled && setCovalentLoading(false);
+					!ignore && dispatch(errorSourceParsedTokenAccounts("Cannot load your Ethereum tokens at the moment."));
+					!ignore && setCovalentError("Cannot load your Ethereum tokens at the moment.");
+					!ignore && setCovalentLoading(false);
 				},
 			);
 
 			return () => {
-				cancelled = true;
+				ignore = true;
 			};
 		}
 	}, [lookupChain, provider, signerAddress, dispatch, covalent]);
