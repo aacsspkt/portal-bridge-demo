@@ -16,6 +16,7 @@ import {
 } from '@certusone/wormhole-sdk';
 import { Connection } from '@solana/web3.js';
 
+import { receiveDataWrapper } from '../app/slices/helpers';
 import {
   setSourceWormholeWrappedInfo,
   setTargetAsset,
@@ -54,7 +55,7 @@ export async function getCorrespondingToken(param: {
 	console.log(tokenAddress, sourceChain, targetChain, signer);
 
 	const isWrapped = await getIsWrapped({ tokenAddress, sourceChain, signer });
-	console.log(isWrapped)
+	console.log(isWrapped);
 	if (isWrapped) {
 		return await getOriginalAsset({ dispatch, tokenAddress, sourceChain, targetChain, signer });
 	} else {
@@ -85,10 +86,12 @@ export async function getForeignAsset(param: {
 				console.log(address);
 
 				dispatch(
-					setTargetAsset({
-						doesExist: !!address,
-						address: address,
-					}),
+					setTargetAsset(
+						receiveDataWrapper({
+							doesExist: !!address,
+							address: address,
+						}),
+					),
 				);
 				console.log("address", address);
 				break;
@@ -107,10 +110,12 @@ export async function getForeignAsset(param: {
 				);
 				console.log("address", address);
 				dispatch(
-					setTargetAsset({
-						doesExist: !!address,
-						address: address,
-					}),
+					setTargetAsset(
+						receiveDataWrapper({
+							doesExist: !!address,
+							address: address,
+						}),
+					),
 				);
 				break;
 			} catch (e) {
@@ -140,10 +145,12 @@ export async function getOriginalAsset(param: {
 				address = tryUint8ArrayToNative(origin.assetAddress, origin.chainId);
 				console.log("address", address);
 				dispatch(
-					setTargetAsset({
-						doesExist: !!address,
-						address: address,
-					}),
+					setTargetAsset(
+						receiveDataWrapper({
+							doesExist: !!address,
+							address: address,
+						}),
+					),
 				);
 				if (address) {
 					dispatch(
@@ -165,10 +172,12 @@ export async function getOriginalAsset(param: {
 				address = tryUint8ArrayToNative(origin.assetAddress, origin.chainId);
 				console.log("address", address);
 				dispatch(
-					setTargetAsset({
-						doesExist: !!address,
-						address: address,
-					}),
+					setTargetAsset(
+						receiveDataWrapper({
+							doesExist: !!address,
+							address: address,
+						}),
+					),
 				);
 				if (address) {
 					dispatch(
@@ -196,7 +205,7 @@ export async function getIsWrapped(param: { tokenAddress: string; sourceChain: C
 	switch (sourceChain) {
 		case "ethereum": {
 			if (!signer) throw new ArgumentNullOrUndefinedError();
-			console.log("before", sourceChain, tokenAddress, signer)
+			console.log("before", sourceChain, tokenAddress, signer);
 			const is_wrapped = await getIsWrappedAssetEth(ETH_TOKEN_BRIDGE_ADDRESS, signer, tokenAddress);
 			console.log("Token Wrapped? ==> ", is_wrapped);
 			return is_wrapped;
