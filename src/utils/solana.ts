@@ -61,17 +61,12 @@ export function logTransaction(transaction: Transaction) {
 			return {
 				publicKey: pair.publicKey.toString(),
 				signature: pair.signature,
+				verified: pair.signature
+					? nacl.sign.detached.verify(transaction.serializeMessage(), pair.signature, pair.publicKey.toBytes())
+					: null,
 			};
 		}),
 	);
-	transaction.signatures.forEach((pair, i) => {
-		if (pair.signature) {
-			console.log(
-				"verfying signature" + i,
-				nacl.sign.detached.verify(transaction.serializeMessage(), pair.signature, pair.publicKey.toBytes()),
-			);
-		}
-	});
 }
 
 export const signTransaction = async (transaction: Transaction) => {
