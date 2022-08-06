@@ -55,14 +55,14 @@ import {
   WETH_DECIMALS,
 } from '../constants';
 import {
+  Provider,
+  useEthereumProvider,
+} from '../contexts/EthereumContextProvider';
+import {
   ExtractedMintInfo,
   extractMintInfo,
   parseSolPubKey,
 } from '../utils/solana';
-import {
-  Provider,
-  useEthereumProvider,
-} from './EthereumContextProvider';
 
 export type CovalentData = {
 	contract_decimals: number;

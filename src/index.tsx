@@ -9,7 +9,7 @@ import { ToastContainer } from 'react-toastify';
 import App from './App';
 import { store } from './app/store';
 import { context2CssClass } from './constants';
-import { EthereumProviderProvider } from './hooks/EthereumContextProvider';
+import { EthereumProviderProvider } from './contexts/EthereumContextProvider';
 import reportWebVitals from './reportWebVitals';
 
 //import { MetaMaskProvider } from 'metamask-react';

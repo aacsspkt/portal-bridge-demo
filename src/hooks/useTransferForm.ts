@@ -57,12 +57,13 @@ import {
   SOLANA_HOST,
   WORMHOLE_RPC_HOSTS,
 } from '../constants';
+import { useEthereumProvider } from '../contexts/EthereumContextProvider';
 import { getCorrespondingToken } from '../functions';
 import {
   sendAndConfirmTransaction,
   signTransaction,
 } from '../utils/solana';
-import { useEthereumProvider } from './EthereumContextProvider';
+import useGetAvailableTokens from './useGetSourceParsedTokenAccounts';
 import useToast from './useToast';
 
 async function evm(
@@ -191,6 +192,8 @@ async function solana(
 }
 
 export const useTransferForm = (list: ChainName[]) => {
+	useGetAvailableTokens();
+
 	const dispatch = useAppDispatch();
 	const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
 	const targetChain = useAppSelector((state) => state.transfer.targetChain);
