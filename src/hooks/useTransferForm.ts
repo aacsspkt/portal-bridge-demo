@@ -52,21 +52,18 @@ import { AppDispatch } from '../app/store';
 import {
   getBridgeAddressForChain,
   getTokenBridgeAddressForChain,
-  KEYPAIR,
   SOL_BRIDGE_ADDRESS,
   SOL_TOKEN_BRIDGE_ADDRESS,
   SOLANA_HOST,
   WORMHOLE_RPC_HOSTS,
 } from '../constants';
-import {
-  getCorrespondingToken,
-  transferTokens,
-} from '../functions';
+import { getCorrespondingToken } from '../functions';
 import {
   sendAndConfirmTransaction,
   signTransaction,
 } from '../utils/solana';
 import { useEthereumProvider } from './EthereumContextProvider';
+import useToast from './useToast';
 
 async function evm(
 	dispatch: AppDispatch,
@@ -193,35 +190,20 @@ async function solana(
 	}
 }
 
-// interface TokenTransferForm {
-// 	sourceChain: ChainName;
-// 	sourceAsset: string | undefined;
-// 	isSourceAssetWormholeWrapped: boolean | undefined;
-// 	sourceParsedTokenAccount: ParsedTokenAccount | undefined;
-
-// 	sourceWalletAddress: string | undefined;
-// 	targetChain: ChainName;
-// 	targetAsset: string | undefined;
-// 	transferAmount: string | undefined;
-// 	originAddress: string | undefined;
-// 	originChain: ChainName;
-// }
-
 export const useTransferForm = (list: ChainName[]) => {
 	const dispatch = useAppDispatch();
 	const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
 	const targetChain = useAppSelector((state) => state.transfer.targetChain);
-	const sourceAsset = useAppSelector((state) => state.transfer.sourceParsedTokenAccount);
+	const sourceParsedTokenAccount = useAppSelector((state) => state.transfer.sourceParsedTokenAccount);
 	const targetAsset = useAppSelector((state) => state.transfer.targetAsset);
 	const targetAddressHex = useAppSelector((state) => state.transfer.targetAddressHex);
 	const amount = useAppSelector((state) => state.transfer.amount);
 	const originAsset = useAppSelector((state) => state.transfer.originAsset);
 	const originChain = useAppSelector((state) => state.transfer.originChain);
-	const {
-    provider,
-    signer} = useEthereumProvider()
+	const { provider, signer } = useEthereumProvider();
 
-	// if (!sourceAsset) throw new ArgumentNullOrUndefinedError();
+	const { toastSuccess } = useToast();
+	// if (!sourceParsedTokenAccount) throw new ArgumentNullOrUndefinedError();
 
 	const handleSourceChainChange = useCallback(
 		(chain: ChainName) => {
@@ -259,25 +241,28 @@ export const useTransferForm = (list: ChainName[]) => {
 			detectedProvider,
 			"any",
 		);
+
+		toastSuccess("Transfer Clicked");
+
 		// const { signerAddress, walletConnected, signer, connect } = useEthereumProvider();
 		// if (!walletConnected) connect();
 		// dispatch(setTargetAddressHex(signerAddress));
 
 		// const relayerFee = useAppSelector(state => state.transfer.relayerFee);
-		if (sourceAsset && targetAddressHex) {
-			const result = await transferTokens(
-				toChainName(sourceChain),
-				toChainName(targetChain),
-				provider,
-				sourceAsset,
-				targetAddressHex,
-				parseFloat(amount),
-				KEYPAIR.publicKey.toString(),
-				originAsset,
-				originChain ? toChainName(originChain) : undefined,
-			);
-			console.log("Result", result);
-		}
+		// if (sourceParsedTokenAccount && targetAddressHex) {
+		// 	const result = await transferTokens(
+		// 		toChainName(sourceChain),
+		// 		toChainName(targetChain),
+		// 		provider,
+		// 		sourceParsedTokenAccount,
+		// 		targetAddressHex,
+		// 		parseFloat(amount),
+		// 		KEYPAIR.publicKey.toString(),
+		// 		originAsset,
+		// 		originChain ? toChainName(originChain) : undefined,
+		// 	);
+		// 	console.log("Result", result);
+		// }
 	};
 
 	useEffect(() => {
@@ -301,14 +286,14 @@ export const useTransferForm = (list: ChainName[]) => {
 				tokenAddress,
 				sourceChain,
 				targetChain,
-				signer
+				signer,
 			});
 		};
 
-		if (sourceAsset?.mintKey) {
-			getAndSetTargetToken(toChainName(sourceChain), toChainName(targetChain), sourceAsset.mintKey);
+		if (sourceParsedTokenAccount?.mintKey) {
+			getAndSetTargetToken(toChainName(sourceChain), toChainName(targetChain), sourceParsedTokenAccount.mintKey);
 		}
-	}, [sourceChain, sourceAsset, targetChain]);
+	}, [sourceChain, sourceParsedTokenAccount, targetChain]);
 
 	return {
 		handleSourceChainChange,

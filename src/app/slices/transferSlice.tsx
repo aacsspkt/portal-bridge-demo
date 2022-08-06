@@ -53,7 +53,6 @@ interface TransferState {
   targetAddressHex: string | undefined;
   targetAsset: ForeignAssetInfo;
   targetParsedTokenAccount: ParsedTokenAccount | undefined;
-
 }
 
 const initialState: TransferState = {
