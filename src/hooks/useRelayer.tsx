@@ -33,7 +33,7 @@ export function useRelayer() {
         return result
     }
 
-    const process_sol_stream = async function (start_time: BigNumber, end_time: BigNumber, amount: BigNumber, receiver: string, sender: string) {
+    const process_sol_stream = async function (start_time: BigNumber, end_time: BigNumber, amount: BigNumber, receiver: Buffer, sender: Buffer) {
 
         console.log("inside")
 
@@ -45,7 +45,7 @@ export function useRelayer() {
         return result
     }
 
-    const process_token_stream = async function (start_time: BigNumber, end_time: BigNumber, amount: BigNumber, receiver: string, sender: string) {
+    const process_token_stream = async function (start_time: BigNumber, end_time: BigNumber, amount: BigNumber, receiver: Buffer, sender: Buffer) {
 
 
         const contract = new ethers.Contract(contractAddress, MessengerABI, signer);
@@ -53,7 +53,7 @@ export function useRelayer() {
         return result
     }
 
-    const process_sol_withdraw_stream = async function process_sol_withdraw_stream(amount: BigNumber, withdrawer: string) {
+    const process_sol_withdraw_stream = async function process_sol_withdraw_stream(amount: BigNumber, withdrawer: Buffer) {
 
 
         const contract = new ethers.Contract(contractAddress, MessengerABI, signer);
@@ -69,7 +69,7 @@ export function useRelayer() {
 
     }
 
-    const process_deposit_sol = async function (amount: BigNumber, depositor: string) {
+    const process_deposit_sol = async function (amount: BigNumber, depositor: Buffer) {
 
 
         const contract = new ethers.Contract(contractAddress, MessengerABI, signer);
@@ -80,7 +80,7 @@ export function useRelayer() {
 
     }
 
-    const process_deposit_token = async function (amount: BigNumber, depositor: string) {
+    const process_deposit_token = async function (amount: BigNumber, depositor: Buffer) {
 
         const contract = new ethers.Contract(contractAddress, MessengerABI, signer);
         const result = await contract.process_deposit_token(amount, depositor);
@@ -88,7 +88,7 @@ export function useRelayer() {
 
     }
 
-    const process_fund_sol = async function (end_time: BigNumber, amount: BigNumber, sender: string) {
+    const process_fund_sol = async function (end_time: BigNumber, amount: BigNumber, sender: Buffer) {
 
 
         const contract = new ethers.Contract(contractAddress, MessengerABI, signer);
@@ -98,7 +98,7 @@ export function useRelayer() {
 
     }
 
-    const process_fund_token = async function (end_time: BigNumber, amount: BigNumber, sender: string) {
+    const process_fund_token = async function (end_time: BigNumber, amount: BigNumber, sender: Buffer) {
 
 
         const contract = new ethers.Contract(contractAddress, MessengerABI, signer);
@@ -108,7 +108,7 @@ export function useRelayer() {
         return result
     }
 
-    const process_withdraw_sol = async function (amount: BigNumber, sender: string) {
+    const process_withdraw_sol = async function (amount: BigNumber, sender: Buffer) {
 
 
         const contract = new ethers.Contract(contractAddress, MessengerABI, signer);
@@ -117,7 +117,7 @@ export function useRelayer() {
 
     }
 
-    const process_withdraw_token = async function (amount: BigNumber, sender: string) {
+    const process_withdraw_token = async function (amount: BigNumber, sender: Buffer) {
 
 
         const contract = new ethers.Contract(contractAddress, MessengerABI, signer);
@@ -127,7 +127,7 @@ export function useRelayer() {
 
     }
 
-    const process_swap_sol = async function (amount: BigNumber, sender: string) {
+    const process_swap_sol = async function (amount: BigNumber, sender: Buffer) {
 
 
         const contract = new ethers.Contract(contractAddress, MessengerABI, signer);
@@ -138,7 +138,7 @@ export function useRelayer() {
     }
 
 
-    const encode_process_swap_token = async function (amount: BigNumber, sender: string) {
+    const encode_process_swap_token = async function (amount: BigNumber, sender: Buffer) {
 
         const contract = new ethers.Contract(contractAddress, MessengerABI, signer);
         const result = await contract.encode_process_swap_token(amount, sender);
@@ -148,7 +148,7 @@ export function useRelayer() {
     }
 
 
-    const registerApplicationContracts = async function (chainId: ChainId, applicationAddr: string) {
+    const registerApplicationContracts = async function (chainId: ChainId, applicationAddr: Buffer) {
 
         const contract = new ethers.Contract(contractAddress, MessengerABI, signer);
         const result = await contract.registerApplicationcontracts(chainId, applicationAddr);
