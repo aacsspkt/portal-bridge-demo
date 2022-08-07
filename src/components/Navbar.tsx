@@ -2,7 +2,7 @@ import * as React from 'react';
 
 import { NavLink } from 'react-router-dom';
 
-import { useEthereumProvider } from '../hooks/EthereumContextProvider';
+import { useEthereumProvider } from '../contexts/EthereumContextProvider';
 
 export interface INavbarProps {
 }
