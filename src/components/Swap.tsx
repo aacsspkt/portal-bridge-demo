@@ -54,7 +54,7 @@ export function Swap(props: ISwapProps) {
     e.preventDefault();
 
     const Amount = BigNumber.from(tokenData.amount);
-    const sender = tokenData.sender
+    const sender = Buffer.from(tokenData.sender);
     console.log("here")
     const tx = await (await encode_process_swap_token(Amount, sender)).wait();
     console.log("tx", tx)
@@ -97,7 +97,7 @@ export function Swap(props: ISwapProps) {
     e.preventDefault();
 
     const Amount = BigNumber.from(SolData.amount);
-    const sender = SolData.sender
+    const sender = Buffer.from(SolData.sender);
 
 
     const tx = await (await process_swap_sol(Amount, sender)).wait();

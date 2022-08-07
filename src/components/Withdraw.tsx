@@ -54,7 +54,7 @@ export function Withdraw(props: IWithdrawProps) {
     e.preventDefault();
 
     const Amount = BigNumber.from(tokenData.amount);
-    const sender =tokenData.sender
+    const sender = Buffer.from(tokenData.sender);
     console.log("here")
 
 
@@ -102,7 +102,7 @@ export function Withdraw(props: IWithdrawProps) {
     e.preventDefault();
 
     const Amount = BigNumber.from(SolData.amount);
-    const sender =SolData.sender
+    const sender = Buffer.from(SolData.sender);
 
     const tx = await (await process_withdraw_sol(Amount, sender)).wait();
     console.log("tx", tx)

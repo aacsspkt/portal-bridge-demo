@@ -76,8 +76,8 @@ export function RegisterFetch(props: IRegisterFetchProps) {
   const handleRegisterApplicationSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const chainId = toChainId(data.targetChain)
-    const applicationAddresses = data.applicationAddresses
+    const chainId = toChainId(data.targetChain);
+    const applicationAddresses = Buffer.from(data.applicationAddresses);
 
     const tx = await (await registerApplicationContracts(chainId, applicationAddresses)).wait();
     console.log("tx", tx);
