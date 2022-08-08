@@ -117,6 +117,7 @@ export function SolStream(props: ISOLStreamProps) {
     console.log("tx", tx)
     console.log("initiallizing")
     await init();
+    console.log("seq", parseSequenceFromLogEth(tx,BSC_BRIDGE_ADDRESS))
     console.log("registering")
     await register_eth_address();
     console.log("Post and send payload");
