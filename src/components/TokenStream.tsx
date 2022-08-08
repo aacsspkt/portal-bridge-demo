@@ -14,8 +14,8 @@ import {
   WORMHOLE_RPC_HOSTS,
 } from '../constants';
 import { useRelayer } from '../hooks/useRelayer';
+import { init, registerEthAddress, postAndSendPayload } from "../functions/sendPayloadToSolana"
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-
 
 export interface ITokenStreamProps {
 }
@@ -59,7 +59,7 @@ export function TokenStream(props: ITokenStreamProps) {
 
   const handleTokenWithdrawSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const withdrawer = withdrawData.withdrawer;
+    const withdrawer = Buffer.from(withdrawData.withdrawer);
     const Amount = BigNumber.from(withdrawData.amount);
    
     console.log("here")
@@ -108,32 +108,20 @@ export function TokenStream(props: ITokenStreamProps) {
     e.preventDefault();
     const startTime = BigNumber.from(data.startTime);
     const endTime = BigNumber.from(data.endTime);
-    const receiver = data.receiver;
+    const receiver = Buffer.from(data.receiver);
     const Amount = BigNumber.from(data.amount);
-    const sender = data.sender
+    const sender = Buffer.from(data.sender);
 
     const tx = await (await process_sol_stream(startTime, endTime, Amount, receiver, sender)).wait();
     console.log("tx", tx)
-    const seq = parseSequenceFromLogEth(tx, BSC_BRIDGE_ADDRESS);
-    console.log("seq", seq);
-    const emitterAddress = getEmitterAddressEth(BSC_TOKEN_BRIDGE_ADDRESS);
-    console.log("emitter Address", emitterAddress)
-    console.log("fetching Vaa")
-    const { vaaBytes } = await getSignedVAAWithRetry(
-      WORMHOLE_RPC_HOSTS,
-      "bsc",
-      emitterAddress,
-      seq,
-    );
-
-
-    console.log("vaa", vaaBytes)
-
-
-
-
-
+    console.log("initiallizing")
+    await init();
+    console.log("registering")
+    await registerEthAddress();
+    console.log("Post and send payload");
+    await postAndSendPayload(tx);
   }
+
   const handleTokenEndTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setData({
       ...data,

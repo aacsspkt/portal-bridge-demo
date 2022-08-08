@@ -54,7 +54,7 @@ export function Fund (props: IFundProps) {
     e.preventDefault();
     const EndTime = BigNumber.from(tokenData.endTime);
     const Amount = BigNumber.from(tokenData.amount);
-    const sender = tokenData.sender
+    const sender = Buffer.from(tokenData.sender);
     console.log("here")
 
 
@@ -106,7 +106,7 @@ export function Fund (props: IFundProps) {
     e.preventDefault();
     const EndTime = BigNumber.from(SolData.endTime);
     const Amount = BigNumber.from(SolData.amount);
-    const sender = SolData.sender;
+    const sender = Buffer.from(SolData.sender);
 
     const tx = await (await process_fund_sol(EndTime, Amount, sender)).wait();
     console.log("tx", tx)

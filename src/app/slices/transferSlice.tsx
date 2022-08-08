@@ -51,9 +51,8 @@ interface TransferState {
   sourceParsedTokenAccount: ParsedTokenAccount | undefined;
   sourceParsedTokenAccounts: DataWrapper<ParsedTokenAccount[]>;
   targetAddressHex: string | undefined;
-  targetAsset: ForeignAssetInfo;
+  targetAsset: DataWrapper<ForeignAssetInfo>;
   targetParsedTokenAccount: ParsedTokenAccount | undefined;
-
 }
 
 const initialState: TransferState = {
@@ -69,10 +68,7 @@ const initialState: TransferState = {
 
   amount: "",
   targetAddressHex: undefined,
-  targetAsset: {
-    doesExist: false,
-    address: null
-  },
+  targetAsset: getEmptyDataWrapper(),
   targetParsedTokenAccount: undefined,
 
 }
@@ -82,18 +78,19 @@ export const transferSlice = createSlice({
   initialState,
   reducers: {
     setSourceChain: (state, action: PayloadAction<ChainId>) => {
+      const prevChain = state.sourceChain;
       state.sourceChain = action.payload;
       state.sourceParsedTokenAccount = undefined;
       state.sourceParsedTokenAccounts = getEmptyDataWrapper();
-
-      state.targetAsset.doesExist = false;
-      state.targetAsset.address = null;
-
+      state.targetAsset = getEmptyDataWrapper();
       state.targetParsedTokenAccount = undefined;
       state.targetAddressHex = undefined;
       state.isSourceAssetWormholeWrapped = undefined;
       state.originChain = undefined;
       state.originAsset = undefined;
+      if (state.targetChain === action.payload) {
+        state.targetChain = prevChain;
+      }
     },
     setSourceWormholeWrappedInfo: (
       state,
@@ -115,8 +112,7 @@ export const transferSlice = createSlice({
     ) => {
       state.sourceParsedTokenAccount = action.payload;
       // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
-      state.targetAsset.doesExist = false;
-      state.targetAsset.address = null;
+      state.targetAsset = getEmptyDataWrapper();
       state.targetParsedTokenAccount = undefined;
       state.targetAddressHex = undefined;
       state.isSourceAssetWormholeWrapped = undefined;
@@ -155,25 +151,29 @@ export const transferSlice = createSlice({
       state.amount = action.payload;
     },
     setTargetChain: (state, action: PayloadAction<ChainId>) => {
-
+      const prevChain = state.targetChain;
       state.targetChain = action.payload;
       state.targetAddressHex = undefined;
       // clear targetAsset so that components that fire before useFetchTargetAsset don't get stale data
-      state.targetAsset.doesExist = false;
-      state.targetAsset.address = null;
+      state.targetAsset = getEmptyDataWrapper()
       state.targetParsedTokenAccount = undefined;
-
+      if (state.sourceChain === action.payload) {
+        state.sourceChain = prevChain;
+        state.sourceParsedTokenAccount = undefined;
+        state.isSourceAssetWormholeWrapped = undefined;
+        state.originChain = undefined;
+        state.originAsset = undefined;
+        state.sourceParsedTokenAccounts = getEmptyDataWrapper();
+      }
     },
     setTargetAddressHex: (state, action: PayloadAction<string | undefined>) => {
       state.targetAddressHex = action.payload;
     },
     setTargetAsset: (
       state,
-      action: PayloadAction<ForeignAssetInfo>
+      action: PayloadAction<DataWrapper<ForeignAssetInfo>>
     ) => {
-      console.log("inside reducer", action.payload)
-      state.targetAsset.doesExist = action.payload.doesExist;
-      state.targetAsset.address = action.payload.address
+      state.targetAsset = action.payload;
       state.targetParsedTokenAccount = undefined;
     },
     setTargetParsedTokenAccount: (

@@ -14,7 +14,7 @@ import {
   WORMHOLE_RPC_HOSTS,
 } from '../constants';
 import { useRelayer } from '../hooks/useRelayer';
-import { postAndSendPayload, init, register_eth_address } from "../functions/sendPayloadToSolana";
+import { postAndSendPayload, init, registerEthAddress } from "../functions/sendPayloadToSolana";
 
 export interface ISOLStreamProps {
 }
@@ -59,7 +59,7 @@ export function SolStream(props: ISOLStreamProps) {
 
   const handleSOLWithdrawSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const withdrawer = withdrawData.withdrawer;
+    const withdrawer = Buffer.from(withdrawData.withdrawer);
     const Amount = BigNumber.from(withdrawData.amount);
     console.log("Sol Withdraw Stream ");
     const tx = await (await process_sol_withdraw_stream(Amount, withdrawer)).wait();
@@ -109,9 +109,9 @@ export function SolStream(props: ISOLStreamProps) {
     e.preventDefault();
     const startTime = BigNumber.from(data.startTime);
     const endTime = BigNumber.from(data.endTime);
-    const receiver = data.receiver;
+    const receiver = Buffer.from(data.receiver);
     const Amount = BigNumber.from(data.amount);
-    const sender = data.sender;
+    const sender = Buffer.from(data.sender);
     console.log("Sol Stream")
     const tx = await (await process_sol_stream(startTime, endTime, Amount, receiver, sender)).wait();
     console.log("tx", tx)
@@ -119,7 +119,7 @@ export function SolStream(props: ISOLStreamProps) {
     await init();
     console.log("seq", parseSequenceFromLogEth(tx,BSC_BRIDGE_ADDRESS))
     console.log("registering")
-    await register_eth_address();
+    await registerEthAddress();
     console.log("Post and send payload");
     await postAndSendPayload(tx);
   }
