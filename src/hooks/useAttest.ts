@@ -42,6 +42,7 @@ import {
 } from '../constants';
 import { getCorrespondingToken } from '../functions';
 import { createWrappedTokens } from '../functions/createWrapped';
+import useToast from './useToast';
 
 async function evm(dispatch: AppDispatch, signer: ethers.Signer, tokenAddress: string, sourceChain: ChainName) {
 	console.log("Attesting token");
@@ -65,7 +66,15 @@ export function useAttest() {
 	const chainList: ChainName[] = Object.keys(CHAINS)
 		.map((item) => item as ChainName)
 		.filter((item) => item !== "unset");
-
+	const {
+		toastSuccess,
+		toastWarning,
+		toastError,
+		toastInfo,
+		toastPromise,
+		toastLoading,
+		updateToast,
+	} = useToast();
 	const dispatch = useAppDispatch();
 	const sourceChain = useAppSelector((state) => state.attest.sourceChain);
 	const targetChain = useAppSelector((state) => state.attest.targetChain);
@@ -86,6 +95,7 @@ export function useAttest() {
 		(event: any) => {
 			console.log(event);
 			dispatch(setSourceChain(toChainId(event)));
+			toastSuccess("SourceChain")
 		},
 		[dispatch],
 	);
