@@ -44,9 +44,16 @@ import { getCorrespondingToken } from '../functions';
 import { createWrappedTokens } from '../functions/createWrapped';
 import useToast from './useToast';
 
-async function evm(dispatch: AppDispatch, signer: ethers.Signer, tokenAddress: string, sourceChain: ChainName) {
+async function evm(
+	dispatch: AppDispatch,
+	signer: ethers.Signer, 
+	tokenAddress: string, 
+	sourceChain: ChainName) {
 	console.log("Attesting token");
-	const tokenAttestation = await attestFromEth(ETH_TOKEN_BRIDGE_ADDRESS, signer, tokenAddress);
+	const tokenAttestation = await attestFromEth(
+		ETH_TOKEN_BRIDGE_ADDRESS,
+		signer,
+		tokenAddress);
 	dispatch(setAttestTx({ id: tokenAttestation.transactionHash, block: tokenAttestation.blockNumber }));
 	// toast success: txn confirmed
 	console.log("token attest txn hash:", tokenAttestation.transactionHash);
@@ -95,7 +102,7 @@ export function useAttest() {
 		(event: any) => {
 			console.log(event);
 			dispatch(setSourceChain(toChainId(event)));
-			toastSuccess("SourceChain")
+			toastError("SourceChain")
 		},
 		[dispatch],
 	);
