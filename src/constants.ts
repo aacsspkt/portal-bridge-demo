@@ -23,7 +23,6 @@ import {
 } from '@certusone/wormhole-sdk';
 import {
   clusterApiUrl,
-  Connection,
   Keypair,
 } from '@solana/web3.js';
 
@@ -37,9 +36,6 @@ export const CLUSTER: Cluster =
 		: "devnet";
 
 export const KEYPAIR = Keypair.fromSecretKey(base58.decode(process.env.REACT_APP_WALLET_SECRET_KEY as string));
-
-export const CONNECTION =
-	CLUSTER === "mainnet" ? new Connection(clusterApiUrl("mainnet-beta")) : new Connection(clusterApiUrl("devnet"));
 
 export const WORMHOLE_RPC_HOSTS =
 	CLUSTER === "mainnet"
@@ -592,3 +588,5 @@ export const BLOCKSCOUT_GET_TOKENS_URL = (chainId: ChainId, walletAddress: strin
 			: "";
 	return baseUrl ? `${baseUrl}/api?module=account&action=tokenlist&address=${walletAddress}` : "";
 };
+
+export const MAX_VAA_UPLOAD_RETRIES_SOLANA = 5;

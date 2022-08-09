@@ -10,30 +10,24 @@ import CustomDropDown from '../components/CustomDropdown';
 import useCheckIfWormholeWrapped from '../hooks/useCheckIfWormholeWrapped';
 import useFetchTargetAsset from '../hooks/useFetchTargetAsset';
 import useGetAvailableTokens from '../hooks/useGetSourceParsedTokenAccounts';
+import useGetSourceWalletAddress from '../hooks/useGetSourceWalletAddress';
 import useGetTargetParsedTokenAccounts
   from '../hooks/useGetTargetParsedTokenAccounts';
-import { useTransferForm } from '../hooks/useTransferForm';
-import useToast from '../hooks/useToast';
+import useTransferForm from '../hooks/useTransferForm';
 
 interface ITransferProps {
 }
 
 
 export default function Transfer(props: ITransferProps) {
+  useGetSourceWalletAddress();
   useGetAvailableTokens();
   useCheckIfWormholeWrapped();
   useFetchTargetAsset();
   useGetTargetParsedTokenAccounts();
 
-  // const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
-  // const targetChain = useAppSelector((state) => state.transfer.targetChain);
-  // const targetAsset = useAppSelector((state) => state.transfer.targetAsset);
-  // const sourceTokenAccount = useAppSelector((state) => state.transfer.sourceParsedTokenAccount);
-  // const sourceTokenAccounts = useAppSelector((state) => state.transfer.sourceParsedTokenAccounts);
-  // const amount = useAppSelector((state) => state.transfer.amount);
-
   const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item === "solana" || item === "ethereum");
- 
+
   const {
     sourceChain,
     targetChain,
