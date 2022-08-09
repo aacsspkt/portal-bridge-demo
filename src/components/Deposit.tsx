@@ -46,7 +46,7 @@ export function Deposit(props: IDepositProps) {
     e.preventDefault();
 
     const Amount = BigNumber.from(tokenData.amount);
-    const depositor = tokenData.depositor
+    const depositor = Buffer.from(tokenData.depositor);
     console.log("here")
     const tx = await (await process_deposit_token(Amount, depositor)).wait();
     console.log("tx", tx)
@@ -88,7 +88,7 @@ export function Deposit(props: IDepositProps) {
 
   const handleSOLDepositSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const depositor = SolData.depositor
+    const depositor = Buffer.from(SolData.depositor);
     const Amount = BigNumber.from(SolData.amount);
 
 

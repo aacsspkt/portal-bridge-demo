@@ -1,13 +1,14 @@
 import { 
   Program, 
   AnchorProvider, 
-  Idl } from '@project-serum/anchor';
+  Idl 
+} from '@project-serum/anchor';
 import { 
   CONNECTION, 
   WORMHOLE_RPC_HOSTS, 
   BSC_BRIDGE_ADDRESS, 
   SOL_BRIDGE_ADDRESS,
-  KEYPAIR 
+  KEYPAIR
 } from "../constants"
 import idl from "../idl/solana_project.json";
 import { PublicKey } from '@solana/web3.js';
@@ -30,7 +31,7 @@ import keccak256 from "keccak256";
 import { TransactionResponse } from "@solana/web3.js";
 
 const SOL_CONTRACT_ADDRESS = "72LwKH2vh1DT5JvSeQseVp2P1oQbpA2FWr8v45ZMHAVT";
-const BSC_CONTRACT_ADDRESS = "0x75e1d4A30B482B27ba0c1C5c9C58fa8146609fEE";
+const BSC_CONTRACT_ADDRESS = "0x4083f716f1fbBf19680A7C37E2fa07eE1A8c9907";
 const CALLING_SC_ADDRESS = new anchor.web3.PublicKey(
   "Bxi8KcfKcCDA6n8gmyZaHSfpXBBSjuTZTxsgfmdSBU1g"
 );
@@ -69,7 +70,7 @@ export async function init() {
     .rpc()
 }
 
-export async function register_eth_address() {
+export async function registerEthAddress() {
   console.log(KEYPAIR.publicKey.toBase58());
   const program = getProgram();
   const emmiter_acc = findProgramAddressSync([
@@ -94,7 +95,7 @@ export async function register_eth_address() {
 }
 
 export async function send_message() {
-  setDefaultWasm("node");
+  setDefaultWasm("bundler");
 
   const program = getProgram()
 
@@ -123,7 +124,7 @@ export async function send_message() {
     })
     .signers([KEYPAIR, whMessageKeypair])
     .rpc();
-  await new Promise((r) => setTimeout(r, 1000));
+  await new Promise((r) => setTimeout(r, 15000));
 
   const seq = parseSequenceFromLogSolana(await program.provider.connection.getTransaction(tx) as TransactionResponse);
   console.log("Sequence: ", seq);
@@ -161,9 +162,6 @@ export async function postAndSendPayload(tx: any) {
   );
   console.log("Raw VAA ===> ", vaaBytes);
 
-  const parsed_vaa = parse_vaa(vaaBytes);
-  console.log("Parsed VAA ==>", parsed_vaa)
-
   console.log("Posting VAA");
   //Submit to Core Bridge
   await postVaaSolanaWithRetry(
@@ -178,7 +176,10 @@ export async function postAndSendPayload(tx: any) {
     10
   );
 
-  await new Promise((r) => setTimeout(r, 5000));
+  await new Promise((r) => setTimeout(r, 15000));
+
+  const parsed_vaa = parse_vaa(vaaBytes);
+  console.log("Parsed VAA ==>", parsed_vaa)
 
   console.log("Finding Emitter Address");
   let emitter_address_acc = findProgramAddressSync([
@@ -214,7 +215,7 @@ let processed_vaa_key = findProgramAddressSync([
 
   let config_acc = findProgramAddressSync([Buffer.from("config")], program.programId)[0]
 
-  //Confirm via Messenger Code
+  //Confirm 
   await program.methods 
     .confirmMsg()
     .accounts({
