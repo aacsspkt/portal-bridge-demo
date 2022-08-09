@@ -41,36 +41,42 @@ export interface Transaction {
 //declare types for state
 interface TransferState {
   sourceChain: ChainId;
-  targetChain: ChainId;
-  amount: string;
-  signedVAAHex: string | undefined;
+  sourceWalletAddress: string | undefined;
+  sourceParsedTokenAccounts: DataWrapper<ParsedTokenAccount[]>;
+  sourceParsedTokenAccount: ParsedTokenAccount | undefined;
   isSourceAssetWormholeWrapped: boolean | undefined;
   originChain: ChainId | undefined;
   originAsset: string | undefined;
-  sourceWalletAddress: string | undefined;
-  sourceParsedTokenAccount: ParsedTokenAccount | undefined;
-  sourceParsedTokenAccounts: DataWrapper<ParsedTokenAccount[]>;
+  targetChain: ChainId;
+  targetParsedTokenAccount: ParsedTokenAccount | undefined;
   targetAddressHex: string | undefined;
   targetAsset: DataWrapper<ForeignAssetInfo>;
-  targetParsedTokenAccount: ParsedTokenAccount | undefined;
+  amount: string;
+  transferTx: Transaction | undefined;
+  signedVAAHex: string | undefined;
+  isSending: boolean,
+  isRedeeming: boolean;
+  redeemTx: Transaction | undefined;
 }
 
 const initialState: TransferState = {
   sourceChain: CHAIN_ID_SOLANA,
-  targetChain: CHAIN_ID_ETH,
-  isSourceAssetWormholeWrapped: false,
   sourceWalletAddress: undefined,
-  sourceParsedTokenAccount: undefined,
   sourceParsedTokenAccounts: getEmptyDataWrapper(),
+  sourceParsedTokenAccount: undefined,
+  isSourceAssetWormholeWrapped: false,
   originChain: undefined,
   originAsset: undefined,
-  signedVAAHex: undefined,
-
-  amount: "",
+  targetChain: CHAIN_ID_ETH,
+  targetParsedTokenAccount: undefined,
   targetAddressHex: undefined,
   targetAsset: getEmptyDataWrapper(),
-  targetParsedTokenAccount: undefined,
-
+  amount: "",
+  transferTx: undefined,
+  signedVAAHex: undefined,
+  isSending: false,
+  isRedeeming: false,
+  redeemTx: undefined,
 }
 
 export const transferSlice = createSlice({
@@ -119,8 +125,22 @@ export const transferSlice = createSlice({
       state.originChain = undefined;
       state.originAsset = undefined;
     },
+    setTransferTx: (state, action: PayloadAction<Transaction>) => {
+      state.transferTx = action.payload;
+    },
     setSignedVAAHex: (state, action: PayloadAction<string>) => {
       state.signedVAAHex = action.payload;
+      state.isSending = false;
+    },
+    setIsSending: (state, action: PayloadAction<boolean>) => {
+      state.isSending = action.payload;
+    },
+    setIsRedeeming: (state, action: PayloadAction<boolean>) => {
+      state.isRedeeming = action.payload;
+    },
+    setRedeemTx: (state, action: PayloadAction<Transaction>) => {
+      state.redeemTx = action.payload;
+      state.isRedeeming = false;
     },
     setSourceParsedTokenAccounts: (
       state,
@@ -187,7 +207,6 @@ export const transferSlice = createSlice({
 })
 
 
-
 export const {
   setSourceChain,
   setSourceWormholeWrappedInfo,
@@ -197,12 +216,16 @@ export const {
   receiveSourceParsedTokenAccounts,
   errorSourceParsedTokenAccounts,
   fetchSourceParsedTokenAccounts,
+  setTransferTx,
   setAmount,
   setTargetChain,
   setTargetAddressHex,
   setTargetAsset,
   setTargetParsedTokenAccount,
   setSignedVAAHex,
+  setIsRedeeming,
+  setIsSending,
+  setRedeemTx
 } = transferSlice.actions
 
 export default transferSlice.reducer

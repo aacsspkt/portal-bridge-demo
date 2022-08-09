@@ -1,68 +1,45 @@
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import axios from 'axios';
-import {
-  formatEther,
-  formatUnits,
-} from 'ethers/lib/utils';
+import axios from "axios";
+import { formatEther, formatUnits } from "ethers/lib/utils";
 
 import {
-  CHAIN_ID_ETH,
-  CHAIN_ID_ETHEREUM_ROPSTEN,
-  CHAIN_ID_SOLANA,
-  ChainId,
-  isEVMChain,
-  WSOL_ADDRESS,
-  WSOL_DECIMALS,
-} from '@certusone/wormhole-sdk';
-import { TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import {
-  AccountInfo,
-  Connection,
-  ParsedAccountData,
-  PublicKey,
-} from '@solana/web3.js';
+	CHAIN_ID_ETH,
+	CHAIN_ID_ETHEREUM_ROPSTEN,
+	CHAIN_ID_SOLANA,
+	ChainId,
+	isEVMChain,
+	WSOL_ADDRESS,
+	WSOL_DECIMALS,
+} from "@certusone/wormhole-sdk";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { AccountInfo, Connection, ParsedAccountData, PublicKey } from "@solana/web3.js";
 
+import { useAppDispatch, useAppSelector } from "../app/hooks";
 import {
-  useAppDispatch,
-  useAppSelector,
-} from '../app/hooks';
+	errorSourceParsedTokenAccounts,
+	fetchSourceParsedTokenAccounts,
+	ParsedTokenAccount,
+	receiveSourceParsedTokenAccounts,
+	setAmount,
+	setSourceParsedTokenAccount,
+	setSourceParsedTokenAccounts,
+	setSourceWalletAddress,
+} from "../app/slices/transferSlice";
+import { AppDispatch } from "../app/store";
 import {
-  errorSourceParsedTokenAccounts,
-  fetchSourceParsedTokenAccounts,
-  ParsedTokenAccount,
-  receiveSourceParsedTokenAccounts,
-  setAmount,
-  setSourceParsedTokenAccount,
-  setSourceParsedTokenAccounts,
-  setSourceWalletAddress,
-} from '../app/slices/transferSlice';
-import { AppDispatch } from '../app/store';
-import {
-  BLOCKSCOUT_GET_TOKENS_URL,
-  COVALENT_GET_TOKENS_URL,
-  getDefaultNativeCurrencyAddressEvm,
-  KEYPAIR,
-  ROPSTEN_WETH_ADDRESS,
-  ROPSTEN_WETH_DECIMALS,
-  SOLANA_HOST,
-  WETH_ADDRESS,
-  WETH_DECIMALS,
-} from '../constants';
-import {
-  Provider,
-  useEthereumProvider,
-} from '../contexts/EthereumContextProvider';
-import {
-  ExtractedMintInfo,
-  extractMintInfo,
-  parseSolPubKey,
-} from '../utils/solana';
+	BLOCKSCOUT_GET_TOKENS_URL,
+	COVALENT_GET_TOKENS_URL,
+	getDefaultNativeCurrencyAddressEvm,
+	KEYPAIR,
+	ROPSTEN_WETH_ADDRESS,
+	ROPSTEN_WETH_DECIMALS,
+	SOLANA_HOST,
+	WETH_ADDRESS,
+	WETH_DECIMALS,
+} from "../constants";
+import { Provider, useEthereumProvider } from "../contexts/EthereumContextProvider";
+import { ExtractedMintInfo, extractMintInfo, parseSolPubKey } from "../utils/solana";
 
 export type CovalentData = {
 	contract_decimals: number;
@@ -167,7 +144,7 @@ const getSolanaParsedTokenAccounts = async (walletAddress: string, dispatch: App
 
 const getEthereumAccountsCovalent = async (url: string, chainId: ChainId): Promise<CovalentData[]> => {
 	try {
-		const output = [] as CovalentData[];
+		const output: CovalentData[] = [];
 		const response = await axios.get(url);
 		const tokens = response.data.data.items;
 
