@@ -43,6 +43,7 @@ import {
 import { getCorrespondingToken } from '../functions';
 import { createWrappedTokens } from '../functions/createWrapped';
 import useToast from './useToast';
+import useFetchTargetAsset from './useFetchTargetAsset';
 
 async function evm(
 	dispatch: AppDispatch,
@@ -89,6 +90,7 @@ export function useAttest() {
 	const targetToken = useAppSelector((state) => state.attest.targetAsset);
 	const signedVAA = useAppSelector((state) => state.attest.signedVAAHex);
 	const tokenExists = useAppSelector((state) => state.attest.targetTokenExists);
+	useFetchTargetAsset();
 
 	const handleChange = useCallback(
 		(event: any) => {
@@ -155,7 +157,6 @@ export function useAttest() {
 		);
 
 		const signer = provider.getSigner();
-		console.log("targetToken ===>", targetToken);
 
 		if (isEVMChain(sourceChain) && !!signer) {
 			await evm(dispatch, signer, sourceToken, toChainName(sourceChain));
