@@ -254,6 +254,8 @@ async function redeemEvm(
 	const { toastInfo, toastSuccess, toastError } = toasts;
 	toastInfo("Redeeming token on evm");
 	console.log("isNative:", isNative);
+
+	console.log("Token bridge address", getTokenBridgeAddressForChain(chainId));
 	try {
 		// Klaytn requires specifying gasPrice
 		const overrides = chainId === CHAIN_ID_KLAYTN ? { gasPrice: (await signer.getGasPrice()).toString() } : {};
@@ -471,7 +473,7 @@ export default function useTransferForm(list: ChainName[]) {
 			if (targetAsset && signedVaa) {
 				if (isEVMChain(targetChain)) {
 					console.log("redeem on eth");
-					await redeemEvm(dispatch, toasts, signer, signedVaa, isNativeEligible(targetAsset), sourceChain);
+					await redeemEvm(dispatch, toasts, signer, signedVaa, isNativeEligible(targetAsset), targetChain);
 				} else if (isSolanaChain(targetChain)) {
 					const solPk = KEYPAIR.publicKey.toString();
 					console.log("redeem on solana");
