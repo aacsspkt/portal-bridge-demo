@@ -39,7 +39,6 @@ import {
   setSourceChain,
   setTargetAsset,
   setTargetChain,
-  setTokenExists,
 } from '../app/slices/attestSlice';
 import { AppDispatch } from '../app/store';
 import {
@@ -51,12 +50,13 @@ import {
   SOL_TOKEN_BRIDGE_ADDRESS,
   WORMHOLE_RPC_HOSTS,
 } from '../constants';
-import { getCorrespondingToken } from '../functions';
+import { getCorrespondingToken, isValidToken } from '../functions';
 import useToast from './useToast';
 import useFetchTargetAsset from './useFetchTargetAsset';
 import { Connection, Keypair, SendTransactionError } from '@solana/web3.js';
 import { sendAndConfirmTransaction, signTransaction } from '../utils/solana';
 import { toast } from 'react-toastify';
+import { receiveDataWrapper } from '../app/slices/helpers';
 
 async function evm(
 	dispatch: AppDispatch,
@@ -78,10 +78,11 @@ async function evm(
 	console.log("emitterAddress:", emitterAddress);
 	const sequence = parseSequenceFromLogEth(tokenAttestation, ETH_BRIDGE_ADDRESS);
 	console.log("sequence:", sequence);
-		toast.success("Fetching VAA")
+	const toastId= toast.loading("Fetching signed vaa");
 	console.log("fetching vaa");
 	const { vaaBytes } = await getSignedVAAWithRetry(WORMHOLE_RPC_HOSTS, sourceChain, emitterAddress, sequence);
 	console.log("vaa:", uint8ArrayToHex(vaaBytes));
+	toast.dismiss(toastId)
 	dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
 	return vaaBytes
 	// toast success: fetched signed vaa
@@ -158,7 +159,7 @@ if (!(signer instanceof Keypair)) throw new Error(`Signer should be instanceof K
 				);
 
 		console.log("creating txn to create wrapped token");
-			toast.success("creating txn to create wrapped token")
+			const toastId= toast.loading("Creating txn to create wrapped token")
 				// create wrapped tokens
 				const createWrappedTxn = await createWrappedOnSolana(
 					connection,
@@ -167,7 +168,8 @@ if (!(signer instanceof Keypair)) throw new Error(`Signer should be instanceof K
 					payerAddress,
 					signedVAA,
 				);
-				await sendAndConfirmTransaction(connection, signTransaction, createWrappedTxn, 10);
+		await sendAndConfirmTransaction(connection, signTransaction, createWrappedTxn, 10);
+		toast.update(toastId, {type:"success",render:"Created Wrapped Token", isLoading:false, autoClose:3000})
 
 				return;
 			} catch (error) {
@@ -186,7 +188,7 @@ export async function evm_create_wrapped(
 	try {
 					
 		console.log("creating txn to create wrapped token");
-		toast.success("Creating txn to create wrapped token")
+		const toastId= toast.loading("Creating txn to create wrapped token")
 		// create wrapped tokens
 					
 		const createWrappedTxn = await createWrappedOnEth(
@@ -194,8 +196,9 @@ export async function evm_create_wrapped(
 			signer,
 			signedVAA
 		);
+		toast.update(toastId, {type:"success",render:"Created Wrapped Token", isLoading:false, autoClose:3000})
 		console.log("createwrapperTx", createWrappedTxn);
-		toast.success("created Wrapped Token")
+
 	
 		return;
 	} catch (error) {
@@ -231,7 +234,6 @@ export function useAttest() {
 	const sourceToken = useAppSelector((state) => state.attest.sourceAsset);
 	const targetToken = useAppSelector((state) => state.attest.targetAsset);
 	const signedVAA = useAppSelector((state) => state.attest.signedVAAHex);
-	const tokenExists = useAppSelector((state) => state.attest.targetTokenExists);
 	useFetchTargetAsset();
 
 	const handleChange = useCallback(
@@ -245,8 +247,8 @@ export function useAttest() {
 	const handleSourceChainChange = useCallback(
 		(event: any) => {
 			console.log(event);
+			
 			dispatch(setSourceChain(toChainId(event)));
-			toastError("SourceChain")
 		},
 		[dispatch],
 	);
@@ -267,6 +269,11 @@ export function useAttest() {
 				detectedProvider,
 				"any",
 			);
+			if (!isValidToken(sourceToken, toChainName(sourceChain)))
+			{
+				toast.error("Enter valid address")
+				return
+			}
 
 			const targetToken = await getCorrespondingToken({
 				dispatch: dispatch,
@@ -278,7 +285,14 @@ export function useAttest() {
 
 			console.log(targetToken);
 			if (targetToken != null) {
-				dispatch(setTargetAsset(targetToken));
+				dispatch(
+							setTargetAsset(
+								receiveDataWrapper({
+									doesExist: targetToken !== ethers.constants.AddressZero,
+									address: targetToken,
+								}),
+							),
+						);
 				
 			}
 		};
@@ -286,7 +300,7 @@ export function useAttest() {
 		if (toChainName(sourceChain) && sourceToken !== "" && targetChain) {
 			getAndSetTargetToken();
 		}
-	}, [sourceToken, sourceChain, targetChain, targetToken, dispatch]);
+	}, [sourceToken, sourceChain, targetChain, dispatch]);
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -309,6 +323,7 @@ export function useAttest() {
 			signedVAA= await solana(dispatch, signer, sourceToken, toChainName(sourceChain));
 		}
 		console.log("signedVAA", signedVAA);
+	
 
 		if (signedVAA) {
 			let targetAsset: string | null;
@@ -341,9 +356,16 @@ export function useAttest() {
 					signer,
 				});
 			} while (targetAsset == null);
+			toast.success("Wrapped Token Created");
 
-			dispatch(setTargetAsset(targetAsset));
-			console.log("wrapped token created:", targetAsset);
+			dispatch(
+				setTargetAsset(
+					receiveDataWrapper({
+							doesExist: targetAsset !== ethers.constants.AddressZero,
+							address: targetAsset,
+						}),
+					));
+			console.log("Wrapped token created:", targetAsset);
 		} else {
 			console.log("Error in token attestation");
 		}

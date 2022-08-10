@@ -4,29 +4,30 @@ import {
   CHAIN_ID_SOLANA,
 } from "@certusone/wormhole-sdk";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { ForeignAssetInfo } from "../../functions";
+import { DataWrapper, getEmptyDataWrapper } from "./helpers";
 import { Transaction } from "./transferSlice";
 
 
 export interface AttestState {
   sourceChain: ChainId;
   sourceAsset: string;
-  targetAsset: string;
+  targetAsset: DataWrapper<ForeignAssetInfo>;
   targetChain: ChainId;
   attestTx: Transaction | undefined;
   signedVAAHex: string | undefined;
   createTx: Transaction | undefined;
-  targetTokenExists: boolean;
+
 }
 
 const initialState: AttestState = {
   sourceChain: CHAIN_ID_SOLANA,
   sourceAsset: "",
-  targetAsset:"",
+  targetAsset: getEmptyDataWrapper(),
   targetChain: CHAIN_ID_ETH,
   attestTx: undefined,
   signedVAAHex: undefined,
   createTx: undefined,
-  targetTokenExists:false,
 };
 
 export const attestSlice = createSlice({
@@ -34,24 +35,28 @@ export const attestSlice = createSlice({
   initialState,
   reducers: {
     setSourceChain: (state, action: PayloadAction<ChainId>) => {
+      const prevChain = state.sourceChain
       state.sourceChain = action.payload;
       state.sourceAsset = "";
-      state.targetAsset = "";
-      state.targetTokenExists = false;
+      state.targetAsset = getEmptyDataWrapper();
+       if (state.targetChain === action.payload) {
+        state.targetChain = prevChain;
+      }
 
     },
     setSourceAsset: (state, action: PayloadAction<string>) => {
       state.sourceAsset = action.payload;
-      state.targetAsset = "";
-      state.targetTokenExists = false;
+      state.targetAsset = getEmptyDataWrapper();
+     
     },
-    setTargetAsset: (state, action: PayloadAction<string>) => {
+    setTargetAsset: (state, action: PayloadAction<DataWrapper<ForeignAssetInfo>>
+    ) => {
       state.targetAsset = action.payload;
     },
     setTargetChain: (state, action: PayloadAction<ChainId>) => {
       state.targetChain = action.payload;
-      state.targetAsset = "";
-      state.targetTokenExists = false;
+      state.targetAsset = getEmptyDataWrapper();
+
       
     },
     setAttestTx: (state, action: PayloadAction<Transaction>) => {
@@ -65,10 +70,7 @@ export const attestSlice = createSlice({
       state.createTx = action.payload;
 
     },
-    setTokenExists: (state, action: PayloadAction<boolean>) => {
-      state.targetTokenExists = action.payload;
 
-    },
     reset: (state) => ({
       ...initialState,
       sourceChain: state.sourceChain,
@@ -82,7 +84,6 @@ export const {
   setSourceAsset,
   setTargetChain,
   setAttestTx,
-  setTokenExists,
   setTargetAsset,
   setSignedVAAHex,
   setCreateTx,

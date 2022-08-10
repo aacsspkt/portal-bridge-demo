@@ -25,9 +25,7 @@ export default function Register(props: IRegisterProps) {
   const sourceChain = useAppSelector((state) => state.attest.sourceChain);
 	const targetChain = useAppSelector((state) => state.attest.targetChain);
 	const sourceToken = useAppSelector((state) => state.attest.sourceAsset);
-	const targetToken = useAppSelector((state) => state.attest.targetAsset);
-  const tokenExists = useAppSelector((state) => state.attest.targetTokenExists);
-  const foreignAssetInfo = useFetchForeignAsset(sourceChain, sourceToken, targetChain)  
+	const targetToken = useAppSelector((state) => state.attest.targetAsset); 
   return (
     <>
       <div className="w-full h-screen flex flex-col">
@@ -55,13 +53,14 @@ export default function Register(props: IRegisterProps) {
                 <label className='text-md '>Target Chain</label>
                 <CustomDropDown value={toChainName(targetChain)} onChange={handleTargetChainChange} label={chain => chain} options={chainList} />
               </div>
-              {foreignAssetInfo.data?.doesExist && (<div>
+              {targetToken.data?.doesExist && (
                 <div>
-                  Token already exists {foreignAssetInfo.data?.address}
+                
+                  Wrapped Token: {targetToken.data.address}
                 </div>
-              </div>)}
+              )}
 
-              {!tokenExists && (<button type='submit' className='p-2 w-40 shadow text-white bg-blue-500 my-4 rounded text-center'>
+              {!targetToken.data?.doesExist && (<button type='submit' className='p-2 w-40 shadow text-white bg-blue-500 my-4 rounded text-center'>
                 Register
               </button>)}
             </form>

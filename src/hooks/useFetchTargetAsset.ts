@@ -36,7 +36,6 @@ import {
   SOLANA_HOST,
 } from '../constants';
 import { useEthereumProvider } from '../contexts/EthereumContextProvider';
-import { setTokenExists } from '../app/slices/attestSlice';
 
 function useFetchTargetAsset() {
 	const dispatch = useAppDispatch();
@@ -128,7 +127,6 @@ function useFetchTargetAsset() {
 					);
 					if (!ignore) {
 						dispatch(setTargetAsset(receiveDataWrapper({ doesExist: !!asset, address: asset })));
-						dispatch(setTokenExists(true));
 						console.log("here")
 						setArgs();
 					}
