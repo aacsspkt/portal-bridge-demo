@@ -35,7 +35,11 @@ import {
   transferNativeSol,
   tryNativeToHexString,
 } from '@certusone/wormhole-sdk';
-import { Connection } from '@solana/web3.js';
+import { getOrCreateAssociatedTokenAccount } from '@solana/spl-token';
+import {
+  Connection,
+  PublicKey,
+} from '@solana/web3.js';
 
 import {
   useAppDispatch,
@@ -76,12 +80,11 @@ import {
 import useCheckIfWormholeWrapped from './useCheckIfWormholeWrapped';
 import useFetchTargetAsset from './useFetchTargetAsset';
 import useGetAvailableTokens from './useGetSourceParsedTokenAccounts';
-import useGetTargetParsedTokenAccounts from './useGetTargetParsedTokenAccounts';
 import useToast, { UseToasts } from './useToast';
 import useTransferTargetAddress from './useTransferTargetAddress';
 
 /** transfer */
-async function transferToEvm(
+async function transferEvm(
 	dispatch: AppDispatch,
 	toasts: UseToasts,
 	signer: Signer,
@@ -153,7 +156,7 @@ async function transferToEvm(
 	}
 }
 
-async function transferToSolana(
+async function transferSolana(
 	dispatch: AppDispatch,
 	toasts: UseToasts,
 	payer: string,
@@ -170,13 +173,26 @@ async function transferToSolana(
 ): Promise<Uint8Array | undefined> {
 	const { toastSuccess, toastInfo, toastError } = toasts;
 	dispatch(setIsSending(true));
-	console.log("isNative:", isNative);
 	try {
 		const connection = new Connection(SOLANA_HOST, "confirmed");
 		const baseAmountParsed = parseUnits(amount, decimals);
 		const feeParsed = parseUnits(relayerFee || "0", decimals);
 		const transferAmountParsed = baseAmountParsed.add(feeParsed);
 		const originAddress = originAddressStr ? zeroPad(hexToUint8Array(originAddressStr), 32) : undefined;
+
+		const targetTokenAccount = await getOrCreateAssociatedTokenAccount(
+			connection,
+			KEYPAIR,
+			new PublicKey(mintAddress),
+			new PublicKey(targetAddress),
+			true,
+		);
+
+		if (!isNative) {
+			targetAddress = targetTokenAccount.address.toBytes();
+		}
+
+		console.log("targetAddress", targetAddress);
 		const transaction = isNative
 			? await transferNativeSol(
 					connection,
@@ -265,9 +281,13 @@ async function redeemSolana(
 	signedVAA: Uint8Array,
 	isNative: boolean,
 ) {
+	console.log("Begin Redeeming");
 	dispatch(setIsRedeeming(true));
 	const { toastInfo, toastSuccess, toastError } = toasts;
+	console.log("SOLANA_HOST", SOLANA_HOST);
 	console.log("isNative:", isNative);
+	console.log(payerAddress);
+	console.log(signedVAA);
 	try {
 		// if (!wallet.signTransaction) {
 		//   throw new Error("wallet.signTransaction is undefined");
@@ -278,7 +298,7 @@ async function redeemSolana(
 			connection,
 			signTransaction,
 			SOL_BRIDGE_ADDRESS,
-			payerAddress,
+			KEYPAIR.publicKey.toString(),
 			Buffer.from(signedVAA),
 			MAX_VAA_UPLOAD_RETRIES_SOLANA,
 		);
@@ -304,7 +324,6 @@ export default function useTransferForm(list: ChainName[]) {
 	useGetAvailableTokens();
 	useCheckIfWormholeWrapped();
 	useFetchTargetAsset();
-	useGetTargetParsedTokenAccounts();
 
 	const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
 	const sourceWalletAddress = useAppSelector((state) => state.transfer.sourceWalletAddress);
@@ -411,8 +430,7 @@ export default function useTransferForm(list: ChainName[]) {
 		let signedVaa: Uint8Array | undefined;
 		if (sourceParsedTokenAccount && targetAddress && sourceWalletAddress) {
 			if (isSolanaChain(sourceChain)) {
-				console.log("transfering to solana");
-				signedVaa = await transferToSolana(
+				signedVaa = await transferSolana(
 					dispatch,
 					toasts,
 					sourceWalletAddress,
@@ -428,7 +446,7 @@ export default function useTransferForm(list: ChainName[]) {
 				);
 			} else if (isEVMChain(sourceChain) && !!signer) {
 				console.log("transfering to eth");
-				signedVaa = await transferToEvm(
+				signedVaa = await transferEvm(
 					dispatch,
 					toasts,
 					signer,
