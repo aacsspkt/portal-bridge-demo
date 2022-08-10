@@ -589,4 +589,4 @@ export const BLOCKSCOUT_GET_TOKENS_URL = (chainId: ChainId, walletAddress: strin
 	return baseUrl ? `${baseUrl}/api?module=account&action=tokenlist&address=${walletAddress}` : "";
 };
 
-export const MAX_VAA_UPLOAD_RETRIES_SOLANA = 5;
+export const MAX_VAA_UPLOAD_RETRIES_SOLANA = 10;
