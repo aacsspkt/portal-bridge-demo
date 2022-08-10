@@ -54,7 +54,7 @@ export default function Transfer(props: ITransferProps) {
             </div>
             <div className='w-4/5 space-y-2'>
               <label className='text-md '>Target Token</label>
-              <div className='h-9 w-full border p-2 text-md focus:outline-none'>{targetAsset.data?.address}</div>
+              <div className='h-9 w-full border p-2 text-md focus:outline-none'>{targetAsset}</div>
 
             </div>
             <div className='w-4/5 space-y-2'>
