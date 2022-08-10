@@ -32,6 +32,7 @@ import {
   transferFromEthNative,
   transferFromSolana,
   transferNativeSol,
+  tryNativeToHexString,
   uint8ArrayToHex,
 } from '@certusone/wormhole-sdk';
 import {
@@ -52,6 +53,8 @@ import {
   setSignedVAAHex,
   setSourceChain,
   setSourceParsedTokenAccount,
+  setSourceWalletAddress,
+  setTargetAddressHex,
   setTargetChain,
   setTransferTx,
 } from '../app/slices/transferSlice';
@@ -74,13 +77,18 @@ import {
   sendAndConfirmTransaction,
   signTransaction,
 } from '../utils/solana';
-import useToast from './useToast';
+import useCheckIfWormholeWrapped from './useCheckIfWormholeWrapped';
+import useFetchTargetAsset from './useFetchTargetAsset';
+import useGetAvailableTokens from './useGetSourceParsedTokenAccounts';
+import useGetTargetParsedTokenAccounts from './useGetTargetParsedTokenAccounts';
+import useToast, { UseToasts } from './useToast';
 import useTransferSignedVAA from './useTransferSignedVAA';
 import useTransferTargetAddress from './useTransferTargetAddress';
 
 /** transfer */
 async function transferToEvm(
 	dispatch: AppDispatch,
+	toasts: UseToasts,
 	signer: Signer,
 	tokenAddress: string,
 	decimals: number,
@@ -91,6 +99,7 @@ async function transferToEvm(
 	isNative?: boolean,
 	relayerFee?: string,
 ) {
+	const { toastSuccess, toastLoading, updateToast, dismissToast, toastError } = toasts;
 	dispatch(setIsSending(true));
 	try {
 		const baseAmountParsed = parseUnits(amount, decimals);
@@ -107,8 +116,8 @@ async function transferToEvm(
 			parseUnits(amount, decimals),
 			overrides,
 		);
+		toastSuccess("Token Approved on Eth");
 		console.log("approve eth:", approveReceipt.transactionHash);
-
 		const transferrReceipt = isNative
 			? await transferFromEthNative(
 					getTokenBridgeAddressForChain(sourceChainId),
@@ -130,27 +139,37 @@ async function transferToEvm(
 					overrides,
 			  );
 		dispatch(setTransferTx({ id: transferrReceipt.transactionHash, block: transferrReceipt.blockNumber }));
-		// toast success: txn confirmed
+		toastSuccess("Transfer Complete on Eth");
 		const sequence = parseSequenceFromLogEth(transferrReceipt, getBridgeAddressForChain(sourceChainId));
 		const emitterAddress = getEmitterAddressEth(getTokenBridgeAddressForChain(sourceChainId));
-		// toast info or loading: fetching vaa
-		const { vaaBytes } = await getSignedVAAWithRetry(
-			WORMHOLE_RPC_HOSTS,
-			sourceChainId,
-			emitterAddress,
-			sequence.toString(),
-		);
-		dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
-		// toast success: fetched signed vaa
+		const id = toastLoading("Fetching signed vaa");
+		try {
+			const { vaaBytes } = await getSignedVAAWithRetry(
+				WORMHOLE_RPC_HOSTS,
+				sourceChainId,
+				emitterAddress,
+				sequence.toString(),
+			);
+			dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
+			updateToast(id, {
+				type: "success",
+				render: "Fetched signed vaa",
+				isLoading: false,
+			});
+		} catch (e) {
+			dismissToast(id);
+			throw e;
+		}
 	} catch (e) {
 		console.error(e);
-		// toast error: e instanceOf Error ? e.message : 'unkown error occured'
+		toastError(e instanceof Error ? e.message : "An unknown errro occured.");
 		dispatch(setIsSending(false));
 	}
 }
 
 async function transferToSolana(
 	dispatch: AppDispatch,
+	toasts: UseToasts,
 	payer: string,
 	fromAddress: string,
 	mintAddress: string,
@@ -163,6 +182,7 @@ async function transferToSolana(
 	originChain?: ChainId,
 	relayerFee?: string,
 ) {
+	const { toastSuccess, toastLoading, updateToast, dismissToast, toastError } = toasts;
 	dispatch(setIsSending(true));
 	console.log("isNative:", isNative);
 	try {
@@ -199,7 +219,6 @@ async function transferToSolana(
 			  );
 
 		const txid = await sendAndConfirmTransaction(connection, signTransaction, transaction, 10);
-		// toast success: txn confirmed
 		console.log("transfer txn confirmed");
 		console.log("txnid:", txid);
 
@@ -207,18 +226,27 @@ async function transferToSolana(
 		if (!info) {
 			throw new Error("An error occurred while fetching the transaction info");
 		}
+		toastSuccess("Transfer complete on solana.");
 		dispatch(setTransferTx({ id: txid, block: info.slot }));
 		const sequence = parseSequenceFromLogSolana(info);
 		const emitterAddress = await getEmitterAddressSolana(SOL_TOKEN_BRIDGE_ADDRESS);
-		// toast info or loading: fetching vaa
-		const { vaaBytes } = await getSignedVAAWithRetry(WORMHOLE_RPC_HOSTS, CHAIN_ID_SOLANA, emitterAddress, sequence);
-
-		console.log("vaaBytes", vaaBytes);
-		dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
-		// toast success: fetched signed vaa
+		const id = toastLoading("Fetching signed vaa");
+		try {
+			const { vaaBytes } = await getSignedVAAWithRetry(WORMHOLE_RPC_HOSTS, CHAIN_ID_SOLANA, emitterAddress, sequence);
+			console.log("vaaBytes", vaaBytes);
+			dispatch(setSignedVAAHex(uint8ArrayToHex(vaaBytes)));
+			updateToast(id, {
+				type: "success",
+				render: "Fetched signed vaa",
+				isLoading: false,
+			});
+		} catch (e) {
+			dismissToast(id);
+			throw e;
+		}
 	} catch (e) {
 		console.error(e);
-		// toast error: e instanceOf Error ? e.message : 'unkown error occured'
+		toastError(e instanceof Error ? e.message : "An unknown errro occured.");
 		dispatch(setIsSending(false));
 	}
 }
@@ -226,9 +254,17 @@ async function transferToSolana(
 /** end transfer */
 
 /** redeem */
-async function redeemEvm(dispatch: any, signer: Signer, signedVAA: Uint8Array, isNative: boolean, chainId: ChainId) {
+async function redeemEvm(
+	dispatch: AppDispatch,
+	toasts: UseToasts,
+	signer: Signer,
+	signedVAA: Uint8Array,
+	isNative: boolean,
+	chainId: ChainId,
+) {
 	dispatch(setIsRedeeming(true));
-	console.log("redeeming...");
+	const { toastLoading, updateToast } = toasts;
+	const id = toastLoading("Redeeming token on evm");
 	console.log("isNative:", isNative);
 	try {
 		// Klaytn requires specifying gasPrice
@@ -238,21 +274,31 @@ async function redeemEvm(dispatch: any, signer: Signer, signedVAA: Uint8Array, i
 			: await redeemOnEth(getTokenBridgeAddressForChain(chainId), signer, signedVAA, overrides);
 		dispatch(setRedeemTx({ id: receipt.transactionHash, block: receipt.blockNumber }));
 		console.log("txn hash:", receipt.transactionHash);
-		// toast redeemed txn confirmed.
+		updateToast(id, {
+			type: "success",
+			render: "Token redeemed successfully",
+			isLoading: false,
+		});
 	} catch (e) {
-		// toast error
+		updateToast(id, {
+			type: "error",
+			render: e instanceof Error ? e.message : "An unknown error occured",
+			isLoading: false,
+		});
 		dispatch(setIsRedeeming(false));
 	}
 }
 
 async function redeemSolana(
-	dispatch: any,
+	dispatch: AppDispatch,
+	toasts: UseToasts,
 	payerAddress: string, //TODO: we may not need this since we have wallet
 	signedVAA: Uint8Array,
 	isNative: boolean,
 ) {
 	dispatch(setIsRedeeming(true));
-	console.log("redeeming...");
+	const { toastLoading, updateToast } = toasts;
+	const id = toastLoading("Redeeming token on solana");
 	console.log("isNative:", isNative);
 	try {
 		// if (!wallet.signTransaction) {
@@ -275,9 +321,17 @@ async function redeemSolana(
 		const txid = await sendAndConfirmTransaction(connection, signTransaction, transaction);
 		dispatch(setRedeemTx({ id: txid, block: 1 }));
 		console.log("txn hash:", txid);
-		// toast success redeem txn
+		updateToast(id, {
+			type: "success",
+			render: "Token redeemed successfully",
+			isLoading: false,
+		});
 	} catch (e) {
-		// toast error
+		updateToast(id, {
+			type: "error",
+			render: e instanceof Error ? e.message : "An unknown error occured",
+			isLoading: false,
+		});
 		dispatch(setIsRedeeming(false));
 	}
 }
@@ -285,6 +339,11 @@ async function redeemSolana(
 
 export default function useTransferForm(list: ChainName[]) {
 	const dispatch = useAppDispatch();
+	useGetAvailableTokens();
+	useCheckIfWormholeWrapped();
+	useFetchTargetAsset();
+	useGetTargetParsedTokenAccounts();
+
 	const sourceChain = useAppSelector((state) => state.transfer.sourceChain);
 	const sourceWalletAddress = useAppSelector((state) => state.transfer.sourceWalletAddress);
 	const sourceParsedTokenAccount = useAppSelector((state) => state.transfer.sourceParsedTokenAccount);
@@ -295,9 +354,12 @@ export default function useTransferForm(list: ChainName[]) {
 	const originAsset = useAppSelector((state) => state.transfer.originAsset);
 	const originChain = useAppSelector((state) => state.transfer.originChain);
 	const sourceParsedTokenAccounts = useAppSelector((state) => state.transfer.sourceParsedTokenAccounts);
-	const targetAddress = useTransferTargetAddress();
 	const [isAmountDisabled, setIsAmountDisabled] = useState(true);
 	const signedVaa = useTransferSignedVAA();
+	const targetAddress = useTransferTargetAddress();
+
+	const { signer, signerAddress, connect, walletConnected } = useEthereumProvider();
+	const solPK = KEYPAIR.publicKey.toString();
 
 	useEffect(() => {
 		if (!sourceParsedTokenAccount) {
@@ -307,9 +369,39 @@ export default function useTransferForm(list: ChainName[]) {
 		}
 	}, [sourceParsedTokenAccount]);
 
-	const { signer } = useEthereumProvider();
+	useEffect(() => {
+		if (!sourceWalletAddress) {
+			if (isSolanaChain(sourceChain)) {
+				dispatch(setSourceWalletAddress(solPK));
+			}
+			if (isEVMChain(sourceChain)) {
+				if (!walletConnected) {
+					connect();
+				}
+				dispatch(setSourceWalletAddress(signerAddress));
+			}
+		}
+	}, [dispatch, connect, walletConnected, sourceChain, sourceWalletAddress, signerAddress, solPK]);
 
-	const { toastSuccess } = useToast();
+	useEffect(() => {
+		if (!targetAddressHex) {
+			if (isSolanaChain(targetChain)) {
+				try {
+					dispatch(setTargetAddressHex(tryNativeToHexString(solPK, targetChain)));
+				} catch (error) {
+					dispatch(setTargetAddressHex(undefined));
+				}
+			}
+			if (isEVMChain(targetChain)) {
+				if (!walletConnected) {
+					connect();
+				}
+				dispatch(setTargetAddressHex(signerAddress));
+			}
+		}
+	}, [dispatch, targetChain, walletConnected, connect, targetAddressHex, solPK, signerAddress]);
+
+	const toasts = useToast();
 	// if (!sourceParsedTokenAccount) throw new ArgumentNullOrUndefinedError();
 
 	const handleSourceChainChange = useCallback(
@@ -355,13 +447,14 @@ export default function useTransferForm(list: ChainName[]) {
 		console.log("amount", amount);
 		console.log("targetAddress", targetAddress);
 
-		toastSuccess("Transfer Clicked"); // testing
+		toasts.toastLoading("Transfer Clicked"); // testing
 
 		if (sourceParsedTokenAccount && targetAddress && sourceWalletAddress) {
 			if (isSolanaChain(sourceChain)) {
 				console.log("transfering to solana");
 				await transferToSolana(
 					dispatch,
+					toasts,
 					sourceWalletAddress,
 					sourceParsedTokenAccount.publicKey,
 					sourceParsedTokenAccount.mintKey,
@@ -377,6 +470,7 @@ export default function useTransferForm(list: ChainName[]) {
 				console.log("transfering to eth");
 				await transferToEvm(
 					dispatch,
+					toasts,
 					signer,
 					sourceParsedTokenAccount.mintKey,
 					sourceParsedTokenAccount.decimals,
@@ -394,11 +488,11 @@ export default function useTransferForm(list: ChainName[]) {
 			if (targetAssetAddress && signedVaa) {
 				if (isEVMChain(targetChain)) {
 					console.log("redeem on eth");
-					await redeemEvm(dispatch, signer, signedVaa, isNativeEligible(targetAssetAddress), sourceChain);
+					await redeemEvm(dispatch, toasts, signer, signedVaa, isNativeEligible(targetAssetAddress), sourceChain);
 				} else if (isSolanaChain(targetChain)) {
 					const solPk = KEYPAIR.publicKey.toString();
 					console.log("redeem on solana");
-					await redeemSolana(dispatch, solPk, signedVaa, isNativeEligible(targetAssetAddress));
+					await redeemSolana(dispatch, toasts, solPk, signedVaa, isNativeEligible(targetAssetAddress));
 				} else {
 				}
 			}
