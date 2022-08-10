@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 
 import {
   ChainName,
+  createWrappedOnEth,
   createWrappedOnSolana,
   postVaaSolanaWithRetry,
 } from '@certusone/wormhole-sdk';
@@ -15,6 +16,7 @@ import {
   SOL_BRIDGE_ADDRESS,
   SOL_TOKEN_BRIDGE_ADDRESS,
   SOLANA_HOST,
+  ETH_TOKEN_BRIDGE_ADDRESS,
 } from '../constants';
 // import {
 //   BRIDGE_ADDRESS_TESTNET,
@@ -35,45 +37,4 @@ import { Dispatch } from 'redux';
  * @param signedVAA Vaa obtained after attestation
  * @returns Array of transaction signature
  * */
-
-export async function solana_create_Wrapped(
-	dispatch:Dispatch,
-	payerAddress: string,
-	signer: Keypair | ethers.Signer,
-	signedVAA: Uint8Array,
-) {
-	try {
-if (!(signer instanceof Keypair)) throw new Error(`Signer should be instanceof Keypair. value: ${signer}`);
-
-				const connection = new Connection(SOLANA_HOST);
-				//post vaa
-				console.log("posting vaa to solana");
-				await postVaaSolanaWithRetry(
-					connection,
-					signTransaction,
-					SOL_BRIDGE_ADDRESS,
-					payerAddress,
-					Buffer.from(signedVAA),
-					10,
-				);
-
-				console.log("creating txn to create wrapped token");
-				// create wrapped tokens
-				const createWrappedTxn = await createWrappedOnSolana(
-					connection,
-					SOL_BRIDGE_ADDRESS,
-					SOL_TOKEN_BRIDGE_ADDRESS,
-					payerAddress,
-					signedVAA,
-				);
-				await sendAndConfirmTransaction(connection, signTransaction, createWrappedTxn, 10);
-
-				return;
-			} catch (error) {
-				if (error instanceof SendTransactionError) {
-					console.log(error.logs);
-				}
-				throw error;
-			}
-		}
 
