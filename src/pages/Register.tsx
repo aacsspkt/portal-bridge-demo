@@ -4,25 +4,30 @@ import { toChainName } from '@certusone/wormhole-sdk';
 
 import CustomDropDown from '../components/CustomDropdown';
 import { useAttest } from '../hooks/useAttest';
+import useFetchTargetAsset from '../hooks/useFetchTargetAsset';
+import { useAppSelector } from '../app/hooks';
+import useFetchForeignAsset from '../hooks/useFetchForeignAsset';
 
 interface IRegisterProps {
 }
 
 export default function Register(props: IRegisterProps) {
+  
+  
   const {
-    sourceChain,
-    targetChain,
-    sourceToken,
-    targetToken,
     chainList,
-    tokenExists,
-
     handleChange,
     handleSourceChainChange,
     handleTargetChainChange,
     handleSubmit
   } = useAttest();
 
+  const sourceChain = useAppSelector((state) => state.attest.sourceChain);
+	const targetChain = useAppSelector((state) => state.attest.targetChain);
+	const sourceToken = useAppSelector((state) => state.attest.sourceAsset);
+	const targetToken = useAppSelector((state) => state.attest.targetAsset);
+  const tokenExists = useAppSelector((state) => state.attest.targetTokenExists);
+  const foreignAssetInfo = useFetchForeignAsset(sourceChain, sourceToken, targetChain)  
   return (
     <>
       <div className="w-full h-screen flex flex-col">
@@ -50,9 +55,9 @@ export default function Register(props: IRegisterProps) {
                 <label className='text-md '>Target Chain</label>
                 <CustomDropDown value={toChainName(targetChain)} onChange={handleTargetChainChange} label={chain => chain} options={chainList} />
               </div>
-              {tokenExists && (<div>
+              {foreignAssetInfo.data?.doesExist && (<div>
                 <div>
-                  Token already exists {targetToken}
+                  Token already exists {foreignAssetInfo.data?.address}
                 </div>
               </div>)}
 

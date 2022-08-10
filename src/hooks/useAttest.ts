@@ -44,6 +44,7 @@ import { getCorrespondingToken } from '../functions';
 import { createWrappedTokens } from '../functions/createWrapped';
 import useToast from './useToast';
 import useFetchTargetAsset from './useFetchTargetAsset';
+import { solana_create_Wrapped } from './useCreateWrappedToken';
 
 async function evm(
 	dispatch: AppDispatch,
@@ -137,7 +138,7 @@ export function useAttest() {
 			console.log(targetToken);
 			if (targetToken != null) {
 				dispatch(setTargetAsset(targetToken));
-				dispatch(setTokenExists(true));
+				
 			}
 		};
 
@@ -167,9 +168,8 @@ export function useAttest() {
 			let targetAsset: string | null;
 
 			do {
-				await createWrappedTokens(
+				await solana_create_Wrapped(
 					dispatch,
-					toChainName(targetChain),
 					KEYPAIR.publicKey.toString(),
 					KEYPAIR,
 					hexToUint8Array(signedVAA),
@@ -192,12 +192,7 @@ export function useAttest() {
 	};
 
 	return {
-		sourceChain,
-		targetChain,
-		targetToken,
-		sourceToken,
 		chainList,
-		tokenExists,
 		handleChange,
 		handleSourceChainChange,
 		handleTargetChainChange,

@@ -1,21 +1,49 @@
-import { CHAIN_ID_SOLANA, createWrappedOnSolana, hexToUint8Array, isEVMChain, postVaaSolanaWithRetry, toChainName } from '@certusone/wormhole-sdk';
-import { Connection, Keypair, sendAndConfirmTransaction } from '@solana/web3.js';
 import { ethers } from 'ethers';
-import * as React from 'react';
-import { Dispatch } from 'redux';
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { KEYPAIR, SOLANA_HOST, SOL_BRIDGE_ADDRESS, SOL_TOKEN_BRIDGE_ADDRESS } from '../constants';
-import { useEthereumProvider } from '../contexts/EthereumContextProvider';
-import { signTransaction } from '../utils/solana';
-import useToast from './useToast';
 
-export async function solana(
+import {
+  ChainName,
+  createWrappedOnSolana,
+  postVaaSolanaWithRetry,
+} from '@certusone/wormhole-sdk';
+import {
+  Connection,
+  Keypair,
+  SendTransactionError,
+} from '@solana/web3.js';
+
+import {
+  SOL_BRIDGE_ADDRESS,
+  SOL_TOKEN_BRIDGE_ADDRESS,
+  SOLANA_HOST,
+} from '../constants';
+// import {
+//   BRIDGE_ADDRESS_TESTNET,
+//   CONNECTION_TESTNET as connection,
+//   RECIPIENT_WALLET_ADDRESS_TESTNET,
+//   TOKEN_BRIDGE_ADDRESS_TESTNET,
+// } from '../constants_testnet';
+import {
+  sendAndConfirmTransaction,
+  signTransaction,
+} from '../utils/solana';
+import { Dispatch } from 'redux';
+
+/**
+ * @param payerAddress Public Key of the fee payer
+ * @param targetChain Source Chain Name
+ * @param signer Signer who signs and pay
+ * @param signedVAA Vaa obtained after attestation
+ * @returns Array of transaction signature
+ * */
+
+export async function solana_create_Wrapped(
 	dispatch:Dispatch,
 	payerAddress: string,
 	signer: Keypair | ethers.Signer,
 	signedVAA: Uint8Array,
 ) {
-	if (!(signer instanceof Keypair)) throw new Error(`Signer should be instanceof Keypair. value: ${signer}`);
+	try {
+if (!(signer instanceof Keypair)) throw new Error(`Signer should be instanceof Keypair. value: ${signer}`);
 
 				const connection = new Connection(SOLANA_HOST);
 				//post vaa
@@ -41,46 +69,11 @@ export async function solana(
 				await sendAndConfirmTransaction(connection, signTransaction, createWrappedTxn, 10);
 
 				return;
-}
+			} catch (error) {
+				if (error instanceof SendTransactionError) {
+					console.log(error.logs);
+				}
+				throw error;
+			}
+		}
 
-
-
-export default function useCreateWrappedToken() {
-    	const dispatch = useAppDispatch();
-	const targetChain = useAppSelector((state) => state.attest.targetChain);
-	const signedVAA = useAppSelector((state) => state.attest.signedVAAHex);
-    	const {
-		toastSuccess,
-		toastWarning,
-		toastError,
-		toastInfo,
-		toastPromise,
-		toastLoading,
-		updateToast,
-        } = useToast();
-    const { signer } = useEthereumProvider();
-    const solPK = KEYPAIR.publicKey;
-    const handleCreateClick = async function () {
-
-     
-        if (isEVMChain(targetChain) && !!signer && !!signedVAA) {
-            //create wrapped token for evm
-        } else if (
-            targetChain === CHAIN_ID_SOLANA &&
-            !!solPK &&
-            !!signedVAA
-        ) {
-            solana(
-                dispatch,
-                KEYPAIR.publicKey.toString(),
-                KEYPAIR,
-                hexToUint8Array(signedVAA),
-            );
-        }
-    }
-
-    return {
-        handleCreateClick
-      
-  }
-}

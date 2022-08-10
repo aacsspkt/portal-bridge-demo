@@ -22,7 +22,6 @@ interface ITransferProps {
 export default function Transfer(props: ITransferProps) {
   useGetSourceWalletAddress();
   useGetAvailableTokens();
-  useCheckIfWormholeWrapped();
   useFetchTargetAsset();
   useGetTargetParsedTokenAccounts();
 
@@ -42,6 +41,7 @@ export default function Transfer(props: ITransferProps) {
     handleAmountChange,
     handleSubmit
   } = useTransferForm(chainList);
+    useCheckIfWormholeWrapped();
 
   return (
     <div className="w-full h-screen flex flex-col">
