@@ -53,7 +53,6 @@ interface TransferState {
   targetAsset: DataWrapper<ForeignAssetInfo>;
   amount: string;
   transferTx: Transaction | undefined;
-  signedVAAHex: string | undefined;
   isSending: boolean,
   isRedeeming: boolean;
   redeemTx: Transaction | undefined;
@@ -73,7 +72,6 @@ const initialState: TransferState = {
   targetAsset: getEmptyDataWrapper(),
   amount: "",
   transferTx: undefined,
-  signedVAAHex: undefined,
   isSending: false,
   isRedeeming: false,
   redeemTx: undefined,
@@ -127,10 +125,6 @@ export const transferSlice = createSlice({
     },
     setTransferTx: (state, action: PayloadAction<Transaction>) => {
       state.transferTx = action.payload;
-    },
-    setSignedVAAHex: (state, action: PayloadAction<string>) => {
-      state.signedVAAHex = action.payload;
-      state.isSending = false;
     },
     setIsSending: (state, action: PayloadAction<boolean>) => {
       state.isSending = action.payload;
@@ -222,7 +216,6 @@ export const {
   setTargetAddressHex,
   setTargetAsset,
   setTargetParsedTokenAccount,
-  setSignedVAAHex,
   setIsRedeeming,
   setIsSending,
   setRedeemTx

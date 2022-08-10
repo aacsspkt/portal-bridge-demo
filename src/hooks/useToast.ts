@@ -53,7 +53,7 @@ export default function useToasts(): UseToasts {
 	};
 
 	const toastInfo = (content: ReactNode) => {
-		return toast.error(content, defaultOptions);
+		return toast.info(content, defaultOptions);
 	};
 
 	const toastPromise = (promise: Promise<unknown>, { pending, success, error }: ToastPromiseParams<unknown>) => {
