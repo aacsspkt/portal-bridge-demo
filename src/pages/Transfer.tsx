@@ -7,12 +7,6 @@ import {
 } from '@certusone/wormhole-sdk';
 
 import CustomDropDown from '../components/CustomDropdown';
-import useCheckIfWormholeWrapped from '../hooks/useCheckIfWormholeWrapped';
-import useFetchTargetAsset from '../hooks/useFetchTargetAsset';
-import useGetAvailableTokens from '../hooks/useGetSourceParsedTokenAccounts';
-import useGetSourceWalletAddress from '../hooks/useGetSourceWalletAddress';
-import useGetTargetParsedTokenAccounts
-  from '../hooks/useGetTargetParsedTokenAccounts';
 import useTransferForm from '../hooks/useTransferForm';
 
 interface ITransferProps {
@@ -20,10 +14,6 @@ interface ITransferProps {
 
 
 export default function Transfer(props: ITransferProps) {
-  useGetSourceWalletAddress();
-  useGetAvailableTokens();
-  useFetchTargetAsset();
-  useGetTargetParsedTokenAccounts();
 
   const chainList: ChainName[] = Object.keys(CHAINS).map(item => item as ChainName).filter(item => item === "solana" || item === "ethereum");
 
@@ -41,7 +31,6 @@ export default function Transfer(props: ITransferProps) {
     handleAmountChange,
     handleSubmit
   } = useTransferForm(chainList);
-    useCheckIfWormholeWrapped();
 
   return (
     <div className="w-full h-screen flex flex-col">

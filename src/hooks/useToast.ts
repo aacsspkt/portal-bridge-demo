@@ -5,9 +5,29 @@ import {
   toast,
   ToastOptions,
   ToastPromiseParams,
+  UpdateOptions,
 } from 'react-toastify';
 
-export default function useToast() {
+type Toast = (content: ReactNode) => Id;
+type ToastPromise = (
+	promise: Promise<unknown>,
+	{ pending, success, error }: ToastPromiseParams<unknown>,
+) => Promise<unknown>;
+type UpdateToast = (id: Id, updateOptions?: UpdateOptions<unknown>) => void;
+type DismissToast = (id?: Id) => void;
+
+export type UseToasts = {
+	toastSuccess: Toast;
+	toastWarning: Toast;
+	toastError: Toast;
+	toastInfo: Toast;
+	toastPromise: ToastPromise;
+	toastLoading: Toast;
+	updateToast: UpdateToast;
+	dismissToast: DismissToast;
+};
+
+export default function useToasts(): UseToasts {
 	const defaultOptions: ToastOptions = {
 		position: toast.POSITION.BOTTOM_RIGHT,
 		autoClose: 3000,
@@ -52,8 +72,12 @@ export default function useToast() {
 		return toast.loading(content, defaultOptions);
 	};
 
-	const updateToast = (id: Id) => {
-		toast.update(id, defaultOptions);
+	const updateToast = (id: Id, updateOptions?: UpdateOptions<unknown>) => {
+		toast.update(id, updateOptions || defaultOptions);
+	};
+
+	const dismissToast = (id?: Id) => {
+		toast.dismiss(id);
 	};
 
 	return {
@@ -64,5 +88,6 @@ export default function useToast() {
 		toastPromise,
 		toastLoading,
 		updateToast,
+		dismissToast,
 	};
 }
