@@ -23,6 +23,7 @@ import {
   isEVMChain,
   parseSequenceFromLogEth,
   parseSequenceFromLogSolana,
+  postVaaSolanaWithRetry,
   redeemAndUnwrapOnSolana,
   redeemOnEth,
   redeemOnEthNative,
@@ -34,9 +35,6 @@ import {
   transferNativeSol,
   tryNativeToHexString,
 } from '@certusone/wormhole-sdk';
-import {
-  postVaaWithRetry,
-} from '@certusone/wormhole-sdk/lib/cjs/solana/postVaa';
 import { Connection } from '@solana/web3.js';
 
 import {
@@ -276,7 +274,7 @@ async function redeemSolana(
 		// }
 		const connection = new Connection(SOLANA_HOST, "confirmed");
 		toastInfo("Posting Vaa on solana");
-		await postVaaWithRetry(
+		await postVaaSolanaWithRetry(
 			connection,
 			signTransaction,
 			SOL_BRIDGE_ADDRESS,
