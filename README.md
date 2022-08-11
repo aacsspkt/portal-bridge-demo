@@ -78,6 +78,9 @@ const createWrappedTxn = await createWrappedOnSolana(
 				);
 ```
 
+#### EVM to Solana Register Demo 
+
+
 ### Solana to evm
 
 Solana to evm is similar to evm to solana, except VAA doesnt need to be posted. Directly wrappedToken can be created. 
@@ -133,7 +136,7 @@ const transferrReceipt =  await transferFromEth(
 ```
 
 #### Solana to EVM
-
+```
 const transaction = await transferFromSolana(
 					connection,
 					SOL_BRIDGE_ADDRESS,
@@ -149,6 +152,7 @@ const transaction = await transferFromSolana(
 					undefined,
 					feeParsed.toBigInt(),
 			  );
+```
 
 ### Redeem 
 #### Redeem on Eth
