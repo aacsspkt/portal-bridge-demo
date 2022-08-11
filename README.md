@@ -1,12 +1,33 @@
-# Getting Started with Create React App
+# Portal Bridge Demo
+
+The application makes use of to register tokens of one chain to another. Here registering tokens from EVM to solana and vice versa are implemented. The application can also transfer tokens from one chain to another. It makes use of wormhole sdk to implement these functionalites
+
+wormhole-sdk: https://github.com/certusone/wormhole/tree/dev.v2
+
+The application referred the bridge_ui repo of wormhole. 
+bridge_ui: https://github.com/certusone/wormhole/tree/dev.v2/bridge_ui
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
-## Available Scripts
+## Setup application
+
+### Environment Variables
+Make an .env file, the .env file will require folowwing varibales
+
+| Environment Variable Names  | Descriptions |
+| ------------- | ------------- |
+| REACT_APP_WALLET_SECRET_KEY  | Private key of the solana wallet |
+| REACT_APP_CLUSTER  | cluster of the solana network. possible values:manniet, testnet  |
+| REACT_APP_RELAYER_CONTRACT_ADDRESS  | Content Cell  |
+| REACT_APP_COVALENT_API_KEY  | covalent api key for fetching balance and tokens owned by an ethereum address |
 
 In the project directory, you can run:
 
-### `npm start`
+### Run `npm install`
+
+Before npm start, neccessary to install packages
+
+### Run `npm start`
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
@@ -14,33 +35,138 @@ Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
 
-### `npm test`
+## Register Tokens
+### From evm to Solana
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+To register evm tokens on solana chain. following methods of wormhole sdk used
 
-### `npm run build`
+To attest the token, first the Attest VAA is created by calling method **attestFromEth()**
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+const tokenAttestation = await attestFromEth(
+		ETH_TOKEN_BRIDGE_ADDRESS,
+		signer,
+		tokenAddress);
+```
+The signed VAA is retrieved from Wormhole Rest endpoint, using getSignedVAAWithRetry, this method keeps retrying till signedVAA is retrieved. 
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+const { vaaBytes } = await getSignedVAAWithRetry(WORMHOLE_RPC_HOSTS, sourceChain, emitterAddress, sequence);
+```
+Here sequence can be retrieved from the tokenAttestation transaction using parseSequenceFromLogEth() and emitter address can be obtained by using getEmitterAddressEth()
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Now the signedVaa posted on the solana using postVaaSolanaWithRetry()
+```
+await postVaaSolanaWithRetry(
+				connection,
+				signTransaction,
+				SOL_BRIDGE_ADDRESS,
+				payerAddress,
+				Buffer.from(signedVAA),
+				10,
+				);
+```
 
-### `npm run eject`
+After the VAA is posted, Wrapped token can be created using createWrappedOnSolana()
+```
+const createWrappedTxn = await createWrappedOnSolana(
+					connection,
+					SOL_BRIDGE_ADDRESS,
+					SOL_TOKEN_BRIDGE_ADDRESS,
+					payerAddress,
+					signedVAA,
+				);
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### Solana to evm
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Solana to evm is similar to evm to solana, except VAA doesnt need to be posted. Directly wrappedToken can be created. 
+ Get signedVAA using **attestFromSolana**
+```
+const transaction = await attestFromSolana(
+			  connection,
+			  SOL_BRIDGE_ADDRESS,
+			  SOL_TOKEN_BRIDGE_ADDRESS,
+			  KEYPAIR.publicKey.toString(),
+			  tokenAddress
+			);
+			
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Fetch signedVaa 
+```
+const { vaaBytes } = await getSignedVAAWithRetry(WORMHOLE_RPC_HOSTS, "solana", solana_emitterAddress, solana_sequence);
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Create Wrapped token in EVM
+```
+const createWrappedTxn = await createWrappedOnEth(
+			ETH_TOKEN_BRIDGE_ADDRESS,
+			signer,
+			signedVAA
+		);
+```
 
-## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Transfer Tokens 
+Transfer contains 2 main steps :
+* Transfer
+* Redeem
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Transfer
+
+Transfer step consists of transferFromEth() method and fetching the SignedVAA
+
+#### EVM to Solana 
+
+```
+const transferrReceipt =  await transferFromEth(
+				getTokenBridgeAddressForChain(sourceChainId),
+					signer,
+					tokenAddress,
+					transferAmountParsed,
+					recipientChain,
+					recipientAddress,
+					feeParsed,
+					overrides,
+			  );
+```
+
+#### Solana to EVM
+
+const transaction = await transferFromSolana(
+					connection,
+					SOL_BRIDGE_ADDRESS,
+					SOL_TOKEN_BRIDGE_ADDRESS,
+					payer,
+					fromAddress,
+					mintAddress,
+					transferAmountParsed.toBigInt(),
+					targetAddress,
+					targetChain,
+					originAddress,
+					originChain,
+					undefined,
+					feeParsed.toBigInt(),
+			  );
+
+### Redeem 
+#### Redeem on Eth
+
+```
+redeemOnEth(getTokenBridgeAddressForChain(chainId), signer, signedVAA, overrides);
+```
+
+#### Redeem on Solana
+
+The Vaa Must be posted on solana before being redeemed
+
+
+```
+redeemOnSolana(connection, SOL_BRIDGE_ADDRESS, SOL_TOKEN_BRIDGE_ADDRESS, payerAddress, signedVAA);
+```
+
+
+
+
+
