@@ -36,10 +36,11 @@ The page will reload if you make edits.\
 You will also see any lint errors in the console.
 
 ## Project demo 
+### Register Token From Solana to EVM
+![alt text](https://github.com/aacsspkt/portal-bridge-demo/blob/main/src/images/solanaEVMATTEST.gif)
+
 ### Transfer From Solana to EVM
-
-### Transfer From EVM to Solana
-
+![alt text](https://github.com/aacsspkt/portal-bridge-demo/blob/main/src/images/SOLANATOEVMTRANSFER.gif)
 
 
 ## Register Tokens
