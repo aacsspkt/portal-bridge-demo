@@ -11,7 +11,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ## Setup application
 
-## Environment Variables
+### Environment Variables
 Make an .env file, the .env file will require folowwing varibales
 
 | Environment Variable Names  | Descriptions |
@@ -23,16 +23,66 @@ Make an .env file, the .env file will require folowwing varibales
 
 In the project directory, you can run:
 
-## Run `npm install`
+### Run `npm install`
 
 Before npm start, neccessary to install packages
 
-## Run `npm start`
+### Run `npm start`
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
+
+## Register Tokens
+### From evm to Solana
+
+To register evm tokens on solana chain. following methods of wormhole sdk used
+
+To attest the token, first the Attest VAA is created by calling method **attestFromEth()**
+
+```
+const tokenAttestation = await attestFromEth(
+		ETH_TOKEN_BRIDGE_ADDRESS,
+		signer,
+		tokenAddress);
+```
+The signed VAA is retrieved from Wormhole Rest endpoint, using getSignedVAAWithRetry, this method keeps retrying till signedVAA is retrieved. 
+```
+
+const { vaaBytes } = await getSignedVAAWithRetry(WORMHOLE_RPC_HOSTS, sourceChain, emitterAddress, sequence);
+```
+Here sequence can be retrieved from the tokenAttestation transaction using parseSequenceFromLogEth() and emitter address can be obtained by using getEmitterAddressEth()
+
+Now the signedVaa posted on the solana using postVaaSolanaWithRetry()
+```
+await postVaaSolanaWithRetry(
+					connection,
+					signTransaction,
+					SOL_BRIDGE_ADDRESS,
+					payerAddress,
+					Buffer.from(signedVAA),
+					10,
+				);
+```
+
+After the VAA is posted, Wrapped token can be created using createWrappedOnSolana()
+```
+const createWrappedTxn = await createWrappedOnSolana(
+					connection,
+					SOL_BRIDGE_ADDRESS,
+					SOL_TOKEN_BRIDGE_ADDRESS,
+					payerAddress,
+					signedVAA,
+				);
+```
+
+### Solana to evm
+
+Solana to evm is similar to evm to solana, except VAA doesnt need to be posted. Directly wrappedToken can be created. 
+
+* Get signedVAA using 
+
 
 
