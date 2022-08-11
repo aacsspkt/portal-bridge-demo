@@ -58,12 +58,12 @@ Here sequence can be retrieved from the tokenAttestation transaction using parse
 Now the signedVaa posted on the solana using postVaaSolanaWithRetry()
 ```
 await postVaaSolanaWithRetry(
-					connection,
-					signTransaction,
-					SOL_BRIDGE_ADDRESS,
-					payerAddress,
-					Buffer.from(signedVAA),
-					10,
+				connection,
+				signTransaction,
+				SOL_BRIDGE_ADDRESS,
+				payerAddress,
+				Buffer.from(signedVAA),
+				10,
 				);
 ```
 
@@ -81,8 +81,82 @@ const createWrappedTxn = await createWrappedOnSolana(
 ### Solana to evm
 
 Solana to evm is similar to evm to solana, except VAA doesnt need to be posted. Directly wrappedToken can be created. 
+ Get signedVAA using **attestFromSolana**
+```
+const transaction = await attestFromSolana(
+			  connection,
+			  SOL_BRIDGE_ADDRESS,
+			  SOL_TOKEN_BRIDGE_ADDRESS,
+			  KEYPAIR.publicKey.toString(),
+			  tokenAddress
+			);
+			
+```
 
-* Get signedVAA using 
+Fetch signedVaa 
+```
+const { vaaBytes } = await getSignedVAAWithRetry(WORMHOLE_RPC_HOSTS, "solana", solana_emitterAddress, solana_sequence);
+```
+
+Create Wrapped token in EVM
+```
+const createWrappedTxn = await createWrappedOnEth(
+			ETH_TOKEN_BRIDGE_ADDRESS,
+			signer,
+			signedVAA
+		);
+```
+
+
+## Transfer Tokens 
+Transfer contains 2 main steps :
+* Transfer
+* Redeem
+
+### Transfer
+
+Transfer step consists of transferFromEth() method and fetching the SignedVAA
+
+#### EVM to Solana 
+
+```
+const transferrReceipt =  await transferFromEth(
+				getTokenBridgeAddressForChain(sourceChainId),
+					signer,
+					tokenAddress,
+					transferAmountParsed,
+					recipientChain,
+					recipientAddress,
+					feeParsed,
+					overrides,
+			  );
+```
+
+#### Solana to EVM
+
+const transaction = await transferFromSolana(
+					connection,
+					SOL_BRIDGE_ADDRESS,
+					SOL_TOKEN_BRIDGE_ADDRESS,
+					payer,
+					fromAddress,
+					mintAddress,
+					transferAmountParsed.toBigInt(),
+					targetAddress,
+					targetChain,
+					originAddress,
+					originChain,
+					undefined,
+					feeParsed.toBigInt(),
+			  );
+
+### Redeem 
+####
+
+
+
+
+
 
 
 
