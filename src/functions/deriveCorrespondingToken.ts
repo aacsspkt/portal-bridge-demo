@@ -59,7 +59,11 @@ export async function getCorrespondingToken(param: {
 	if (isWrapped) {
 		return await getOriginalAsset({ dispatch, tokenAddress, sourceChain, targetChain, signer });
 	} else {
-		return await getForeignAsset({ dispatch, tokenAddress, sourceChain, targetChain, provider: signer });
+		const asset = await getForeignAsset({ dispatch, tokenAddress, sourceChain, targetChain, provider: signer });
+		if (asset && asset.includes(ethers.constants.AddressZero)) {
+			return null;
+		}
+		return asset;
 	}
 }
 
