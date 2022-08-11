@@ -151,10 +151,20 @@ const transaction = await transferFromSolana(
 			  );
 
 ### Redeem 
-####
+#### Redeem on Eth
+
+```
+redeemOnEth(getTokenBridgeAddressForChain(chainId), signer, signedVAA, overrides);
+```
+
+#### Redeem on Solana
+
+The Vaa Must be posted on solana before being redeemed
 
 
-
+```
+redeemOnSolana(connection, SOL_BRIDGE_ADDRESS, SOL_TOKEN_BRIDGE_ADDRESS, payerAddress, signedVAA);
+```
 
 
 
