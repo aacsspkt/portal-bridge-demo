@@ -103,7 +103,7 @@ function useFetchTargetAsset() {
 							setTargetAsset(
 								receiveDataWrapper({
 									doesExist: asset !== ethers.constants.AddressZero,
-									address: asset,
+									address: asset && asset.includes(ethers.constants.AddressZero) ? null : asset,
 								}),
 							),
 						);
@@ -127,7 +127,7 @@ function useFetchTargetAsset() {
 					);
 					if (!ignore) {
 						dispatch(setTargetAsset(receiveDataWrapper({ doesExist: !!asset, address: asset })));
-						console.log("here")
+						console.log("here");
 						setArgs();
 					}
 				} catch (e) {
